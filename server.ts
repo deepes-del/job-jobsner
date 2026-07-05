@@ -152,6 +152,45 @@ function verifyPassword(password: string, salt: string, hash: string): boolean {
   return verifyHash === hash;
 }
 
+const TOKEN_SECRET = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_URL || 'default-fallback-secret-key-12345';
+
+function generateSessionToken(userId: string, role: 'candidate' | 'recruiter'): string {
+  // Session expires in 30 days
+  const expires = Date.now() + 30 * 24 * 60 * 60 * 1000;
+  const payloadObj = { userId, role, expires };
+  const payloadStr = Buffer.from(JSON.stringify(payloadObj)).toString('base64url');
+  
+  const hmac = crypto.createHmac('sha256', TOKEN_SECRET);
+  hmac.update(payloadStr);
+  const signature = hmac.digest('base64url');
+  
+  return `${payloadStr}.${signature}`;
+}
+
+function verifySessionToken(token: string): { userId: string; role: 'candidate' | 'recruiter' } | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 2) return null;
+    
+    const [payloadStr, signature] = parts;
+    const hmac = crypto.createHmac('sha256', TOKEN_SECRET);
+    hmac.update(payloadStr);
+    const expectedSignature = hmac.digest('base64url');
+    
+    if (signature !== expectedSignature) return null;
+    
+    const payloadObj = JSON.parse(Buffer.from(payloadStr, 'base64url').toString('utf-8'));
+    if (payloadObj.expires < Date.now()) return null; // Expired
+    
+    return {
+      userId: payloadObj.userId,
+      role: payloadObj.role
+    };
+  } catch (err) {
+    return null;
+  }
+}
+
 // Auth Middleware
 function authenticateToken(req: express.Request, res: express.Response, next: express.NextFunction) {
   const authHeader = req.headers['authorization'];
@@ -161,14 +200,13 @@ function authenticateToken(req: express.Request, res: express.Response, next: ex
     return res.status(401).json({ error: 'Access denied. No token provided.' });
   }
 
-  const db = readDB();
-  const candidateId = db.tokens[token];
-
-  if (!candidateId) {
+  const session = verifySessionToken(token);
+  if (!session || session.role !== 'candidate') {
     return res.status(403).json({ error: 'Invalid or expired token.' });
   }
 
-  const candidate = db.candidates.find((c: any) => c.id === candidateId);
+  const db = readDB();
+  const candidate = db.candidates.find((c: any) => c.id === session.userId);
   if (!candidate) {
     return res.status(404).json({ error: 'Candidate not found.' });
   }
@@ -186,14 +224,13 @@ function authenticateRecruiter(req: express.Request, res: express.Response, next
     return res.status(401).json({ error: 'Access denied. No token provided.' });
   }
 
-  const db = readDB();
-  const recruiterId = db.recruiterTokens[token];
-
-  if (!recruiterId) {
+  const session = verifySessionToken(token);
+  if (!session || session.role !== 'recruiter') {
     return res.status(403).json({ error: 'Invalid or expired token.' });
   }
 
-  const recruiter = db.recruiters.find((r: any) => r.id === recruiterId);
+  const db = readDB();
+  const recruiter = db.recruiters.find((r: any) => r.id === session.userId);
   if (!recruiter) {
     return res.status(404).json({ error: 'Recruiter not found.' });
   }
@@ -253,8 +290,7 @@ app.post('/api/register', (req, res) => {
   db.candidates.push(newCandidate);
 
   // Generate Session Token
-  const token = crypto.randomBytes(32).toString('hex');
-  db.tokens[token] = id;
+  const token = generateSessionToken(id, 'candidate');
 
   writeDB(db);
 
@@ -293,8 +329,7 @@ app.post('/api/login', (req, res) => {
   }
 
   // Generate Session Token
-  const token = crypto.randomBytes(32).toString('hex');
-  db.tokens[token] = candidate.id;
+  const token = generateSessionToken(candidate.id, 'candidate');
 
   writeDB(db);
 
@@ -724,9 +759,7 @@ app.post('/api/recruiter/login', (req, res) => {
     }
 
     // Generate access token
-    const token = crypto.randomBytes(32).toString('hex');
-    db.recruiterTokens = db.recruiterTokens || {};
-    db.recruiterTokens[token] = recruiter.id;
+    const token = generateSessionToken(recruiter.id, 'recruiter');
     writeDB(db);
 
     const { salt: _s, hash: _h, ...recruiterDetails } = recruiter;
@@ -1918,8 +1951,9 @@ app.get('/api/applications/:id/timeline', (req, res) => {
     }
 
     // Determine user identity
-    const candidateId = db.tokens[token];
-    const recruiterId = db.recruiterTokens[token];
+    const session = verifySessionToken(token);
+    const candidateId = session?.role === 'candidate' ? session.userId : undefined;
+    const recruiterId = session?.role === 'recruiter' ? session.userId : undefined;
 
     let authorized = false;
 
