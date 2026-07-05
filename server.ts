@@ -28,7 +28,7 @@ import {
   getSupabase, 
   isSupabaseConfigured, 
   clearSupabaseClient 
-} from './src/lib/supabase';
+} from './src/lib/supabase.js';
 import { 
   publicHealthHandler, 
   publicJobsHandler, 
