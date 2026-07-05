@@ -25,6 +25,11 @@ import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
 import { 
+  getSupabase, 
+  isSupabaseConfigured, 
+  clearSupabaseClient 
+} from './src/lib/supabase';
+import { 
   publicHealthHandler, 
   publicJobsHandler, 
   candidateProfileHandler, 
@@ -67,7 +72,6 @@ let supabaseErrorDetails: string | null = null;
 async function syncToSupabase(db: any) {
   if (!supabaseActive) return;
   try {
-    const { getSupabase } = await import('./src/lib/supabase.js');
     const supabase = getSupabase();
     
     // Asynchronously update tables in Supabase using upsert
@@ -2001,7 +2005,6 @@ app.all('/api/supabase-server/admin/candidates', adaptWebFetch(adminCandidatesLi
 // Database configuration and connection state status endpoint
 app.get('/api/database-status', async (req, res) => {
   try {
-    const { isSupabaseConfigured } = await import('./src/lib/supabase.js');
     res.json({
       configured: isSupabaseConfigured(),
       active: supabaseActive,
@@ -2017,7 +2020,6 @@ app.get('/api/database-status', async (req, res) => {
 // Re-check and sync database connection dynamically
 app.post('/api/database-reconnect', async (req, res) => {
   try {
-    const { clearSupabaseClient } = await import('./src/lib/supabase.js');
     clearSupabaseClient();
     supabaseActive = false;
     supabaseErrorDetails = null;
@@ -2035,7 +2037,6 @@ app.post('/api/database-reconnect', async (req, res) => {
 // Execute a SQL SELECT 1 ping query via a Supabase RPC function to verify live DB execution
 app.get('/api/database-ping-sql', async (req, res) => {
   try {
-    const { getSupabase, isSupabaseConfigured, clearSupabaseClient } = await import('./src/lib/supabase.js');
     clearSupabaseClient();
     if (!isSupabaseConfigured()) {
       return res.status(400).json({
@@ -2076,7 +2077,6 @@ app.get('/api/database-ping-sql', async (req, res) => {
 // Complete database diagnostic utility to troubleshoot Supabase integration issues
 app.get('/api/database-diagnose', async (req, res) => {
   try {
-    const { clearSupabaseClient } = await import('./src/lib/supabase.js');
     clearSupabaseClient();
   } catch (e) {}
 
@@ -2139,7 +2139,6 @@ app.get('/api/database-diagnose', async (req, res) => {
 
   // Test individual tables
   try {
-    const { getSupabase } = await import('./src/lib/supabase.js');
     const supabase = getSupabase();
 
     const tablesToTest = ['candidates', 'recruiters', 'jobs', 'applications', 'documents'];
@@ -2227,7 +2226,6 @@ async function initDatabase() {
   const db = readDB();
 
   try {
-    const { isSupabaseConfigured, getSupabase } = await import('./src/lib/supabase.js');
     if (isSupabaseConfigured()) {
       console.log('[Database Init] Supabase config found. Validating cloud connection...');
       const supabase = getSupabase();
@@ -2669,5 +2667,14 @@ async function startServer() {
 }
 
 startServer();
+
+// Global Express error handler
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('[Express Global Error]', err);
+  res.status(500).json({
+    error: err.message || 'Internal Server Error',
+    stack: process.env.NODE_ENV !== 'production' ? err.stack : undefined
+  });
+});
 
 export default app;
