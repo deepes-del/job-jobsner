@@ -34,7 +34,7 @@ import {
   publicJobsHandler, 
   candidateProfileHandler, 
   adminCandidatesListHandler 
-} from './src/lib/supabaseServerHandlers';
+} from './src/lib/supabaseServerHandlers.js';
 
 
 const app = express();
