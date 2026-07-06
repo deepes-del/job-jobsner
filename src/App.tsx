@@ -69,8 +69,11 @@ export default function App() {
       if (savedToken) {
         try {
           const res = await fetch('/api/profile', {
+            cache: 'no-store',
             headers: {
-              'Authorization': `Bearer ${savedToken}`
+              'Authorization': `Bearer ${savedToken}`,
+              'Cache-Control': 'no-cache, no-store',
+              'Pragma': 'no-cache'
             }
           });
           if (res.ok) {
@@ -102,8 +105,11 @@ export default function App() {
       if (savedRecruiterToken) {
         try {
           const res = await fetch('/api/recruiter/profile', {
+            cache: 'no-store',
             headers: {
-              'Authorization': `Bearer ${savedRecruiterToken}`
+              'Authorization': `Bearer ${savedRecruiterToken}`,
+              'Cache-Control': 'no-cache, no-store',
+              'Pragma': 'no-cache'
             }
           });
           if (res.ok) {

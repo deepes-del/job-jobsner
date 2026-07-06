@@ -52,6 +52,16 @@ app.use((req, res, next) => {
   }
 });
 
+// Force all /api/* responses to never be cached by Vercel Edge or browser.
+// This prevents the "304 BYPASS" issue where Vercel serves a stale cached
+// response instead of running the serverless function.
+app.use('/api', (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Surrogate-Control', 'no-store');
+  next();
+});
+
 const isVercel = !!process.env.VERCEL;
 const DB_PATH = isVercel 
   ? path.join('/tmp', 'db.json') 
