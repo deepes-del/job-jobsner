@@ -55,7 +55,7 @@ export default function CandidateDashboard({
   const [sortOrder, setSortOrder] = React.useState('newest'); // 'newest' | 'oldest'
 
   // Swipe vs Grid View State
-  const [viewMode, setViewMode] = React.useState<'swipe' | 'grid'>('swipe');
+  const [viewMode, setViewMode] = React.useState<'swipe' | 'grid'>('grid');
   const [currentSwipeIndex, setCurrentSwipeIndex] = React.useState(0);
   const [swipeTrigger, setSwipeTrigger] = React.useState<'left' | 'right' | null>(null);
   const [swipedJobHistory, setSwipedJobHistory] = React.useState<number[]>([]); // Track index history for rewind capability
@@ -1040,34 +1040,6 @@ export default function CandidateDashboard({
                 <Sparkles className="w-4 h-4 text-orange-500 animate-pulse" />
                 Found {filteredJobsList.length} matching jobs
               </span>
-
-              {/* Toggle controls to easily flip between modern Swipe deck or standard list Grid */}
-              <div className="flex bg-white border border-gray-200 p-0.5 rounded-xl shadow-sm self-start sm:self-auto">
-                <button
-                  onClick={() => setViewMode('swipe')}
-                  className={`px-3.5 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer ${
-                    viewMode === 'swipe'
-                      ? 'bg-orange-600 text-white shadow'
-                      : 'text-gray-500 hover:text-slate-800 hover:bg-gray-50'
-                  }`}
-                  id="viewmode-toggle-swipe"
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  Swipe Cards
-                </button>
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`px-3.5 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer ${
-                    viewMode === 'grid'
-                      ? 'bg-orange-600 text-white shadow'
-                      : 'text-gray-500 hover:text-slate-800 hover:bg-gray-50'
-                  }`}
-                  id="viewmode-toggle-grid"
-                >
-                  <SlidersHorizontal className="w-3.5 h-3.5" />
-                  Grid List
-                </button>
-              </div>
             </div>
 
             {loadingJobs ? (

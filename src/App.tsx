@@ -14,9 +14,6 @@ import RecruiterLogin from './components/RecruiterLogin';
 import RecruiterRegistration from './components/RecruiterRegistration';
 import RecruiterDashboard from './components/RecruiterDashboard';
 
-// Supabase guide modal
-import SupabaseGuideModal from './components/SupabaseGuideModal';
-
 
 export default function App() {
   const [initialLoading, setInitialLoading] = useState(true);
@@ -246,23 +243,7 @@ export default function App() {
           {/* Mini Info Badge & Portal Switcher */}
           <div className="flex items-center gap-3 sm:gap-4" id="navbar-controls">
             
-            {/* Database Sync Status Badge */}
-            {dbStatus && (
-              <button
-                onClick={() => setIsSupabaseModalOpen(true)}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
-                  dbStatus.active 
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' 
-                    : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 animate-pulse'
-                }`}
-                title={dbStatus.active ? "Supabase Cloud Connected. Click for details." : "Using Local JSON Fallback (Sync Disabled). Click to fix connection."}
-              >
-                <Database className="w-3.5 h-3.5" />
-                <span className="hidden md:inline">{dbStatus.active ? 'Supabase Sync Active' : 'Local Fallback'}</span>
-              </button>
-            )}
 
-            
             {/* If logged in, show status. Otherwise, show portal toggle button */}
             {userRole === null ? (
               <span className="text-[10px] font-bold text-orange-600 uppercase tracking-widest bg-orange-50 border border-orange-100 px-2.5 py-1 rounded-full">
@@ -661,14 +642,6 @@ export default function App() {
           // We can dispatch a custom event or let the browser update automatically
           window.dispatchEvent(new Event('refresh-jobs'));
         }}
-      />
-
-      {/* Supabase Connection Setup & Diagnostic Modal */}
-      <SupabaseGuideModal
-        isOpen={isSupabaseModalOpen}
-        onClose={() => setIsSupabaseModalOpen(false)}
-        dbStatus={dbStatus}
-        onRefreshStatus={fetchDbStatus}
       />
     </div>
 
