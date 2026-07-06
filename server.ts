@@ -377,6 +377,33 @@ app.post('/api/register', async (req, res) => {
 
   await writeDB(db);
 
+  // Always attempt a direct Supabase write for this new record, even if
+  // supabaseActive is false. This covers the case where tables were created
+  // AFTER the server started (supabaseActive = false at init time but tables exist now).
+  if (isSupabaseConfigured()) {
+    try {
+      const supabase = getSupabase();
+      await supabase.from('candidates').upsert({
+        id: newCandidate.id,
+        mobile: newCandidate.mobile,
+        fullName: newCandidate.fullName,
+        email: newCandidate.email || null,
+        salt: newCandidate.salt,
+        hash: newCandidate.hash,
+        profile: newCandidate.profile
+      });
+      console.log('[Candidate Register] Written to Supabase:', newCandidate.id);
+      // If this succeeds, activate Supabase for subsequent requests
+      if (!supabaseActive) {
+        supabaseActive = true;
+        supabaseErrorDetails = null;
+        console.log('[Candidate Register] Supabase activated via direct write.');
+      }
+    } catch (sbErr: any) {
+      console.warn('[Candidate Register] Supabase write failed (tables may not exist yet):', sbErr.message || sbErr);
+    }
+  }
+
   res.status(201).json({
     message: 'Registration successful',
     token,
@@ -798,6 +825,40 @@ app.post('/api/recruiter/register', async (req, res) => {
 
     db.recruiters.push(newRecruiter);
     await writeDB(db);
+
+    // Always attempt a direct Supabase write for this new record
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = getSupabase();
+        await supabase.from('recruiters').upsert({
+          id: newRecruiter.id,
+          companyName: newRecruiter.companyName,
+          companyLogo: newRecruiter.companyLogo,
+          companyWebsite: newRecruiter.companyWebsite,
+          recruiterName: newRecruiter.recruiterName,
+          designation: newRecruiter.designation,
+          mobile: newRecruiter.mobile,
+          email: newRecruiter.email,
+          salt: newRecruiter.salt,
+          hash: newRecruiter.hash,
+          address: newRecruiter.address,
+          city: newRecruiter.city,
+          state: newRecruiter.state,
+          pincode: newRecruiter.pincode,
+          status: newRecruiter.status,
+          createdAt: newRecruiter.createdAt,
+          updatedAt: newRecruiter.updatedAt
+        });
+        console.log('[Recruiter Register] Written to Supabase:', newRecruiter.id);
+        if (!supabaseActive) {
+          supabaseActive = true;
+          supabaseErrorDetails = null;
+          console.log('[Recruiter Register] Supabase activated via direct write.');
+        }
+      } catch (sbErr: any) {
+        console.warn('[Recruiter Register] Supabase write failed (tables may not exist yet):', sbErr.message || sbErr);
+      }
+    }
 
     // Return the recruiter details (excluding password salt/hash)
     const { salt: _s, hash: _h, ...recruiterDetails } = newRecruiter;
@@ -1565,6 +1626,29 @@ app.post('/api/jobs/:id/apply', authenticateToken, async (req, res) => {
     job.applicationsCount = (job.applicationsCount || 0) + 1;
 
     await writeDB(db);
+
+    // Always attempt a direct Supabase write for the new application
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = getSupabase();
+        await supabase.from('applications').upsert({
+          id: newApplication.id,
+          candidateId: newApplication.candidateId,
+          jobId: newApplication.jobId,
+          recruiterId: newApplication.recruiterId,
+          appliedDate: newApplication.appliedDate,
+          currentStatus: newApplication.currentStatus,
+          withdrawStatus: newApplication.withdrawStatus,
+          lastUpdated: newApplication.lastUpdated
+        });
+        // Also sync the updated job applications count
+        await supabase.from('jobs').update({ applicationsCount: job.applicationsCount }).eq('id', job.id);
+        console.log('[Apply Job] Application written to Supabase:', newApplication.id);
+        if (!supabaseActive) { supabaseActive = true; supabaseErrorDetails = null; }
+      } catch (sbErr: any) {
+        console.warn('[Apply Job] Supabase write failed:', sbErr.message || sbErr);
+      }
+    }
 
     res.status(201).json({
       message: 'Application submitted successfully.',
