@@ -42,14 +42,25 @@ const PORT = 3000;
 
 app.use(express.json({ limit: '10mb' })); // Support base64 photos
 
-// On Vercel cold starts, the first HTTP request can arrive before initDatabase() completes.
-// This lightweight middleware waits for the init promise to resolve before continuing.
-app.use((req, res, next) => {
+// On Vercel, serverless function instances are isolated. To prevent stale caches
+// (e.g. warm containers having outdated memoryDB/db.json states), this middleware
+// waits for the initial database load and then pulls the latest tables from
+// Supabase in real-time for any incoming API requests.
+app.use(async (req, res, next) => {
   if (_initPromise) {
-    _initPromise.then(() => next()).catch(() => next());
-  } else {
-    next();
+    try {
+      await _initPromise;
+    } catch (e) {}
   }
+
+  if (req.path.startsWith('/api') && supabaseActive) {
+    try {
+      await refreshFromSupabase();
+    } catch (err) {
+      console.error('Supabase real-time sync error:', err);
+    }
+  }
+  next();
 });
 
 // Force all /api/* responses to never be cached by Vercel Edge or browser.
@@ -168,6 +179,39 @@ function readDB() {
     return memoryDB;
   }
 }
+
+async function refreshFromSupabase() {
+  if (!supabaseActive) return;
+  try {
+    const supabase = getSupabase();
+    const [
+      { data: candidates },
+      { data: recruiters },
+      { data: jobs },
+      { data: applications },
+      { data: dDocs }
+    ] = await Promise.all([
+      supabase.from('candidates').select('*'),
+      supabase.from('recruiters').select('*'),
+      supabase.from('jobs').select('*'),
+      supabase.from('applications').select('*'),
+      supabase.from('documents').select('*')
+    ]);
+
+    const db = readDB();
+    if (candidates) db.candidates = candidates;
+    if (recruiters) db.recruiters = recruiters;
+    if (jobs) db.jobs = jobs;
+    if (applications) db.applications = applications;
+    if (dDocs) db.documents = dDocs;
+
+    memoryDB = db;
+    fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2), 'utf-8');
+  } catch (err: any) {
+    console.warn('[Supabase Refresh Warning] Failed to refresh data from Supabase:', err.message || err);
+  }
+}
+
 
 function writeDB(data: any): Promise<void> | void {
   memoryDB = data;
@@ -1439,7 +1483,7 @@ app.post('/api/jobs/:id/view', (req, res) => {
 });
 
 // 7.4 Apply Job (Candidates)
-app.post('/api/jobs/:id/apply', authenticateToken, (req, res) => {
+app.post('/api/jobs/:id/apply', authenticateToken, async (req, res) => {
   const candidate = (req as any).candidate;
   const jobId = req.params.id;
 
@@ -1520,7 +1564,7 @@ app.post('/api/jobs/:id/apply', authenticateToken, (req, res) => {
     // Increment applicationsCount for the job
     job.applicationsCount = (job.applicationsCount || 0) + 1;
 
-    writeDB(db);
+    await writeDB(db);
 
     res.status(201).json({
       message: 'Application submitted successfully.',
@@ -1533,7 +1577,7 @@ app.post('/api/jobs/:id/apply', authenticateToken, (req, res) => {
 });
 
 // Alias POST for Apply Job (supports both calling structures)
-app.post('/api/applications', authenticateToken, (req, res) => {
+app.post('/api/applications', authenticateToken, async (req, res) => {
   const { jobId } = req.body;
   if (!jobId) {
     return res.status(400).json({ error: 'jobId is required in body.' });
@@ -1614,7 +1658,7 @@ app.post('/api/applications', authenticateToken, (req, res) => {
 
     db.applications.push(newApplication);
     job.applicationsCount = (job.applicationsCount || 0) + 1;
-    writeDB(db);
+    await writeDB(db);
 
     res.status(201).json({
       message: 'Application submitted successfully.',
@@ -1716,7 +1760,7 @@ app.get('/api/my-applications', authenticateToken, (req, res) => {
 });
 
 // 7.6 Withdraw Application (Candidates)
-app.post('/api/applications/:id/withdraw', authenticateToken, (req, res) => {
+app.post('/api/applications/:id/withdraw', authenticateToken, async (req, res) => {
   const candidate = (req as any).candidate;
   const appId = req.params.id;
 
@@ -1746,7 +1790,7 @@ app.post('/api/applications/:id/withdraw', authenticateToken, (req, res) => {
       job.applicationsCount -= 1;
     }
 
-    writeDB(db);
+    await writeDB(db);
 
     res.status(200).json({
       message: 'Application withdrawn successfully.',
