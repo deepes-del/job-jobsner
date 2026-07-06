@@ -42,6 +42,16 @@ const PORT = 3000;
 
 app.use(express.json({ limit: '10mb' })); // Support base64 photos
 
+// On Vercel cold starts, the first HTTP request can arrive before initDatabase() completes.
+// This lightweight middleware waits for the init promise to resolve before continuing.
+app.use((req, res, next) => {
+  if (_initPromise) {
+    _initPromise.then(() => next()).catch(() => next());
+  } else {
+    next();
+  }
+});
+
 const isVercel = !!process.env.VERCEL;
 const DB_PATH = isVercel 
   ? path.join('/tmp', 'db.json') 
@@ -55,7 +65,24 @@ if (!fs.existsSync(path.dirname(DB_PATH))) {
   fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 }
 if (!fs.existsSync(DB_PATH)) {
-  fs.writeFileSync(DB_PATH, JSON.stringify({ candidates: [], tokens: {}, documents: [] }, null, 2), 'utf-8');
+  if (isVercel) {
+    // On Vercel, /tmp is ephemeral — seed from the bundled data/db.json so
+    // pre-registered accounts survive cold container restarts
+    const bundledDBPath = path.join(process.cwd(), 'data', 'db.json');
+    if (fs.existsSync(bundledDBPath)) {
+      try {
+        fs.copyFileSync(bundledDBPath, DB_PATH);
+        console.log('[Vercel Cold Start] Seeded /tmp/db.json from bundled data/db.json');
+      } catch (copyErr) {
+        console.warn('[Vercel Cold Start] Could not copy bundled db.json, creating empty DB:', copyErr);
+        fs.writeFileSync(DB_PATH, JSON.stringify({ candidates: [], tokens: {}, documents: [], recruiters: [], recruiterTokens: {}, jobs: [], applications: [], applicationHistory: [], recruiterNotes: [] }, null, 2), 'utf-8');
+      }
+    } else {
+      fs.writeFileSync(DB_PATH, JSON.stringify({ candidates: [], tokens: {}, documents: [], recruiters: [], recruiterTokens: {}, jobs: [], applications: [], applicationHistory: [], recruiterNotes: [] }, null, 2), 'utf-8');
+    }
+  } else {
+    fs.writeFileSync(DB_PATH, JSON.stringify({ candidates: [], tokens: {}, documents: [] }, null, 2), 'utf-8');
+  }
 }
 if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
@@ -68,6 +95,9 @@ app.use('/uploads', express.static(UPLOADS_DIR));
 let memoryDB: any = null;
 let supabaseActive = false;
 let supabaseErrorDetails: string | null = null;
+
+// Tracks the async DB init promise so HTTP requests can wait for it on cold starts
+let _initPromise: Promise<void> | null = null;
 
 async function syncToSupabase(db: any) {
   if (!supabaseActive) return;
@@ -2669,7 +2699,8 @@ app.delete('/api/admin/candidates/:id', (req, res) => {
 
 // Start server and handle Vite middleware
 async function startServer() {
-  await initDatabase();
+  // Re-use the already-in-progress init promise (started at module load)
+  await (_initPromise || initDatabase());
 
   if (process.env.VERCEL) {
     console.log('[Server] Running in Vercel environment. Skipping local app.listen().');
@@ -2695,6 +2726,12 @@ async function startServer() {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 }
+
+// Start DB init immediately at module load (not inside startServer) so requests
+// don't have to wait for the entire server bootstrap on Vercel cold starts.
+_initPromise = initDatabase().catch(err => {
+  console.error('[DB Init Error]', err);
+});
 
 startServer();
 
