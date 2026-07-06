@@ -129,12 +129,11 @@ function readDB() {
   }
 }
 
-function writeDB(data: any) {
+function writeDB(data: any): Promise<void> | void {
   memoryDB = data;
   fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), 'utf-8');
   if (supabaseActive) {
-    // Fire and forget, or handle background sync errors
-    syncToSupabase(data).catch(err => {
+    return syncToSupabase(data).catch(err => {
       console.error('[Supabase Background Sync Error]', err);
     });
   }
@@ -208,7 +207,7 @@ function authenticateToken(req: express.Request, res: express.Response, next: ex
   const db = readDB();
   const candidate = db.candidates.find((c: any) => c.id === session.userId);
   if (!candidate) {
-    return res.status(404).json({ error: 'Candidate not found.' });
+    return res.status(401).json({ error: 'Session expired or account no longer exists. Please log in again.' });
   }
 
   (req as any).candidate = candidate;
@@ -232,7 +231,7 @@ function authenticateRecruiter(req: express.Request, res: express.Response, next
   const db = readDB();
   const recruiter = db.recruiters.find((r: any) => r.id === session.userId);
   if (!recruiter) {
-    return res.status(404).json({ error: 'Recruiter not found.' });
+    return res.status(401).json({ error: 'Session expired or account no longer exists. Please log in again.' });
   }
 
   (req as any).recruiter = recruiter;
@@ -243,7 +242,7 @@ function authenticateRecruiter(req: express.Request, res: express.Response, next
 // API Routes
 
 // 1. Register Candidate
-app.post('/api/register', (req, res) => {
+app.post('/api/register', async (req, res) => {
   const { fullName, mobile, email, password, confirmPassword } = req.body;
 
   // Validation
@@ -292,7 +291,7 @@ app.post('/api/register', (req, res) => {
   // Generate Session Token
   const token = generateSessionToken(id, 'candidate');
 
-  writeDB(db);
+  await writeDB(db);
 
   res.status(201).json({
     message: 'Registration successful',
@@ -331,8 +330,6 @@ app.post('/api/login', (req, res) => {
   // Generate Session Token
   const token = generateSessionToken(candidate.id, 'candidate');
 
-  writeDB(db);
-
   res.status(200).json({
     message: 'Login successful',
     token,
@@ -362,7 +359,7 @@ app.get('/api/profile', authenticateToken, (req, res) => {
 });
 
 // 4. Update Candidate Profile
-app.put('/api/profile', authenticateToken, (req, res) => {
+app.put('/api/profile', authenticateToken, async (req, res) => {
   const candidate = (req as any).candidate;
   const updatedProfile = req.body;
 
@@ -401,7 +398,7 @@ app.put('/api/profile', authenticateToken, (req, res) => {
   // Sync basic candidate details if updated
   dbCandidate.fullName = dbCandidate.profile.fullName;
 
-  writeDB(db);
+  await writeDB(db);
 
   const documents = db.documents.filter((d: any) => d.candidateId === candidate.id);
 
@@ -638,7 +635,7 @@ app.delete('/api/documents/:type', authenticateToken, (req, res) => {
 // --- RECRUITER MODULE APIS ---
 
 // 1. Register Recruiter
-app.post('/api/recruiter/register', (req, res) => {
+app.post('/api/recruiter/register', async (req, res) => {
   const {
     companyName,
     companyLogo,
@@ -716,7 +713,7 @@ app.post('/api/recruiter/register', (req, res) => {
     };
 
     db.recruiters.push(newRecruiter);
-    writeDB(db);
+    await writeDB(db);
 
     // Return the recruiter details (excluding password salt/hash)
     const { salt: _s, hash: _h, ...recruiterDetails } = newRecruiter;
@@ -760,7 +757,6 @@ app.post('/api/recruiter/login', (req, res) => {
 
     // Generate access token
     const token = generateSessionToken(recruiter.id, 'recruiter');
-    writeDB(db);
 
     const { salt: _s, hash: _h, ...recruiterDetails } = recruiter;
 

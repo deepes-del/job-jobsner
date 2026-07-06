@@ -121,14 +121,25 @@ export default function RecruiterDashboard({
   const [searchTitle, setSearchTitle] = useState<string>('');
   const [searchCity, setSearchCity] = useState<string>('');
 
+  // Helper that automatically logs out the recruiter on 401 (expired/deleted session)
+  const authFetch = async (url: string, options: RequestInit = {}) => {
+    const headers: Record<string, string> = {
+      ...(options.headers as Record<string, string> || {}),
+      'Authorization': `Bearer ${token}`
+    };
+    const response = await fetch(url, { ...options, headers });
+    if (response.status === 401) {
+      // Session is invalid — auto-logout
+      onLogout();
+      throw new Error('Session expired. Please log in again.');
+    }
+    return response;
+  };
+
   const fetchApplications = async () => {
     setLoadingApps(true);
     try {
-      const response = await fetch('/api/recruiter/applications', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await authFetch('/api/recruiter/applications');
       const data = await response.json();
       if (response.ok) {
         setApplications(data.applications || []);
@@ -143,11 +154,7 @@ export default function RecruiterDashboard({
   const fetchAppDetail = async (id: string) => {
     setLoadingAppDetail(true);
     try {
-      const response = await fetch(`/api/recruiter/applications/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await authFetch(`/api/recruiter/applications/${id}`);
       const data = await response.json();
       if (response.ok) {
         setSelectedAppDetail(data);
@@ -165,12 +172,9 @@ export default function RecruiterDashboard({
   const handleStatusUpdate = async (id: string, newStatus: string) => {
     setUpdatingStatus(newStatus);
     try {
-      const response = await fetch(`/api/recruiter/applications/${id}/status`, {
+      const response = await authFetch(`/api/recruiter/applications/${id}/status`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
       });
       const data = await response.json();
@@ -199,12 +203,9 @@ export default function RecruiterDashboard({
     if (!noteText.trim()) return;
     setSubmittingNote(true);
     try {
-      const response = await fetch(`/api/recruiter/applications/${id}/notes`, {
+      const response = await authFetch(`/api/recruiter/applications/${id}/notes`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ noteText })
       });
       const data = await response.json();
@@ -282,11 +283,7 @@ export default function RecruiterDashboard({
   const fetchJobs = async () => {
     setLoadingJobs(true);
     try {
-      const response = await fetch('/api/recruiter/jobs', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await authFetch('/api/recruiter/jobs');
       const data = await response.json();
       if (response.ok) {
         setJobs(data.jobs || []);
@@ -378,12 +375,9 @@ export default function RecruiterDashboard({
         : '/api/recruiter/jobs';
       const method = editingJob ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
+      const response = await authFetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(jobData)
       });
 
@@ -444,11 +438,8 @@ export default function RecruiterDashboard({
     setError(null);
     setSuccess(null);
     try {
-      const response = await fetch(`/api/recruiter/jobs/${jobId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await authFetch(`/api/recruiter/jobs/${jobId}`, {
+        method: 'DELETE'
       });
       if (response.ok) {
         setSuccess('Job deleted successfully.');
@@ -472,12 +463,9 @@ export default function RecruiterDashboard({
     setError(null);
     setSuccess(null);
     try {
-      const response = await fetch(`/api/recruiter/jobs/${jobId}/status`, {
+      const response = await authFetch(`/api/recruiter/jobs/${jobId}/status`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
       });
       const data = await response.json();
@@ -658,12 +646,9 @@ export default function RecruiterDashboard({
     setUpdating(true);
 
     try {
-      const response = await fetch('/api/recruiter/profile', {
+      const response = await authFetch('/api/recruiter/profile', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           companyName: companyName.trim(),
           companyLogo,

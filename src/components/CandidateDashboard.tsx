@@ -80,16 +80,19 @@ export default function CandidateDashboard({
       fetch(`/api/applications/${selectedApp.id}/timeline`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
-        .then(res => res.json())
+        .then(res => {
+          if (res.status === 401) { onLogout(); return null; }
+          return res.json();
+        })
         .then(data => {
-          setAppTimeline(data.timeline || []);
+          if (data) setAppTimeline(data.timeline || []);
         })
         .catch(err => console.error('Error fetching timeline:', err))
         .finally(() => setLoadingTimeline(false));
     } else {
       setAppTimeline([]);
     }
-  }, [selectedApp, token]);
+  }, [selectedApp, token, onLogout]);
 
   // Status alerts & Complete verification states
   const [submitError, setSubmitError] = React.useState<string | null>(null);
@@ -127,13 +130,16 @@ export default function CandidateDashboard({
     fetch('/api/applications/my', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
-      .then(res => res.json())
+      .then(res => {
+        if (res.status === 401) { onLogout(); return null; }
+        return res.json();
+      })
       .then(data => {
-        setMyApplications(data.applications || []);
+        if (data) setMyApplications(data.applications || []);
       })
       .catch(err => console.error('Error fetching applications:', err))
       .finally(() => setLoadingApps(false));
-  }, [token]);
+  }, [token, onLogout]);
 
   const fetchDocuments = React.useCallback(() => {
     if (!token) return;
@@ -141,13 +147,30 @@ export default function CandidateDashboard({
     fetch('/api/documents', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
-      .then(res => res.json())
+      .then(res => {
+        if (res.status === 401) { onLogout(); return null; }
+        return res.json();
+      })
       .then(data => {
-        setDocuments(data.documents || []);
+        if (data) setDocuments(data.documents || []);
       })
       .catch(err => console.error('Error fetching documents:', err))
       .finally(() => setLoadingDocs(false));
-  }, [token]);
+  }, [token, onLogout]);
+
+  // Helper: auto-logout on 401 (expired/deleted session)
+  const authFetch = React.useCallback(async (url: string, options: RequestInit = {}) => {
+    const headers: Record<string, string> = {
+      ...(options.headers as Record<string, string> || {}),
+      'Authorization': `Bearer ${token}`
+    };
+    const response = await fetch(url, { ...options, headers });
+    if (response.status === 401) {
+      onLogout();
+      throw new Error('Session expired. Please log in again.');
+    }
+    return response;
+  }, [token, onLogout]);
 
   // Load stats & details on mount
   React.useEffect(() => {
@@ -334,12 +357,9 @@ export default function CandidateDashboard({
     // Submit application immediately
     setApplyingJobId(job.id);
     try {
-      const response = await fetch(`/api/jobs/${job.id}/apply`, {
+      const response = await authFetch(`/api/jobs/${job.id}/apply`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ jobId: job.id })
       });
 
@@ -407,12 +427,9 @@ export default function CandidateDashboard({
         pincode: instantPincode,
       };
 
-      const profileResponse = await fetch('/api/profile', {
+      const profileResponse = await authFetch('/api/profile', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedProfile)
       });
 
@@ -427,12 +444,9 @@ export default function CandidateDashboard({
       }
 
       // 2. Submit job application
-      const applyResponse = await fetch(`/api/jobs/${jobForInstantApply.id}/apply`, {
+      const applyResponse = await authFetch(`/api/jobs/${jobForInstantApply.id}/apply`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ jobId: jobForInstantApply.id })
       });
 
@@ -478,12 +492,9 @@ export default function CandidateDashboard({
     setWithdrawingAppId(applicationId);
 
     try {
-      const response = await fetch(`/api/applications/${applicationId}/withdraw`, {
+      const response = await authFetch(`/api/applications/${applicationId}/withdraw`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Content-Type': 'application/json' }
       });
 
       const data = await response.json();

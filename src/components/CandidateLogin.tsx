@@ -9,7 +9,7 @@ interface CandidateLoginProps {
 }
 
 export default function CandidateLogin({ onSuccess, onNavigateToRegister }: CandidateLoginProps) {
-  const [mobile, setMobile] = useState('');
+  const [mobile, setMobile] = useState(() => localStorage.getItem('candidate_last_mobile') || '');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -51,6 +51,8 @@ export default function CandidateLogin({ onSuccess, onNavigateToRegister }: Cand
         throw new Error(data.error || 'Login failed.');
       }
 
+      // Remember mobile for next login
+      localStorage.setItem('candidate_last_mobile', mobile.trim());
       onSuccess(data.candidate, data.token);
     } catch (err: any) {
       setError(err.message || 'An error occurred during login.');

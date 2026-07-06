@@ -14,7 +14,7 @@ export default function RecruiterLogin({
   onNavigateToRegister,
   onSwitchToCandidate
 }: RecruiterLoginProps) {
-  const [identifier, setIdentifier] = useState('');
+  const [identifier, setIdentifier] = useState(() => localStorage.getItem('recruiter_last_identifier') || '');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -49,6 +49,8 @@ export default function RecruiterLogin({
         throw new Error(data.error || 'Login failed. Please check your credentials.');
       }
 
+      // Remember identifier for next login
+      localStorage.setItem('recruiter_last_identifier', identifier.trim());
       onSuccess(data.recruiter, data.token);
     } catch (err: any) {
       setError(err.message || 'Something went wrong.');
