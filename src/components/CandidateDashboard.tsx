@@ -74,25 +74,36 @@ export default function CandidateDashboard({
   const [appTimeline, setAppTimeline] = React.useState<any[]>([]);
   const [loadingTimeline, setLoadingTimeline] = React.useState(false);
 
+  // Helper: auto-logout on 401 (expired/deleted session)
+  const authFetch = React.useCallback(async (url: string, options: RequestInit = {}) => {
+    const headers: Record<string, string> = {
+      ...(options.headers as Record<string, string> || {}),
+      'Authorization': `Bearer ${token}`,
+      'Cache-Control': 'no-cache, no-store',
+      'Pragma': 'no-cache'
+    };
+    const response = await fetch(url, { ...options, headers, cache: 'no-store' });
+    if (response.status === 401) {
+      onLogout();
+      throw new Error('Session expired. Please log in again.');
+    }
+    return response;
+  }, [token, onLogout]);
+
   React.useEffect(() => {
     if (selectedApp) {
       setLoadingTimeline(true);
-      fetch(`/api/applications/${selectedApp.id}/timeline`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-        .then(res => {
-          if (res.status === 401) { onLogout(); return null; }
-          return res.json();
-        })
+      authFetch(`/api/applications/${selectedApp.id}/timeline`)
+        .then(res => res.json())
         .then(data => {
-          if (data) setAppTimeline(data.timeline || []);
+          setAppTimeline(data.timeline || []);
         })
         .catch(err => console.error('Error fetching timeline:', err))
         .finally(() => setLoadingTimeline(false));
     } else {
       setAppTimeline([]);
     }
-  }, [selectedApp, token, onLogout]);
+  }, [selectedApp, authFetch]);
 
   // Status alerts & Complete verification states
   const [submitError, setSubmitError] = React.useState<string | null>(null);
@@ -115,7 +126,7 @@ export default function CandidateDashboard({
   // Fetch functions
   const fetchJobs = React.useCallback(() => {
     setLoadingJobs(true);
-    fetch('/api/jobs')
+    fetch('/api/jobs', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
         setActiveJobs(data.jobs || []);
@@ -127,50 +138,27 @@ export default function CandidateDashboard({
   const fetchMyApplications = React.useCallback(() => {
     if (!token) return;
     setLoadingApps(true);
-    fetch('/api/applications/my', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-      .then(res => {
-        if (res.status === 401) { onLogout(); return null; }
-        return res.json();
-      })
+    authFetch('/api/applications/my')
+      .then(res => res.json())
       .then(data => {
-        if (data) setMyApplications(data.applications || []);
+        setMyApplications(data.applications || []);
       })
       .catch(err => console.error('Error fetching applications:', err))
       .finally(() => setLoadingApps(false));
-  }, [token, onLogout]);
+  }, [token, authFetch]);
 
   const fetchDocuments = React.useCallback(() => {
     if (!token) return;
     setLoadingDocs(true);
-    fetch('/api/documents', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-      .then(res => {
-        if (res.status === 401) { onLogout(); return null; }
-        return res.json();
-      })
+    authFetch('/api/documents')
+      .then(res => res.json())
       .then(data => {
-        if (data) setDocuments(data.documents || []);
+        setDocuments(data.documents || []);
       })
       .catch(err => console.error('Error fetching documents:', err))
       .finally(() => setLoadingDocs(false));
-  }, [token, onLogout]);
+  }, [token, authFetch]);
 
-  // Helper: auto-logout on 401 (expired/deleted session)
-  const authFetch = React.useCallback(async (url: string, options: RequestInit = {}) => {
-    const headers: Record<string, string> = {
-      ...(options.headers as Record<string, string> || {}),
-      'Authorization': `Bearer ${token}`
-    };
-    const response = await fetch(url, { ...options, headers });
-    if (response.status === 401) {
-      onLogout();
-      throw new Error('Session expired. Please log in again.');
-    }
-    return response;
-  }, [token, onLogout]);
 
   // Load stats & details on mount
   React.useEffect(() => {

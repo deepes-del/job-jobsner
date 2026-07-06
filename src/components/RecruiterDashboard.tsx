@@ -125,9 +125,11 @@ export default function RecruiterDashboard({
   const authFetch = async (url: string, options: RequestInit = {}) => {
     const headers: Record<string, string> = {
       ...(options.headers as Record<string, string> || {}),
-      'Authorization': `Bearer ${token}`
+      'Authorization': `Bearer ${token}`,
+      'Cache-Control': 'no-cache, no-store',
+      'Pragma': 'no-cache'
     };
-    const response = await fetch(url, { ...options, headers });
+    const response = await fetch(url, { ...options, headers, cache: 'no-store' });
     if (response.status === 401) {
       // Session is invalid — auto-logout
       onLogout();

@@ -134,8 +134,11 @@ export default function CandidateDocuments({
 
         // Fetch refreshed document list
         const listRes = await fetch('/api/documents', {
+          cache: 'no-store',
           headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${token}`,
+            'Cache-Control': 'no-cache, no-store',
+            'Pragma': 'no-cache'
           }
         });
         const listData = await listRes.json();
@@ -205,8 +208,11 @@ export default function CandidateDocuments({
 
       // Fetch refreshed document list
       const listRes = await fetch('/api/documents', {
+        cache: 'no-store',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Cache-Control': 'no-cache, no-store',
+          'Pragma': 'no-cache'
         }
       });
       const listData = await listRes.json();

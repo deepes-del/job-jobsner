@@ -40,7 +40,7 @@ export default function App() {
 
   const fetchDbStatus = async () => {
     try {
-      const res = await fetch('/api/database-status');
+      const res = await fetch('/api/database-status', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         setDbStatus(data);
