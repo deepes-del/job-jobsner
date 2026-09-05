@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jobsner - Connecting Careers</title>
+    <link rel="icon" type="image/png" href="/logo.png" />
+    <meta name="description" content="Jobsner logistics and delivery hiring platform connecting fleet owners with certified drivers." />
+    <meta property="og:title" content="Jobsner - Connecting Careers" />
+    <meta property="og:description" content="Jobsner logistics and delivery hiring platform connecting fleet owners with certified drivers." />
+    <meta property="og:image" content="/logo.png" />
+    <script>
+      // Polyfill to make window.fetch writable in sandboxed/iframe environments
+      (function() {
+        try {
+          const originalFetch = window.fetch;
+          if (originalFetch) {
+            let currentFetch = originalFetch;
+            Object.defineProperty(window, 'fetch', {
+              get: function() {
+                return currentFetch;
+              },
+              set: function(val) {
+                currentFetch = val;
+              },
+              configurable: true,
+              enumerable: true
+            });
+          }
+        } catch (e) {
+          console.warn("Jobsner: Unable to redefine window.fetch property:", e);
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

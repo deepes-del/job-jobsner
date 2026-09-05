@@ -1,0 +1,8 @@
+{
+  "name": "Remix Remix Remix Remix Delivery \u0026 Logistics Hiring Platform",
+  "description": "Candidate registration, login, profile setup, and dashboard for logistics job applicants.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
