@@ -16,97 +16,69 @@ const JobsnerLogo: React.FC<JobsnerLogoProps> = ({
   onClick,
   id,
 }) => {
-  /*
-   * ============================================================
-   * JOBSNER LOGO
-   * ============================================================
-   *
-   * IMPORTANT:
-   *
-   * /public/logo.png is the ORIGINAL Jobsner logo image.
-   *
-   * We do NOT:
-   * - recreate the logo
-   * - add JOBSner text
-   * - add Connecting Careers text
-   * - change colors
-   * - crop the image
-   * - modify the image
-   * - add another border
-   * - add another logo
-   *
-   * The uploaded image is displayed exactly as it is.
-   */
-
   const sizeMap = {
     xs: 'w-8 h-8',
-    sm: 'w-10 h-10',
-    md: 'w-14 h-14',
-    lg: 'w-20 h-20',
-    xl: 'w-28 h-28',
+    sm: 'w-12 h-12',
+    md: 'w-20 h-20',
+    lg: 'w-28 h-28',
+    xl: 'w-36 h-36 sm:w-44 sm:h-44',
   };
 
   const sizeClass = sizeMap[size] || sizeMap.md;
-
-  /*
-   * ============================================================
-   * ICON
-   * ============================================================
-   */
 
   if (variant === 'icon') {
     return (
       <img
         id={id}
         src="/logo.png"
-        alt="Jobsner"
+        alt="Jobsner Logo"
         onClick={onClick}
         draggable={false}
         referrerPolicy="no-referrer"
         className={`
           ${sizeClass}
-          object-contain
+          rounded-full
+          object-cover
+          shadow-md
+          border-2
+          border-white/80
+          bg-white
           block
           select-none
-          ${onClick ? 'cursor-pointer hover:opacity-95 transition-opacity' : ''}
+          shrink-0
+          ${onClick ? 'cursor-pointer hover:scale-105 active:scale-95 transition-all' : ''}
           ${className}
         `}
       />
     );
   }
-
-  /*
-   * ============================================================
-   * BADGE
-   * ============================================================
-   */
 
   if (variant === 'badge') {
     return (
       <img
         id={id}
         src="/logo.png"
-        alt="Jobsner"
+        alt="Jobsner Logo"
         onClick={onClick}
         draggable={false}
         referrerPolicy="no-referrer"
         className={`
           ${sizeClass}
-          object-contain
+          rounded-full
+          object-cover
+          shadow-md
+          border-2
+          border-orange-100
+          bg-white
           block
           select-none
-          ${onClick ? 'cursor-pointer hover:opacity-95 transition-opacity' : ''}
+          shrink-0
+          ${onClick ? 'cursor-pointer hover:scale-105 active:scale-95 transition-all' : ''}
           ${className}
         `}
       />
     );
   }
-
-  /*
-   * ============================================================
-   * FULL LOGO
-   * ============================================================
-   */
 
   if (variant === 'full') {
     return (
@@ -118,28 +90,22 @@ const JobsnerLogo: React.FC<JobsnerLogoProps> = ({
         draggable={false}
         referrerPolicy="no-referrer"
         className={`
-          w-48
-          h-48
-          sm:w-56
-          sm:h-56
-          object-contain
+          ${sizeClass}
+          rounded-full
+          object-cover
+          shadow-xl
+          border-4
+          border-white
+          bg-white
           block
           select-none
-          ${onClick ? 'cursor-pointer hover:opacity-95 transition-opacity' : ''}
+          shrink-0
+          ${onClick ? 'cursor-pointer hover:scale-105 active:scale-95 transition-all' : ''}
           ${className}
         `}
       />
     );
   }
-
-  /*
-   * ============================================================
-   * HEADER
-   * ============================================================
-   *
-   * EXACT SAME IMAGE.
-   * Only the size changes.
-   */
 
   return (
     <img
@@ -151,10 +117,15 @@ const JobsnerLogo: React.FC<JobsnerLogoProps> = ({
       referrerPolicy="no-referrer"
       className={`
         ${sizeClass}
-        object-contain
+        rounded-full
+        object-cover
+        shadow-sm
+        border border-gray-200/90
+        bg-white
         block
         select-none
-        ${onClick ? 'cursor-pointer hover:opacity-95 transition-opacity' : ''}
+        shrink-0
+        ${onClick ? 'cursor-pointer hover:scale-105 active:scale-95 transition-all' : ''}
         ${className}
       `}
     />
@@ -162,5 +133,4 @@ const JobsnerLogo: React.FC<JobsnerLogoProps> = ({
 };
 
 export default JobsnerLogo;
-
 export { JobsnerLogo };

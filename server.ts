@@ -36,7 +36,7 @@ import { getAuth as getAdminAuth } from 'firebase-admin/auth';
 
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 8152;
 
 app.use(express.json({ limit: '10mb' })); // Support base64 photos
 
@@ -211,6 +211,18 @@ export function toSupabaseNotificationRow(n: any) {
     job_id: n.job_id || n.jobId || null,
     is_read: !!(n.is_read ?? n.isRead ?? false),
     created_at: n.created_at || n.createdAt || new Date().toISOString()
+  };
+}
+
+export function toSupabaseAllocationRow(a: any) {
+  if (!a) return null;
+  return {
+    applicationId: String(a.applicationId || a.application_id || a.id || ''),
+    allocationStatus: String(a.allocationStatus || a.allocation_status || 'Pending Allocation'),
+    jobId: String(a.jobId || a.job_id || ''),
+    recruiterId: String(a.recruiterId || a.recruiter_id || ''),
+    candidateId: String(a.candidateId || a.candidate_id || ''),
+    allocatedAt: a.allocatedAt || a.allocated_at || new Date().toISOString()
   };
 }
 
@@ -694,6 +706,42 @@ async function getLiveDocuments(): Promise<any[]> {
     console.warn('[Supabase Documents Fetch Warning]', err);
   }
   return db.documents || [];
+}
+
+async function getLiveAllocations(): Promise<any[]> {
+  const db = readDB();
+  db.candidateAllocations = db.candidateAllocations || [];
+  try {
+    if (isSupabaseConfigured()) {
+      const supabase = getSupabase();
+      const { data, error } = await supabase.from('candidateAllocations').select('*');
+      if (!error && data && Array.isArray(data)) {
+        const allocMap = new Map<string, any>();
+        (db.candidateAllocations || []).forEach((a: any) => {
+          const appId = String(a.applicationId || a.application_id || '');
+          if (appId) allocMap.set(appId, a);
+        });
+        data.forEach((a: any) => {
+          const appId = String(a.applicationId || a.application_id || '');
+          if (appId) {
+            allocMap.set(appId, {
+              applicationId: appId,
+              allocationStatus: String(a.allocationStatus || a.allocation_status || 'Pending Allocation'),
+              jobId: String(a.jobId || a.job_id || ''),
+              recruiterId: String(a.recruiterId || a.recruiter_id || ''),
+              candidateId: String(a.candidateId || a.candidate_id || ''),
+              allocatedAt: a.allocatedAt || a.allocated_at || new Date().toISOString()
+            });
+          }
+        });
+        db.candidateAllocations = Array.from(allocMap.values());
+        memoryDB = db;
+      }
+    }
+  } catch (err) {
+    console.warn('[Supabase candidateAllocations Fetch Warning]', err);
+  }
+  return db.candidateAllocations || [];
 }
 
 
@@ -3004,15 +3052,20 @@ app.post('/api/applications/:id/withdraw', authenticateToken, (req, res) => {
   }
 });
 
-// Module 6 - Recruiter Application Management APIs
-
-// 6.1 Get Recruiter Applications (Live from Database)
+// 6.1 Get Recruiter Applications (Live from Database, filtered by Candidate Allocation Engine)
 app.get('/api/recruiter/applications', authenticateRecruiter, async (req, res) => {
   const recruiter = (req as any).recruiter;
   try {
     const allJobs = await getLiveJobs();
     const allApps = await getLiveApplications();
     const allCandidates = await getLiveCandidates();
+    const allAllocations = await getLiveAllocations();
+
+    const visibleAppIds = new Set(
+      allAllocations
+        .filter((al: any) => al.allocationStatus === 'Recruiter Visible')
+        .map((al: any) => String(al.applicationId || al.id))
+    );
 
     const isRecruiterJob = (j: any) => {
       if (!j) return false;
@@ -3027,9 +3080,14 @@ app.get('/api/recruiter/applications', authenticateRecruiter, async (req, res) =
 
     const myJobs = allJobs.filter(isRecruiterJob);
     const myJobIds = myJobs.map((j: any) => String(j.id));
-    const myApps = allApps.filter((app: any) => 
-      myJobIds.includes(String(app.jobId)) || myJobIds.includes(String(app.job_id))
-    );
+    
+    // Filter apps: must belong to recruiter's job AND be allocated as 'Recruiter Visible' (unless admin)
+    const myApps = allApps.filter((app: any) => {
+      const matchesJob = myJobIds.includes(String(app.jobId)) || myJobIds.includes(String(app.job_id));
+      if (!matchesJob) return false;
+      if (recruiter.role === 'admin') return true;
+      return visibleAppIds.has(String(app.id));
+    });
 
     const appMap = new Map<string, any>();
     myApps.forEach((app: any) => {
@@ -3072,6 +3130,7 @@ app.get('/api/recruiter/applications/:id', authenticateRecruiter, async (req, re
     const allJobs = await getLiveJobs();
     const allCandidates = await getLiveCandidates();
     const allDocs = await getLiveDocuments();
+    const allAllocations = await getLiveAllocations();
 
     const application = allApps.find((a: any) => String(a.id) === String(appId));
     if (!application) {
@@ -3090,6 +3149,16 @@ app.get('/api/recruiter/applications/:id', authenticateRecruiter, async (req, re
 
     if (!isOwner) {
       return res.status(403).json({ error: 'Unauthorized to view this application.' });
+    }
+
+    // Candidate Allocation Isolation check: Must be Recruiter Visible
+    if (recruiter.role !== 'admin') {
+      const isVisible = allAllocations.some((al: any) => 
+        String(al.applicationId || al.id) === String(appId) && al.allocationStatus === 'Recruiter Visible'
+      );
+      if (!isVisible) {
+        return res.status(403).json({ error: 'Access restricted: this candidate record is managed exclusively by Admin.' });
+      }
     }
 
     const candidateId = String(application.candidateId || application.candidate_id);
@@ -3721,57 +3790,268 @@ async function initDatabase() {
 
 // --- ADMIN PANEL DIRECT ACCESS ENDPOINTS ---
 
-// Get all recruiters (safely masked)
-app.get('/api/admin/recruiters', (req, res) => {
+// Section 1 & 2: Get all recruiters (safely formatted)
+app.get('/api/admin/recruiters', async (req, res) => {
   try {
-    const db = readDB();
-    const safeRecruiters = (db.recruiters || []).map(({ salt, hash, ...r }: any) => r);
-    res.json(safeRecruiters);
+    const allRecruiters = await getLiveRecruiters();
+    const safeRecruiters = allRecruiters.map(({ salt, hash, ...r }: any) => ({
+      id: String(r.id),
+      companyName: r.companyName || r.company_name || 'Hiring Company',
+      companyLogo: r.companyLogo || r.company_logo || '',
+      companyWebsite: r.companyWebsite || r.company_website || '',
+      recruiterName: r.recruiterName || r.recruiter_name || 'Recruiter',
+      designation: r.designation || 'HR Lead',
+      mobile: r.mobile || '',
+      email: r.email || '',
+      address: r.address || '',
+      city: r.city || '',
+      state: r.state || '',
+      pincode: r.pincode || '',
+      status: r.status || 'Approved',
+      createdAt: r.createdAt || r.created_at || ''
+    }));
+    res.status(200).json(safeRecruiters);
   } catch (err: any) {
+    console.error('[Admin] Error fetching recruiters:', err);
     res.status(500).json({ error: 'Failed to retrieve recruiters' });
   }
 });
 
-// Directly create a recruiter (Approved by default)
-app.post('/api/admin/recruiters', (req, res) => {
-  const { companyName, contactPerson, email, mobile, password } = req.body;
-  if (!companyName || !contactPerson || !email || !mobile || !password) {
-    return res.status(400).json({ error: 'All fields are required to create a recruiter.' });
+// Section 1: Directly register a Fake Recruiter
+app.post('/api/admin/recruiters', async (req, res) => {
+  const { 
+    recruiterName, 
+    mobile, 
+    email, 
+    companyName, 
+    designation, 
+    companyWebsite, 
+    address, 
+    city, 
+    state, 
+    pincode, 
+    companyLogo, 
+    status,
+    password 
+  } = req.body;
+
+  if (!recruiterName || !mobile || !email || !companyName) {
+    return res.status(400).json({ error: 'Recruiter Name, Mobile, Email, and Company Name are required.' });
   }
 
   try {
-    const db = readDB();
-    db.recruiters = db.recruiters || [];
+    const cleanMobile = mobile.trim();
+    const cleanEmail = email.trim().toLowerCase();
+    const allRecruiters = await getLiveRecruiters();
 
-    // Check duplicate email / mobile
-    if (db.recruiters.some((r: any) => r.email.toLowerCase() === email.toLowerCase())) {
+    if (allRecruiters.some((r: any) => String(r.email || '').toLowerCase() === cleanEmail)) {
       return res.status(400).json({ error: 'A recruiter with this email already exists.' });
     }
-    if (db.recruiters.some((r: any) => r.mobile === mobile)) {
+    if (allRecruiters.some((r: any) => String(r.mobile || '') === cleanMobile)) {
       return res.status(400).json({ error: 'A recruiter with this mobile number already exists.' });
     }
 
-    const { salt, hash } = hashPassword(password);
+    const { salt, hash } = hashPassword(password || 'Recruiter2026!');
+    const recruiterId = `rec_${crypto.randomUUID()}`;
+
     const newRecruiter = {
-      id: crypto.randomUUID(),
+      id: recruiterId,
       companyName: companyName.trim(),
-      contactPerson: contactPerson.trim(),
-      email: email.trim().toLowerCase(),
-      mobile: mobile.trim(),
+      companyLogo: companyLogo ? companyLogo.trim() : null,
+      companyWebsite: companyWebsite ? companyWebsite.trim() : null,
+      recruiterName: recruiterName.trim(),
+      designation: designation ? designation.trim() : 'HR Lead',
+      mobile: cleanMobile,
+      email: cleanEmail,
       salt,
       hash,
-      status: 'Approved',
+      address: address ? address.trim() : null,
+      city: city ? city.trim() : null,
+      state: state ? state.trim() : null,
+      pincode: pincode ? pincode.trim() : null,
+      status: status || 'Approved',
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      nickname: recruiterName.trim()
     };
 
-    db.recruiters.push(newRecruiter);
+    // Dual Sync: Supabase & DB
+    if (isSupabaseConfigured()) {
+      try {
+        const row = toSupabaseRecruiterRow(newRecruiter);
+        await safeSupabaseUpsert('recruiters', [row]);
+      } catch (supaErr) {
+        console.warn('[Supabase Admin Recruiter Upsert Warning]', supaErr);
+      }
+    }
+
+    const db = readDB();
+    db.recruiters = db.recruiters || [];
+    db.recruiters.unshift(newRecruiter);
     writeDB(db);
 
     const { salt: _s, hash: _h, ...safeRecruiter } = newRecruiter;
-    res.status(201).json({ message: 'Recruiter added successfully', recruiter: safeRecruiter });
+    res.status(201).json({ message: 'Recruiter registered successfully', recruiter: safeRecruiter });
   } catch (err: any) {
-    res.status(500).json({ error: 'Server error creating recruiter' });
+    console.error('[Admin] Error creating recruiter:', err);
+    res.status(500).json({ error: 'Server error registering recruiter' });
+  }
+});
+
+// Section 2: Get all jobs posted by a specific Recruiter
+app.get('/api/admin/recruiters/:recruiterId/jobs', async (req, res) => {
+  const { recruiterId } = req.params;
+  try {
+    const allJobs = await getLiveJobs();
+    const recruiterJobs = allJobs.filter((j: any) => 
+      String(j.recruiterId || j.recruiter_id) === String(recruiterId)
+    );
+    res.status(200).json({ jobs: recruiterJobs });
+  } catch (err: any) {
+    console.error('[Admin] Error fetching recruiter jobs:', err);
+    res.status(500).json({ error: 'Failed to retrieve jobs for recruiter' });
+  }
+});
+
+// Section 2: Candidate Allocation Engine for a Job
+// Every 3 applicants per Job -> 1 random Recruiter Visible, 2 Admin Only, remainder Pending
+app.get('/api/admin/jobs/:jobId/allocations', async (req, res) => {
+  const { jobId } = req.params;
+  try {
+    const allApps = await getLiveApplications();
+    const allCandidates = await getLiveCandidates();
+    const allJobs = await getLiveJobs();
+    const allAllocations = await getLiveAllocations();
+
+    const job = allJobs.find((j: any) => String(j.id) === String(jobId)) || {};
+    const jobApps = allApps
+      .filter((a: any) => String(a.jobId || a.job_id) === String(jobId) && a.withdrawStatus !== 'Withdrawn')
+      .sort((a: any, b: any) => new Date(a.appliedDate).getTime() - new Date(b.appliedDate).getTime());
+
+    const allocMap = new Map<string, any>();
+    allAllocations.forEach((al: any) => {
+      const appId = String(al.applicationId || al.application_id || '');
+      if (appId) allocMap.set(appId, al);
+    });
+
+    const newlyAllocatedRows: any[] = [];
+    const unallocatedApps: any[] = [];
+
+    jobApps.forEach((app: any) => {
+      const appId = String(app.id);
+      if (!allocMap.has(appId)) {
+        unallocatedApps.push(app);
+      }
+    });
+
+    // Group unallocated applicants in batches of 3
+    const completeGroupCount = Math.floor(unallocatedApps.length / 3);
+    for (let i = 0; i < completeGroupCount; i++) {
+      const group = unallocatedApps.slice(i * 3, (i + 1) * 3);
+      // Pick 1 randomly to be Recruiter Visible
+      const visibleIndex = Math.floor(Math.random() * 3);
+
+      group.forEach((app: any, idx: number) => {
+        const status = idx === visibleIndex ? 'Recruiter Visible' : 'Admin Only';
+        const allocRecord = {
+          applicationId: String(app.id),
+          allocationStatus: status,
+          jobId: String(app.jobId || app.job_id || jobId),
+          recruiterId: String(app.recruiterId || app.recruiter_id || job.recruiterId || ''),
+          candidateId: String(app.candidateId || app.candidate_id || ''),
+          allocatedAt: new Date().toISOString()
+        };
+        allocMap.set(String(app.id), allocRecord);
+        newlyAllocatedRows.push(allocRecord);
+      });
+    }
+
+    // Persist new allocations
+    if (newlyAllocatedRows.length > 0) {
+      const db = readDB();
+      db.candidateAllocations = db.candidateAllocations || [];
+      newlyAllocatedRows.forEach((r) => {
+        const existingIdx = db.candidateAllocations.findIndex((x: any) => String(x.applicationId) === String(r.applicationId));
+        if (existingIdx >= 0) {
+          db.candidateAllocations[existingIdx] = r;
+        } else {
+          db.candidateAllocations.push(r);
+        }
+      });
+      writeDB(db);
+
+      if (isSupabaseConfigured()) {
+        try {
+          const rowsToUpsert = newlyAllocatedRows.map(toSupabaseAllocationRow);
+          await safeSupabaseUpsert('candidateAllocations', rowsToUpsert);
+        } catch (supaErr) {
+          console.warn('[Supabase Candidate Allocation Upsert Warning]', supaErr);
+        }
+      }
+    }
+
+    // Format candidate rows for the Excel Grid
+    const formatRow = (app: any, allocStatus: string) => {
+      const candidateId = String(app.candidateId || app.candidate_id || '');
+      const candidate = allCandidates.find((c: any) => String(c.id) === candidateId) || {};
+      const profile = candidate.profile || {};
+
+      return {
+        id: candidate.id || candidateId,
+        applicationId: String(app.id),
+        fullName: profile.fullName || candidate.fullName || 'Candidate',
+        mobile: candidate.mobile || '',
+        email: candidate.email || '',
+        age: profile.age ?? candidate.age ?? '—',
+        gender: profile.gender || candidate.gender || 'Any',
+        city: profile.city || candidate.city || '—',
+        state: profile.state || candidate.state || '—',
+        pincode: profile.pincode || candidate.pincode || '—',
+        experience: profile.experience !== undefined ? profile.experience : (candidate.experience ?? 0),
+        category: job.category || candidate.recent_category || profile.recentAppliedCategory || 'Delivery Jobs',
+        bikeAvailable: profile.bikeAvailable ?? candidate.bikeAvailable ?? 'No',
+        drivingLicenseAvailable: profile.drivingLicenseAvailable ?? candidate.drivingLicenseAvailable ?? 'No',
+        jobTitle: job.title || 'Unknown Position',
+        appliedDate: app.appliedDate || app.applied_date || new Date().toISOString(),
+        currentStatus: app.currentStatus || app.status || 'Applied',
+        allocationStatus: allocStatus,
+        raw: { app, candidate, job }
+      };
+    };
+
+    const recruiterVisible: any[] = [];
+    const adminOnly: any[] = [];
+    const pending: any[] = [];
+
+    jobApps.forEach((app: any) => {
+      const appId = String(app.id);
+      const alloc = allocMap.get(appId);
+      if (alloc) {
+        if (alloc.allocationStatus === 'Recruiter Visible') {
+          recruiterVisible.push(formatRow(app, 'Recruiter Visible'));
+        } else {
+          adminOnly.push(formatRow(app, 'Admin Only'));
+        }
+      } else {
+        pending.push(formatRow(app, 'Pending Allocation'));
+      }
+    });
+
+    res.status(200).json({
+      recruiterVisible,
+      adminOnly,
+      pending,
+      totalCount: jobApps.length,
+      stats: {
+        total: jobApps.length,
+        visibleCount: recruiterVisible.length,
+        adminOnlyCount: adminOnly.length,
+        pendingCount: pending.length
+      }
+    });
+  } catch (err: any) {
+    console.error('[Admin] Error processing allocations for job:', err);
+    res.status(500).json({ error: 'Server error processing candidate allocations' });
   }
 });
 

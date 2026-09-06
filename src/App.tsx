@@ -7,7 +7,7 @@ import CandidateLogin from './components/CandidateLogin';
 import CandidateDashboard from './components/CandidateDashboard';
 import CandidateProfileEdit from './components/CandidateProfileEdit';
 import CandidateDocuments from './components/CandidateDocuments';
-import AdminPanelModal from './components/AdminPanelModal';
+import AdminPanel from './components/AdminPanel';
 import { logoutFirebase, subscribeToAuthState } from './lib/firebase';
 import JobsnerLogo from './components/JobsnerLogo';
 
@@ -259,16 +259,17 @@ export default function App() {
             onClick={handleLogoClick}
             className="flex items-center gap-3 select-none cursor-pointer group active:scale-95 transition-all" 
             id="navbar-brand"
-            title="Click 5 times to open developer admin panel"
+            title="Click 5 times to open central admin panel"
           >
-            <img 
-              src="/logo.png" 
-              alt="Jobsner - Connecting Careers" 
-              className="h-12 sm:h-14 w-auto object-contain drop-shadow-sm hover:opacity-95 transition-opacity block"
-              referrerPolicy="no-referrer" 
-            />
+            <JobsnerLogo variant="header" size="sm" />
+            <div className="flex flex-col">
+              <span className="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-none group-hover:text-orange-600 transition-colors">
+                JOBS<span className="text-orange-500">NER</span>
+              </span>
+              <span className="text-[9px] font-bold tracking-widest text-slate-400 uppercase">Connecting Careers</span>
+            </div>
             {userRole !== null && (
-              <span className="text-[11px] font-bold text-orange-600 uppercase bg-orange-50 border border-orange-100 px-2.5 py-1 rounded-full tracking-wider shrink-0 hidden xs:inline-block">
+              <span className="text-[11px] font-bold text-orange-600 uppercase bg-orange-50 border border-orange-100 px-2.5 py-1 rounded-full tracking-wider shrink-0 hidden xs:inline-block ml-1">
                 {portal === 'candidate' ? 'Candidate Portal' : 'Recruiter Portal'}
               </span>
             )}
@@ -676,12 +677,11 @@ export default function App() {
       </footer>
 
       {/* Admin Panel Modal */}
-      <AdminPanelModal 
+      <AdminPanel 
         isOpen={isAdminPanelOpen}
         onClose={() => setIsAdminPanelOpen(false)}
         onJobPosted={() => {
           // If candidate is logged in, reload jobs in background
-          // We can dispatch a custom event or let the browser update automatically
           window.dispatchEvent(new Event('refresh-jobs'));
         }}
       />
