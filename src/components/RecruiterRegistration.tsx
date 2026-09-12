@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { Recruiter } from '../types';
 import JobsnerLogo from './JobsnerLogo';
+import { compressImageTo50KB, MAX_IMAGE_SIZE_BYTES } from '../lib/imageCompressor';
 
 interface RecruiterRegistrationProps {
   prefill?: { mobile?: string; email?: string; name?: string } | null;
@@ -24,6 +25,7 @@ export default function RecruiterRegistration({
   const [companyName, setCompanyName] = useState('');
   const [companyLogo, setCompanyLogo] = useState('');
   const [companyWebsite, setCompanyWebsite] = useState('');
+  const [logoUploading, setLogoUploading] = useState(false);
 
   // Recruiter Info
   const [recruiterName, setRecruiterName] = useState(prefill?.name || '');
@@ -50,35 +52,29 @@ export default function RecruiterRegistration({
   // States
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [logoUploading, setLogoUploading] = useState(false);
 
-  // Convert logo file to base64
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Convert and compress logo file to <= 50KB
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       
       // Validation
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
       if (!validTypes.includes(file.type)) {
-        setError('Logo must be a JPG, JPEG, or PNG image.');
-        return;
-      }
-      if (file.size > 2 * 1024 * 1024) {
-        setError('Logo size should be under 2MB.');
+        setError('Logo must be a JPG, JPEG, PNG, or WEBP image.');
         return;
       }
 
       setLogoUploading(true);
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setCompanyLogo(event.target?.result as string);
+      setError(null);
+      try {
+        const compressed = await compressImageTo50KB(file, MAX_IMAGE_SIZE_BYTES);
+        setCompanyLogo(compressed.dataUrl);
+      } catch (err: any) {
+        setError(err.message || 'Failed to compress logo image.');
+      } finally {
         setLogoUploading(false);
-      };
-      reader.onerror = () => {
-        setError('Failed to load logo image.');
-        setLogoUploading(false);
-      };
-      reader.readAsDataURL(file);
+      }
     }
   };
 
@@ -305,7 +301,7 @@ export default function RecruiterRegistration({
                     {logoUploading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
                     {companyLogo ? 'Change Logo' : 'Upload Corporate Logo'}
                   </button>
-                  <p className="text-[10px] text-gray-400 mt-1.5">Supports JPG, JPEG, or PNG. Maximum size 2MB.</p>
+                  <p className="text-[10px] text-gray-400 mt-1.5">Auto-compressed to ≤ 50KB (JPG, JPEG, PNG). Visible to all candidates.</p>
                 </div>
               </div>
             </div>

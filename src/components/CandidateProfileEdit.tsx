@@ -27,6 +27,7 @@ import {
   Save
 } from 'lucide-react';
 import { Profile, Candidate } from '../types';
+import { compressImageTo50KB, formatByteSize, getBase64ByteSize, MAX_IMAGE_SIZE_BYTES } from '../lib/imageCompressor';
 
 interface CandidateProfileEditProps {
   initialProfile: Profile;
@@ -195,48 +196,60 @@ export default function CandidateProfileEdit({
     setUploadingDoc(type);
     setError(null);
     try {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const base64Content = reader.result as string;
-        const res = await fetch('/api/documents', {
-          method: 'POST',
+      let fileContentToUpload = '';
+      let effectiveFileName = file.name;
+
+      if (type === 'photo') {
+        // Compress photo to strictly under 50KB
+        const compressed = await compressImageTo50KB(file, MAX_IMAGE_SIZE_BYTES);
+        fileContentToUpload = compressed.dataUrl;
+        effectiveFileName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
+      } else {
+        fileContentToUpload = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = (err) => reject(err);
+          reader.readAsDataURL(file);
+        });
+      }
+
+      const res = await fetch('/api/documents', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          documentType: type,
+          fileName: effectiveFileName,
+          fileContent: fileContentToUpload
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to upload document');
+      }
+
+      if (type === 'resume') {
+        setResumeFileName(file.name);
+      }
+
+      if (type === 'photo' && data.document?.fileUrl) {
+        setProfilePhoto(data.document.fileUrl);
+        // Auto sync photo to profile
+        fetch('/api/profile', {
+          method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify({
-            documentType: type,
-            fileName: file.name,
-            fileContent: base64Content
-          })
+          body: JSON.stringify({ fullName, profilePhoto: data.document.fileUrl })
         });
+      }
 
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || 'Failed to upload document');
-        }
-
-        if (type === 'resume') {
-          setResumeFileName(file.name);
-        }
-
-        if (type === 'photo' && data.document?.fileUrl) {
-          setProfilePhoto(data.document.fileUrl);
-          // Auto sync photo to profile
-          fetch('/api/profile', {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ fullName, profilePhoto: data.document.fileUrl })
-          });
-        }
-
-        setSuccessMsg(`${type === 'resume' ? 'Resume' : 'Profile Photo'} uploaded successfully!`);
-        setTimeout(() => setSuccessMsg(null), 3000);
-      };
-      reader.readAsDataURL(file);
+      setSuccessMsg(`${type === 'resume' ? 'Resume' : 'Profile Photo (under 50KB)'} uploaded successfully!`);
+      setTimeout(() => setSuccessMsg(null), 3000);
     } catch (err: any) {
       setError(err.message || 'File upload failed');
     } finally {
@@ -586,7 +599,9 @@ export default function CandidateProfileEdit({
                   </div>
                   <div className="overflow-hidden">
                     <span className="text-xs font-bold text-slate-900 block truncate">Profile Photo</span>
-                    <span className="text-[10px] text-slate-500 block truncate">{profilePhoto ? 'Photo Attached' : 'JPEG or PNG'}</span>
+                    <span className="text-[10px] text-slate-500 block truncate">
+                      {profilePhoto ? (profilePhoto.startsWith('data:') ? `Attached (${formatByteSize(getBase64ByteSize(profilePhoto))}) • ≤50KB` : 'Attached • ≤50KB') : 'Max 50KB • Auto-compressed'}
+                    </span>
                   </div>
                 </div>
                 <div>

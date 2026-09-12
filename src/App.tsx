@@ -18,8 +18,25 @@ import RecruiterDashboard from './components/RecruiterDashboard';
 
 export default function App() {
   const [initialLoading, setInitialLoading] = useState(true);
-  const [userRole, setUserRole] = useState<'candidate' | 'recruiter' | null>(null);
-  const [portal, setPortal] = useState<'candidate' | 'recruiter'>('candidate');
+  const [userRole, setUserRole] = useState<'candidate' | 'recruiter' | null>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        if (localStorage.getItem('delivery_hiring_token')) return 'candidate';
+        if (localStorage.getItem('recruiter_hiring_token')) return 'recruiter';
+      }
+    } catch {}
+    return null;
+  });
+  const [portal, setPortal] = useState<'candidate' | 'recruiter'>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        if (localStorage.getItem('recruiter_hiring_token') && !localStorage.getItem('delivery_hiring_token')) {
+          return 'recruiter';
+        }
+      }
+    } catch {}
+    return 'candidate';
+  });
 
   // Admin / Logo click triggers
   const [logoClickCount, setLogoClickCount] = useState(0);
@@ -66,6 +83,7 @@ export default function App() {
 
   // Restore session tokens on mount
   useEffect(() => {
+    let isSyncingFirebaseAuth = false;
     const savedToken = localStorage.getItem('delivery_hiring_token');
     const savedRecruiterToken = localStorage.getItem('recruiter_hiring_token');
 
@@ -92,7 +110,7 @@ export default function App() {
             setPortal('candidate');
             setUserRole('candidate');
             return true;
-          } else {
+          } else if (res.status === 401 || res.status === 403) {
             localStorage.removeItem('delivery_hiring_token');
           }
         } catch (err) {
@@ -118,7 +136,7 @@ export default function App() {
             setPortal('recruiter');
             setUserRole('recruiter');
             return true;
-          } else {
+          } else if (res.status === 401 || res.status === 403) {
             localStorage.removeItem('recruiter_hiring_token');
           }
         } catch (err) {
@@ -132,20 +150,24 @@ export default function App() {
       await fetchDbStatus();
       const candidateRestored = await checkCandidate();
       if (!candidateRestored) {
-        await checkRecruiter();
+        const recruiterRestored = await checkRecruiter();
+        if (!recruiterRestored) {
+          setUserRole(null);
+        }
       }
       setInitialLoading(false);
     };
 
     restoreAll();
 
-    // Firebase Auth State Listener
+    // Firebase Auth State Listener (Guard against repeated auto-sync loops)
     const unsubscribe = subscribeToAuthState(async (firebaseUser) => {
-      if (firebaseUser) {
-        const savedToken = localStorage.getItem('delivery_hiring_token');
-        const savedRecruiterToken = localStorage.getItem('recruiter_hiring_token');
+      if (firebaseUser && !isSyncingFirebaseAuth) {
+        const currentCandToken = localStorage.getItem('delivery_hiring_token');
+        const currentRecToken = localStorage.getItem('recruiter_hiring_token');
 
-        if (!savedToken && !savedRecruiterToken) {
+        if (!currentCandToken && !currentRecToken) {
+          isSyncingFirebaseAuth = true;
           try {
             const idToken = await firebaseUser.getIdToken();
             const res = await fetch('/api/firebase-auth', {
@@ -168,9 +190,13 @@ export default function App() {
               } else if (data.role === 'recruiter') {
                 handleRecruiterAuthSuccess(data.recruiter, data.token);
               }
+            } else {
+              console.warn('[Firebase Auth Auto Sync Notice] Status:', res.status);
             }
           } catch (err) {
             console.error('[Firebase Auth Auto Sync Error]', err);
+          } finally {
+            isSyncingFirebaseAuth = false;
           }
         }
       }

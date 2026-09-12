@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Building2, User, MapPin, Mail, Phone, LogOut, CheckCircle, 
@@ -7,9 +7,14 @@ import {
   Upload, Globe, Trash2, Edit2, Check, RefreshCw, X, Plus, Truck,
   Eye, Copy, Search, Filter, Calendar, FileMinus, MessageSquare,
   ShieldCheck, CheckCircle2, ExternalLink, PhoneCall, FileCheck,
-  FolderOpen, ChevronDown, ChevronUp, Sparkles, Lock, CheckCheck
+  FolderOpen, ChevronDown, ChevronUp, Sparkles, Lock, CheckCheck,
+  Bell
 } from 'lucide-react';
 import { Recruiter } from '../types';
+import NotificationPermissionBanner from './NotificationPermissionBanner';
+import { playNotificationChime, showSystemNotification } from '../lib/webPush';
+import { getSupabase } from '../lib/supabase';
+import { compressImageTo50KB, formatByteSize, getBase64ByteSize, MAX_IMAGE_SIZE_BYTES } from '../lib/imageCompressor';
 import { 
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, 
   CartesianGrid, Tooltip, BarChart, Bar, Cell, Legend
@@ -49,6 +54,10 @@ export default function RecruiterDashboard({
   const [pincode, setPincode] = useState(recruiter.pincode);
   const [logoUploading, setLogoUploading] = useState(false);
   const [approving, setApproving] = useState(false);
+
+  // Job-specific company logo upload
+  const [jobCompanyLogo, setJobCompanyLogo] = useState('');
+  const [jobLogoUploading, setJobLogoUploading] = useState(false);
 
   // Jobs management states
   const [jobs, setJobs] = useState<any[]>([]);
@@ -130,6 +139,12 @@ export default function RecruiterDashboard({
   const [filterStatus, setFilterStatus] = useState<string>('All'); // 'All' | 'Active' | 'Draft' | 'Closed' | 'Published'
   const [searchTitle, setSearchTitle] = useState<string>('');
   const [searchCity, setSearchCity] = useState<string>('');
+
+  // Recruiter Candidate Allocation Notifications
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadNotifCount, setUnreadNotifCount] = useState(0);
+  const [showNotifDrawer, setShowNotifDrawer] = useState(false);
+  const [loadingNotifs, setLoadingNotifs] = useState(false);
 
   const fetchApplications = async () => {
     setLoadingApps(true);
@@ -387,10 +402,134 @@ export default function RecruiterDashboard({
     }
   };
 
+  const fetchNotifications = async () => {
+    try {
+      setLoadingNotifs(true);
+      const res = await fetch(`/api/recruiter/notifications?recruiterId=${recruiter.id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(data.notifications || []);
+        setUnreadNotifCount(data.unreadCount || 0);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch recruiter notifications', err);
+    } finally {
+      setLoadingNotifs(false);
+    }
+  };
+
+  const handleMarkNotifAsRead = async (notifId: string) => {
+    try {
+      setNotifications((prev) => 
+        prev.map((n) => n.id === notifId ? { ...n, isRead: true, is_read: true } : n)
+      );
+      setUnreadNotifCount((prev) => Math.max(0, prev - 1));
+      await fetch(`/api/recruiter/notifications/${notifId}/read`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    } catch (err) {
+      console.warn('Failed to mark notification as read', err);
+    }
+  };
+
+  const handleMarkAllNotifsAsRead = async () => {
+    try {
+      setNotifications((prev) => 
+        prev.map((n) => ({ ...n, isRead: true, is_read: true }))
+      );
+      setUnreadNotifCount(0);
+      await fetch('/api/recruiter/notifications/read-all', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ recruiterId: recruiter.id })
+      });
+    } catch (err) {
+      console.warn('Failed to mark all notifications as read', err);
+    }
+  };
+
+  const handleSelectCandidateFromNotif = (notif: any) => {
+    handleMarkNotifAsRead(notif.id);
+    setShowNotifDrawer(false);
+    setActiveTab('applications');
+    if (notif.applicationId) {
+      fetchAppDetail(notif.applicationId);
+      setSelectedAppId(notif.applicationId);
+    }
+  };
+
   React.useEffect(() => {
     fetchJobs();
     fetchApplications();
-  }, []);
+    fetchNotifications();
+
+    // Regular polling fallback every 20 seconds
+    const intervalId = setInterval(() => {
+      fetchNotifications();
+    }, 20000);
+
+    // Supabase Realtime broadcast listener for instant push alerts
+    let supaChannel: any = null;
+    try {
+      const supa = getSupabase();
+      supaChannel = supa
+        .channel('jobsner_realtime')
+        .on('broadcast', { event: 'recruiter_notification' }, (payloadObj: any) => {
+          const payload = payloadObj.payload;
+          if (!payload) return;
+          if (!payload.recruiterId || String(payload.recruiterId) === String(recruiter.id)) {
+            // Play audio chime
+            playNotificationChime();
+
+            // Native OS pop-up alert
+            showSystemNotification({
+              title: payload.title || '👤 New Candidate Allocated!',
+              message: payload.message || 'A candidate profile is now visible to you in Jobsner.',
+              icon: '/jobsner-logo.png',
+              tag: `rec-notif-${payload.candidateId || Date.now()}`
+            });
+
+            // Update state
+            setNotifications((prev) => [payload, ...prev.filter((n) => n.id !== payload.id)]);
+            setUnreadNotifCount((prev) => prev + 1);
+          }
+        })
+        .on('broadcast', { event: 'notification' }, (payloadObj: any) => {
+          const payload = payloadObj.payload;
+          if (payload && payload.type === 'RECRUITER_ALLOCATED') {
+            if (!payload.recipientId || String(payload.recipientId) === String(recruiter.id)) {
+              playNotificationChime();
+              showSystemNotification({
+                title: payload.title,
+                message: payload.message,
+                icon: '/jobsner-logo.png',
+                tag: `notif-${payload.candidateId || Date.now()}`
+              });
+              fetchNotifications();
+            }
+          }
+        })
+        .subscribe();
+    } catch (err) {
+      console.warn('[Realtime Subscription Warning]', err);
+    }
+
+    return () => {
+      clearInterval(intervalId);
+      if (supaChannel) {
+        try {
+          const supa = getSupabase();
+          supa.removeChannel(supaChannel);
+        } catch (e) {}
+      }
+    };
+  }, [recruiter.id, token]);
 
   const handleJobSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -458,7 +597,8 @@ export default function RecruiterDashboard({
       description: jobDescription.trim(),
       responsibilities: jobResponsibilities.trim(),
       benefits: jobBenefits.trim(),
-      status: editingJob ? editingJob.status : submitStatus // either 'Draft' or 'Published'
+      status: editingJob ? editingJob.status : submitStatus, // either 'Draft' or 'Published'
+      companyLogo: jobCompanyLogo || recruiter.companyLogo || ''
     };
 
     try {
@@ -510,6 +650,7 @@ export default function RecruiterDashboard({
       setJobDescription('');
       setJobResponsibilities('');
       setJobBenefits('');
+      setJobCompanyLogo('');
       
       // Refresh list
       fetchJobs();
@@ -612,6 +753,7 @@ export default function RecruiterDashboard({
     setJobDescription(job.description || '');
     setJobResponsibilities(job.responsibilities || '');
     setJobBenefits(job.benefits || '');
+    setJobCompanyLogo(job.companyLogo || job.company_logo || recruiter.companyLogo || '');
     
     setShowJobForm(true);
     setSuccess('Job details duplicated! Review and publish/save below.');
@@ -647,6 +789,7 @@ export default function RecruiterDashboard({
     setJobDescription(job.description || '');
     setJobResponsibilities(job.responsibilities || '');
     setJobBenefits(job.benefits || '');
+    setJobCompanyLogo(job.companyLogo || job.company_logo || recruiter.companyLogo || '');
     
     setShowJobForm(true);
   };
@@ -674,31 +817,48 @@ export default function RecruiterDashboard({
     }
   };
 
-  // Handle Logo Upload in profile edit
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle Logo Upload in profile edit (strictly <= 50KB)
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
       if (!validTypes.includes(file.type)) {
-        setError('Logo must be a JPG, JPEG, or PNG image.');
-        return;
-      }
-      if (file.size > 2 * 1024 * 1024) {
-        setError('Logo size should be under 2MB.');
+        setError('Logo must be a JPG, JPEG, PNG, or WEBP image.');
         return;
       }
 
       setLogoUploading(true);
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setCompanyLogo(event.target?.result as string);
+      setError(null);
+      try {
+        const compressed = await compressImageTo50KB(file, MAX_IMAGE_SIZE_BYTES);
+        setCompanyLogo(compressed.dataUrl);
+      } catch (err: any) {
+        setError(err.message || 'Failed to compress corporate logo.');
+      } finally {
         setLogoUploading(false);
-      };
-      reader.onerror = () => {
-        setError('Failed to load logo image.');
-        setLogoUploading(false);
-      };
-      reader.readAsDataURL(file);
+      }
+    }
+  };
+
+  // Handle Job-Specific Company Logo Upload (strictly <= 50KB, auto-compressed)
+  const handleJobLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        setError('Company logo must be a JPG, JPEG, PNG, or WEBP image.');
+        return;
+      }
+      setJobLogoUploading(true);
+      setError(null);
+      try {
+        const compressed = await compressImageTo50KB(file, MAX_IMAGE_SIZE_BYTES);
+        setJobCompanyLogo(compressed.dataUrl);
+      } catch (err: any) {
+        setError(err.message || 'Failed to compress company logo for job post.');
+      } finally {
+        setJobLogoUploading(false);
+      }
     }
   };
 
@@ -913,81 +1073,143 @@ export default function RecruiterDashboard({
 
   // --- RENDER APPROVED DASHBOARD ---
   return (
-    <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row gap-8" id="recruiter-approved-dashboard">
-      
-      {/* Sidebar Controls (Responsive Desktop Panel) */}
-      <aside className="w-full lg:w-64 shrink-0" id="recruiter-dashboard-sidebar">
-        <div className="bg-white border border-gray-150 rounded-2xl p-5 space-y-6 sticky top-24 shadow-sm">
+    <div className="w-full space-y-4">
+      {/* Native Browser Notification Permission Prompt */}
+      <NotificationPermissionBanner recruiterName={recruiter.recruiterName || recruiter.companyName} />
+
+      <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row gap-8" id="recruiter-approved-dashboard">
+        
+        {/* Sidebar Controls (Responsive Desktop Panel) */}
+        <aside className="w-full lg:w-64 shrink-0" id="recruiter-dashboard-sidebar">
+          <div className="bg-white border border-gray-150 rounded-2xl p-5 space-y-5 sticky top-24 shadow-sm">
+            
+            {/* Header info */}
+            <div className="flex items-center gap-3">
+              {recruiter.companyLogo ? (
+                <div className="w-12 h-12 rounded-xl border border-gray-200 overflow-hidden bg-gray-50 shrink-0">
+                  <img src={recruiter.companyLogo} alt={recruiter.companyName} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                </div>
+              ) : (
+                <div className="w-12 h-12 bg-orange-50 border border-orange-100 rounded-xl flex items-center justify-center text-orange-600 shrink-0">
+                  <Building2 className="w-6 h-6" />
+                </div>
+              )}
+              <div className="truncate">
+                <h4 className="font-bold text-gray-900 text-xs leading-tight truncate">{recruiter.companyName}</h4>
+                <p className="text-[10px] text-gray-400 truncate mt-0.5">{recruiter.recruiterName}</p>
+              </div>
+            </div>
+
+            {/* Candidate Allocation Alerts Quick Sidebar Trigger */}
+            <button
+              onClick={() => setShowNotifDrawer(true)}
+              className="w-full py-2.5 px-3.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between cursor-pointer bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-transparent border border-orange-500/20 text-orange-800 hover:bg-orange-500/20 hover:border-orange-500/40 shadow-xs"
+            >
+              <span className="flex items-center gap-2.5">
+                <span className="relative flex h-2.5 w-2.5">
+                  {unreadNotifCount > 0 && (
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-500 opacity-75"></span>
+                  )}
+                  <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${unreadNotifCount > 0 ? 'bg-orange-600' : 'bg-gray-400'}`}></span>
+                </span>
+                <Bell className="w-4 h-4 text-orange-600 shrink-0" />
+                <span>Candidate Alerts</span>
+              </span>
+              {unreadNotifCount > 0 ? (
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-extrabold bg-orange-600 text-white animate-pulse">
+                  {unreadNotifCount} NEW
+                </span>
+              ) : (
+                <span className="text-[10px] text-gray-400 font-medium">
+                  {notifications.length}
+                </span>
+              )}
+            </button>
+
+            {/* Navigation link array */}
+            <nav className="space-y-1.5">
+              {[
+                { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+                { id: 'profile', label: 'Company Profile', icon: Building2 },
+                { id: 'jobs', label: 'Jobs', icon: Briefcase, badge: jobs.length ? String(jobs.length) : undefined },
+                { id: 'applications', label: 'Applications', icon: FileText, badge: applications.length ? String(applications.length) : undefined },
+                { id: 'settings', label: 'Settings', icon: Settings, badge: 'Soon' },
+              ].map((item) => {
+                const IconComp = item.icon;
+                const active = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id as TabType)}
+                    className={`w-full py-2.5 px-3.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
+                      active 
+                        ? 'bg-orange-600 text-white shadow-md shadow-orange-600/10' 
+                        : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <IconComp className="w-4 h-4 shrink-0" />
+                      <span>{item.label}</span>
+                    </span>
+                    {item.badge && (
+                      <span className={`text-[9px] px-1.5 py-0.2 rounded-md font-extrabold tracking-wider uppercase ${
+                        active ? 'bg-orange-700 text-white' : 'bg-gray-100 text-gray-500'
+                      }`}>
+                        {item.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
+
+            {/* Quick Sign Out */}
+            <div className="pt-4 border-t border-gray-100">
+              <button
+                onClick={onLogout}
+                className="w-full py-2.5 px-3.5 rounded-xl text-xs font-bold text-red-500 hover:bg-red-50 transition-all flex items-center gap-2.5 cursor-pointer"
+              >
+                <LogOut className="w-4 h-4 text-red-500" /> Sign Out
+              </button>
+            </div>
+
+          </div>
+        </aside>
+
+        {/* Main Tab Content Panel */}
+        <main className="flex-1" id="recruiter-dashboard-content-panel">
           
-          {/* Header info */}
-          <div className="flex items-center gap-3">
-            {recruiter.companyLogo ? (
-              <div className="w-12 h-12 rounded-xl border border-gray-200 overflow-hidden bg-gray-50 shrink-0">
-                <img src={recruiter.companyLogo} alt={recruiter.companyName} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
-              </div>
-            ) : (
-              <div className="w-12 h-12 bg-orange-50 border border-orange-100 rounded-xl flex items-center justify-center text-orange-600 shrink-0">
-                <Building2 className="w-6 h-6" />
-              </div>
-            )}
-            <div className="truncate">
-              <h4 className="font-bold text-gray-900 text-xs leading-tight truncate">{recruiter.companyName}</h4>
-              <p className="text-[10px] text-gray-400 truncate mt-0.5">{recruiter.recruiterName}</p>
+          {/* Top Live Recruiter Status Bar with Notification Bell */}
+          <div className="bg-white border border-gray-150 rounded-2xl p-3.5 px-4 mb-6 flex items-center justify-between shadow-xs">
+            <div className="flex items-center gap-2.5">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                Recruiter Verified Hub
+              </span>
+              <span className="text-xs text-gray-400 hidden sm:inline">•</span>
+              <span className="text-xs text-gray-500 hidden sm:inline">
+                Admin-allocated candidates appear here instantly
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowNotifDrawer(true)}
+                className="relative p-2 px-3 rounded-xl border border-gray-200 hover:border-orange-500/50 hover:bg-orange-50/60 text-gray-700 hover:text-orange-700 transition-all cursor-pointer flex items-center gap-2 text-xs font-bold"
+                title="View Candidate Alerts"
+              >
+                <Bell className="w-4 h-4 text-orange-600" />
+                <span className="hidden md:inline">Candidate Alerts</span>
+                {unreadNotifCount > 0 ? (
+                  <span className="bg-orange-600 text-white text-[10px] font-extrabold px-1.5 py-0.2 rounded-full animate-bounce">
+                    {unreadNotifCount}
+                  </span>
+                ) : (
+                  <span className="text-gray-400 text-[10px] font-medium">({notifications.length})</span>
+                )}
+              </button>
             </div>
           </div>
-
-          {/* Navigation link array */}
-          <nav className="space-y-1.5">
-            {[
-              { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-              { id: 'profile', label: 'Company Profile', icon: Building2 },
-              { id: 'jobs', label: 'Jobs', icon: Briefcase, badge: jobs.length ? String(jobs.length) : undefined },
-              { id: 'applications', label: 'Applications', icon: FileText, badge: applications.length ? String(applications.length) : undefined },
-              { id: 'settings', label: 'Settings', icon: Settings, badge: 'Soon' },
-            ].map((item) => {
-              const IconComp = item.icon;
-              const active = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id as TabType)}
-                  className={`w-full py-2.5 px-3.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
-                    active 
-                      ? 'bg-orange-600 text-white shadow-md shadow-orange-600/10' 
-                      : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
-                >
-                  <span className="flex items-center gap-2.5">
-                    <IconComp className="w-4 h-4 shrink-0" />
-                    <span>{item.label}</span>
-                  </span>
-                  {item.badge && (
-                    <span className={`text-[9px] px-1.5 py-0.2 rounded-md font-extrabold tracking-wider uppercase ${
-                      active ? 'bg-orange-700 text-white' : 'bg-gray-100 text-gray-500'
-                    }`}>
-                      {item.badge}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </nav>
-
-          {/* Quick Sign Out */}
-          <div className="pt-4 border-t border-gray-100">
-            <button
-              onClick={onLogout}
-              className="w-full py-2.5 px-3.5 rounded-xl text-xs font-bold text-red-500 hover:bg-red-50 transition-all flex items-center gap-2.5 cursor-pointer"
-            >
-              <LogOut className="w-4 h-4 text-red-500" /> Sign Out
-            </button>
-          </div>
-
-        </div>
-      </aside>
-
-      {/* Main Tab Content Panel */}
-      <main className="flex-1" id="recruiter-dashboard-content-panel">
         
         {/* Banner Alert Messages */}
         <AnimatePresence mode="wait">
@@ -1286,7 +1508,9 @@ export default function RecruiterDashboard({
                           {logoUploading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
                           {companyLogo ? 'Replace Logo' : 'Upload Corporate Logo'}
                         </button>
-                        <p className="text-[10px] text-gray-400 mt-1.5">Supports JPG, JPEG, or PNG. Maximum size 2MB.</p>
+                        <p className="text-[10px] text-gray-400 mt-1.5">
+                          Auto-compressed to ≤ 50KB (JPG, JPEG, PNG). {companyLogo && `Current: ${companyLogo.startsWith('data:') ? formatByteSize(getBase64ByteSize(companyLogo)) : '≤50KB'}. `}Visible to all candidates across all active job postings.
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -1718,6 +1942,74 @@ export default function RecruiterDashboard({
                             </select>
                           </div>
                         </div>
+
+                        {/* Job-Specific Company Logo Upload */}
+                        <div className="md:col-span-2">
+                          <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                            Job Company Logo <span className="text-gray-400 font-normal normal-case">(Optional — ≤ 50KB, shown to candidates)</span>
+                          </label>
+                          <div className="flex items-start gap-4">
+                            {/* Preview */}
+                            <div className="w-16 h-16 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+                              {jobCompanyLogo ? (
+                                <img
+                                  src={jobCompanyLogo}
+                                  alt="Job company logo"
+                                  className="w-full h-full object-contain p-1"
+                                  referrerPolicy="no-referrer"
+                                />
+                              ) : recruiter.companyLogo ? (
+                                <img
+                                  src={recruiter.companyLogo}
+                                  alt={recruiter.companyName}
+                                  className="w-full h-full object-contain p-1 opacity-40"
+                                  referrerPolicy="no-referrer"
+                                  title="Profile logo (auto-used if no custom logo uploaded)"
+                                />
+                              ) : (
+                                <Building2 className="w-6 h-6 text-gray-300" />
+                              )}
+                            </div>
+
+                            <div className="flex-1 space-y-2">
+                              <label
+                                htmlFor="job-logo-upload"
+                                className={`inline-flex items-center gap-2 py-2 px-4 rounded-xl text-xs font-bold cursor-pointer transition-all border ${
+                                  jobLogoUploading
+                                    ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+                                    : 'bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100'
+                                }`}
+                              >
+                                <Upload className="w-3.5 h-3.5" />
+                                {jobLogoUploading ? 'Compressing...' : jobCompanyLogo ? 'Replace Logo' : 'Upload Logo for this Job'}
+                              </label>
+                              <input
+                                id="job-logo-upload"
+                                type="file"
+                                accept="image/jpeg,image/jpg,image/png,image/webp"
+                                className="hidden"
+                                disabled={jobLogoUploading}
+                                onChange={handleJobLogoUpload}
+                              />
+                              {jobCompanyLogo && (
+                                <button
+                                  type="button"
+                                  onClick={() => setJobCompanyLogo('')}
+                                  className="flex items-center gap-1 text-[11px] text-red-500 hover:text-red-700 font-bold cursor-pointer"
+                                >
+                                  <X className="w-3 h-3" /> Remove custom logo
+                                </button>
+                              )}
+                              <p className="text-[10px] text-gray-400 leading-relaxed">
+                                {jobCompanyLogo
+                                  ? `✓ Custom logo uploaded (auto-compressed ≤ 50KB). Shown on this job post.`
+                                  : recruiter.companyLogo
+                                  ? 'Your profile logo will be used automatically. Upload a custom one for this specific job if needed.'
+                                  : 'Upload a JPG, PNG or WEBP image ≤ 50KB. Will be auto-compressed. Shown to candidates browsing this job.'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
@@ -2115,6 +2407,18 @@ export default function RecruiterDashboard({
                             
                             <div className="space-y-2">
                               <div className="flex items-center gap-2.5 flex-wrap">
+                                {/* Company logo beside job title */}
+                                {(job.companyLogo || job.company_logo) && (
+                                  <div className="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center overflow-hidden shrink-0">
+                                    <img
+                                      src={job.companyLogo || job.company_logo}
+                                      alt={job.companyName || recruiter.companyName}
+                                      className="w-full h-full object-contain p-0.5"
+                                      referrerPolicy="no-referrer"
+                                      onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
+                                    />
+                                  </div>
+                                )}
                                 <h4 className="font-black text-gray-900 text-sm tracking-tight">{job.title}</h4>
                                 <span className={`text-[9px] px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wide border ${
                                   job.status === 'Published' || job.status === 'Active'
@@ -2953,6 +3257,211 @@ export default function RecruiterDashboard({
           </div>
         </div>
       )}
+
+      </div>
+
+      {/* Slide-over Candidate Allocation Notification Drawer */}
+      <AnimatePresence>
+        {showNotifDrawer && (
+          <React.Fragment>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowNotifDrawer(false)}
+              className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 transition-opacity"
+            />
+
+            {/* Slide-out Panel */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+              className="fixed inset-y-0 right-0 max-w-lg w-full bg-white shadow-2xl z-50 flex flex-col border-l border-gray-200"
+            >
+              {/* Drawer Header */}
+              <div className="p-5 border-b border-gray-150 flex items-center justify-between bg-gray-50/80">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-600 shrink-0">
+                    <Bell className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
+                      Candidate Alerts
+                      {unreadNotifCount > 0 && (
+                        <span className="px-2 py-0.5 rounded-full bg-orange-600 text-white text-[10px] font-bold animate-pulse">
+                          {unreadNotifCount} unread
+                        </span>
+                      )}
+                    </h3>
+                    <p className="text-[11px] text-gray-500">Recruiter-visible candidate allocations</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {unreadNotifCount > 0 && (
+                    <button
+                      onClick={handleMarkAllNotifsAsRead}
+                      className="text-xs text-orange-600 hover:text-orange-700 font-semibold px-2 py-1 rounded hover:bg-orange-50 transition-colors cursor-pointer"
+                    >
+                      Mark all read
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowNotifDrawer(false)}
+                    className="p-2 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Drawer Content */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                {loadingNotifs && notifications.length === 0 ? (
+                  <div className="text-center py-12 text-gray-400 text-xs">
+                    <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-orange-500" />
+                    Loading alerts...
+                  </div>
+                ) : notifications.length === 0 ? (
+                  <div className="text-center py-16 px-4">
+                    <div className="w-14 h-14 bg-orange-50 border border-orange-100 rounded-2xl flex items-center justify-center text-orange-500 mx-auto mb-3">
+                      <User className="w-7 h-7" />
+                    </div>
+                    <h4 className="font-bold text-gray-800 text-sm mb-1">No candidate alerts yet</h4>
+                    <p className="text-xs text-gray-500 max-w-xs mx-auto">
+                      When candidates are allocated as "Recruiter Visible" in the Admin Panel, real-time pop-up alerts with complete candidate details will appear here.
+                    </p>
+                  </div>
+                ) : (
+                  notifications.map((n) => {
+                    const isUnread = !n.isRead && !n.is_read;
+                    const details = n.candidateDetails || {};
+                    const candName = n.candidateName || details.fullName || 'Candidate';
+                    const candPhoto = n.candidateProfilePhoto || details.candidateProfilePhoto || details.profilePhoto || details.photoUrl;
+                    const mobile = n.candidateMobile || details.mobile || '';
+                    const city = n.candidateCity || details.city || '';
+                    const jobTitle = details.jobTitle || 'Delivery Job';
+                    const exp = details.experience !== undefined ? `${details.experience} yrs` : (n.candidateExperience ? `${n.candidateExperience} yrs` : 'Fresher');
+
+                    return (
+                      <div
+                        key={n.id}
+                        className={`border rounded-2xl p-4 transition-all ${
+                          isUnread
+                            ? 'bg-gradient-to-r from-orange-50/60 to-white border-orange-300 shadow-sm'
+                            : 'bg-white border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                          <div className="flex items-center gap-2">
+                            {candPhoto ? (
+                              <img
+                                src={candPhoto}
+                                alt={candName}
+                                className="w-8 h-8 rounded-full object-cover border border-gray-200 shrink-0"
+                                referrerPolicy="no-referrer"
+                              />
+                            ) : (
+                              <span className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs shrink-0">
+                                {candName.charAt(0).toUpperCase()}
+                              </span>
+                            )}
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-bold text-gray-900 text-xs">{candName}</h4>
+                                {isUnread && (
+                                  <span className="px-1.5 py-0.2 rounded-md bg-orange-600 text-white text-[9px] font-extrabold uppercase">
+                                    NEW
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[10px] text-gray-500">Allocated for <span className="font-semibold text-gray-700">{jobTitle}</span></p>
+                            </div>
+                          </div>
+
+                          <span className="text-[10px] text-gray-400 whitespace-nowrap">
+                            {new Date(n.createdAt || n.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                          </span>
+                        </div>
+
+                        {/* Candidate Details Snippet */}
+                        <div className="grid grid-cols-2 gap-2 my-2.5 text-[11px] bg-gray-50 p-2.5 rounded-xl border border-gray-150">
+                          <div className="flex items-center gap-1.5 text-gray-600">
+                            <Phone className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                            <span className="font-mono font-semibold">{mobile || '—'}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-gray-600">
+                            <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                            <span className="truncate">{city || '—'}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-gray-600">
+                            <Briefcase className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                            <span>Exp: {exp}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-gray-600">
+                            <Truck className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                            <span>Bike: {details.bikeAvailable || 'Yes'}</span>
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex items-center justify-between gap-2 mt-3 pt-2 border-t border-gray-100">
+                          <div className="flex items-center gap-2">
+                            {mobile && (
+                              <a
+                                href={`tel:${mobile}`}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition-colors cursor-pointer shadow-xs"
+                              >
+                                <PhoneCall className="w-3 h-3" />
+                                Call
+                              </a>
+                            )}
+                            <button
+                              onClick={() => handleSelectCandidateFromNotif(n)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-[11px] font-semibold transition-colors cursor-pointer"
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                              View in Applications
+                            </button>
+                          </div>
+
+                          {isUnread && (
+                            <button
+                              onClick={() => handleMarkNotifAsRead(n.id)}
+                              className="text-[11px] text-gray-400 hover:text-gray-600 flex items-center gap-1 cursor-pointer"
+                            >
+                              <Check className="w-3 h-3" />
+                              Mark read
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Drawer Footer */}
+              <div className="p-4 border-t border-gray-150 bg-gray-50 flex items-center justify-between text-xs text-gray-500">
+                <span className="flex items-center gap-1.5 text-[11px]">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  Pop-up alerts active
+                </span>
+                <button
+                  onClick={() => fetchNotifications()}
+                  className="text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1 cursor-pointer"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  Refresh
+                </button>
+              </div>
+            </motion.div>
+          </React.Fragment>
+        )}
+      </AnimatePresence>
 
     </div>
   );

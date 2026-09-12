@@ -36,7 +36,7 @@ import { getAuth as getAdminAuth } from 'firebase-admin/auth';
 
 
 const app = express();
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 8152;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 7337;
 
 app.use(express.json({ limit: '10mb' })); // Support base64 photos
 
@@ -226,6 +226,26 @@ export function toSupabaseAllocationRow(a: any) {
   };
 }
 
+export function toSupabaseRecruiterNotificationRow(n: any) {
+  if (!n) return null;
+  return {
+    id: String(n.id || crypto.randomUUID()),
+    recruiter_id: String(n.recruiterId || n.recruiter_id || ''),
+    candidate_id: String(n.candidateId || n.candidate_id || ''),
+    job_id: String(n.jobId || n.job_id || ''),
+    application_id: String(n.applicationId || n.application_id || ''),
+    title: String(n.title || ''),
+    message: String(n.message || ''),
+    candidate_name: String(n.candidateName || n.candidate_name || ''),
+    candidate_mobile: String(n.candidateMobile || n.candidate_mobile || ''),
+    candidate_city: String(n.candidateCity || n.candidate_city || ''),
+    candidate_experience: String(n.candidateExperience ?? n.candidate_experience ?? '0'),
+    candidate_details: n.candidateDetails || n.candidate_details || {},
+    is_read: !!(n.isRead ?? n.is_read ?? false),
+    created_at: n.createdAt || n.created_at || new Date().toISOString()
+  };
+}
+
 export async function safeSupabaseUpsert(
   table: string,
   rows: any[]
@@ -239,14 +259,42 @@ export async function safeSupabaseUpsert(
     const cleanRows = rows.filter(Boolean);
     if (cleanRows.length === 0) return { success: true };
 
-    const { error } = await supabase.from(table).upsert(cleanRows);
+    // Deduplicate in memory before sending to Supabase
+    const seenIds = new Set<string>();
+    const seenEmails = new Set<string>();
+    const uniqueRows: any[] = [];
+
+    for (let i = cleanRows.length - 1; i >= 0; i--) {
+      const r = cleanRows[i];
+      const id = String(r.id || '');
+      const email = r.email ? String(r.email).toLowerCase().trim() : null;
+      if (id && seenIds.has(id)) continue;
+      if (email && seenEmails.has(email)) continue;
+      if (id) seenIds.add(id);
+      if (email) seenEmails.add(email);
+      uniqueRows.unshift(r);
+    }
+
+    if (uniqueRows.length === 0) return { success: true };
+
+    const { error } = await supabase.from(table).upsert(uniqueRows);
     if (error) {
-      console.error(`[Supabase Upsert Error on ${table}]`, error.message || error);
-      return { success: false, error: error.message };
+      // If batch upsert encounters a unique constraint or schema error, fallback to individual upserts
+      let partialSuccess = false;
+      for (const row of uniqueRows) {
+        try {
+          const { error: rowErr } = await supabase.from(table).upsert([row]);
+          if (!rowErr) partialSuccess = true;
+        } catch (_) {}
+      }
+      if (!partialSuccess) {
+        console.warn(`[Supabase Upsert Notice on ${table}]`, error.message || error);
+      }
+      return { success: partialSuccess, error: error.message };
     }
     return { success: true };
   } catch (err: any) {
-    console.error(`[Supabase Upsert Exception on ${table}]`, err.message || err);
+    console.warn(`[Supabase Upsert Exception on ${table}]`, err.message || err);
     return { success: false, error: err.message || String(err) };
   }
 }
@@ -535,7 +583,7 @@ async function getLiveJobs(): Promise<any[]> {
     const norm = normalizeJob(j);
     if (norm.recruiterId && recMap.has(norm.recruiterId)) {
       const recruiter = recMap.get(norm.recruiterId);
-      if ((!norm.companyLogo || norm.companyLogo.trim() === '') && recruiter.companyLogo) {
+      if ((!norm.companyLogo || norm.companyLogo.trim() === '') && recruiter.companyLogo && recruiter.companyLogo.trim() !== '') {
         norm.companyLogo = recruiter.companyLogo;
       }
       if ((!norm.companyName || norm.companyName === 'Hiring Company') && recruiter.companyName) {
@@ -789,6 +837,274 @@ async function getLiveRecruiters(): Promise<any[]> {
     console.warn('[Supabase Recruiters Fetch Warning]', err);
   }
   return db.recruiters || [];
+}
+
+async function getLiveRecruiterNotifications(recruiterId?: string): Promise<any[]> {
+  const db = readDB();
+  db.recruiter_notifications = db.recruiter_notifications || [];
+  try {
+    if (isSupabaseConfigured()) {
+      const supabase = getSupabase();
+      // Try querying recruiter_notifications table
+      let { data, error } = await supabase.from('recruiter_notifications').select('*');
+      if (error) {
+        // Fallback to notifications table where category = 'RECRUITER_ALLOCATED'
+        const { data: altData } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('category', 'RECRUITER_ALLOCATED');
+        if (altData && Array.isArray(altData)) {
+          data = altData.map((a: any) => ({
+            id: a.id,
+            recruiterId: a.candidate_id,
+            candidateId: a.candidate_id,
+            jobId: a.job_id,
+            title: a.title,
+            message: a.message,
+            candidateName: a.title?.replace('👤 New Candidate Allocated: ', '') || 'Candidate',
+            candidateMobile: '',
+            candidateCity: '',
+            candidateExperience: '0',
+            candidateDetails: {},
+            isRead: !!a.is_read,
+            createdAt: a.created_at
+          }));
+        }
+      }
+
+      if (data && Array.isArray(data)) {
+        const notifMap = new Map<string, any>();
+        (db.recruiter_notifications || []).forEach((n: any) => {
+          if (n.id) notifMap.set(String(n.id), n);
+        });
+
+        data.forEach((r: any) => {
+          const id = String(r.id || '');
+          if (!id) return;
+          const existing = notifMap.get(id) || {};
+          notifMap.set(id, {
+            ...existing,
+            ...r,
+            id,
+            recruiterId: String(r.recruiter_id || r.recruiterId || existing.recruiterId || ''),
+            candidateId: String(r.candidate_id || r.candidateId || existing.candidateId || ''),
+            jobId: String(r.job_id || r.jobId || existing.jobId || ''),
+            applicationId: String(r.application_id || r.applicationId || existing.applicationId || ''),
+            title: r.title || existing.title || '',
+            message: r.message || existing.message || '',
+            candidateName: r.candidate_name || r.candidateName || existing.candidateName || 'Candidate',
+            candidateMobile: r.candidate_mobile || r.candidateMobile || existing.candidateMobile || '',
+            candidateCity: r.candidate_city || r.candidateCity || existing.candidateCity || '',
+            candidateExperience: r.candidate_experience || r.candidateExperience || existing.candidateExperience || '0',
+            candidateDetails: r.candidate_details || r.candidateDetails || existing.candidateDetails || {},
+            isRead: !!(r.is_read ?? r.isRead ?? existing.isRead ?? false),
+            createdAt: r.created_at || r.createdAt || existing.createdAt || new Date().toISOString()
+          });
+        });
+
+        db.recruiter_notifications = Array.from(notifMap.values());
+        memoryDB = db;
+      }
+    }
+  } catch (err) {
+    console.warn('[Supabase recruiter_notifications Fetch Warning]', err);
+  }
+
+  let list = db.recruiter_notifications || [];
+  if (recruiterId) {
+    list = list.filter((n: any) => String(n.recruiterId) === String(recruiterId));
+  }
+
+  // Ensure candidate profile photo is populated on notifications
+  list = list.map((n: any) => {
+    let photo = n.candidateProfilePhoto || n.candidateDetails?.candidateProfilePhoto || '';
+    if (!photo && n.candidateId) {
+      const cand = (db.candidates || []).find((c: any) => String(c.id) === String(n.candidateId));
+      if (cand?.profile?.profilePhoto) {
+        photo = cand.profile.profilePhoto;
+      } else {
+        const doc = (db.documents || []).find((d: any) => String(d.candidateId || d.candidate_id) === String(n.candidateId) && (d.documentType === 'photo' || d.type === 'photo'));
+        photo = doc?.fileUrl || doc?.file_url || '';
+      }
+    }
+    return {
+      ...n,
+      candidateProfilePhoto: photo,
+      candidateDetails: {
+        ...(n.candidateDetails || {}),
+        candidateProfilePhoto: photo
+      }
+    };
+  });
+
+  return list.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+async function sendPushNotificationToRecruiter(recruiterId: string, title: string, body: string, dataPayload: any) {
+  try {
+    const db = readDB();
+    const fcmTokens = (db.fcmTokens || []).filter((t: any) => t.userId === recruiterId || t.role === 'recruiter');
+    if (!fcmTokens || fcmTokens.length === 0) return;
+    
+    const tokens = fcmTokens.map((t: any) => t.token).filter(Boolean);
+    if (tokens.length === 0) return;
+
+    if (getAdminApps().length > 0) {
+      const { getMessaging } = await import('firebase-admin/messaging');
+      await getMessaging().sendEachForMulticast({
+        tokens,
+        notification: { title, body },
+        data: Object.fromEntries(
+          Object.entries(dataPayload || {}).map(([k, v]) => [k, typeof v === 'string' ? v : JSON.stringify(v)])
+        )
+      });
+      console.log(`[FCM] Push dispatched to ${tokens.length} device(s) for recruiter ${recruiterId}`);
+    }
+  } catch (pushErr: any) {
+    console.warn('[FCM Push Warning]', pushErr?.message || pushErr);
+  }
+}
+
+async function notifyRecruiterOnCandidateAllocation(
+  allocRecord: any, 
+  candidate: any, 
+  job: any
+): Promise<any> {
+  const recruiterId = String(allocRecord.recruiterId || job.recruiterId || job.recruiter_id || '');
+  if (!recruiterId) {
+    console.warn('[Recruiter Notification] No recruiterId found for allocation:', allocRecord);
+    return null;
+  }
+
+  const db = readDB();
+  db.recruiter_notifications = db.recruiter_notifications || [];
+
+  const candidateId = String(allocRecord.candidateId || candidate.id || '');
+  const jobId = String(allocRecord.jobId || job.id || '');
+  const applicationId = String(allocRecord.applicationId || '');
+
+  // Deduplication check: check by applicationId OR (recruiterId + candidateId + jobId)
+  const alreadyNotified = db.recruiter_notifications.some((n: any) => 
+    (applicationId && String(n.applicationId) === applicationId) ||
+    (String(n.recruiterId) === recruiterId && String(n.candidateId) === candidateId && String(n.jobId) === jobId)
+  );
+
+  if (alreadyNotified) {
+    return null;
+  }
+
+  const profile = candidate.profile || {};
+  const fullName = profile.fullName || candidate.fullName || 'Candidate';
+  const mobile = candidate.mobile || '';
+  const email = candidate.email || '';
+  const city = profile.city || candidate.city || '—';
+  const state = profile.state || candidate.state || '—';
+  const exp = profile.experience !== undefined ? profile.experience : (candidate.experience ?? 0);
+  const bikeAvailable = profile.bikeAvailable ?? candidate.bikeAvailable ?? 'No';
+  const drivingLicenseAvailable = profile.drivingLicenseAvailable ?? candidate.drivingLicenseAvailable ?? 'No';
+  const jobTitle = job.title || 'Delivery Associate';
+  const appliedDate = allocRecord.allocatedAt || new Date().toISOString();
+
+  const candDoc = (db.documents || []).find((d: any) => String(d.candidateId || d.candidate_id) === candidateId && (d.documentType === 'photo' || d.type === 'photo'));
+  const candidateProfilePhoto = profile.profilePhoto || candDoc?.fileUrl || candDoc?.file_url || '';
+
+  const title = `👤 New Candidate Allocated: ${fullName}`;
+  const message = `${fullName} (${mobile}, ${city}) is now visible for "${jobTitle}". Experience: ${exp} yr(s).`;
+
+  const newNotif = {
+    id: crypto.randomUUID(),
+    recruiterId,
+    candidateId,
+    jobId,
+    applicationId,
+    title,
+    message,
+    candidateName: fullName,
+    candidateMobile: mobile,
+    candidateCity: city,
+    candidateExperience: exp,
+    candidateProfilePhoto,
+    candidateDetails: {
+      fullName,
+      mobile,
+      email,
+      city,
+      state,
+      experience: exp,
+      bikeAvailable,
+      drivingLicenseAvailable,
+      jobTitle,
+      category: job.category || 'Delivery Jobs',
+      appliedDate,
+      candidateProfilePhoto
+    },
+    isRead: false,
+    createdAt: new Date().toISOString()
+  };
+
+  db.recruiter_notifications.push(newNotif);
+  writeDB(db);
+
+  // Dual-write into Supabase
+  if (isSupabaseConfigured()) {
+    try {
+      const supabase = getSupabase();
+      
+      // 1. Attempt insert into dedicated recruiter_notifications table
+      try {
+        const row = toSupabaseRecruiterNotificationRow(newNotif);
+        if (row) {
+          await supabase.from('recruiter_notifications').upsert([row]);
+        }
+      } catch (e) {
+        // Table might not exist yet; gracefully handled below
+      }
+
+      // 2. Insert into public.notifications table (exists in Supabase)
+      try {
+        const notifRow = {
+          id: newNotif.id,
+          candidate_id: recruiterId, // target recruiter ID
+          title: newNotif.title,
+          message: newNotif.message,
+          category: 'RECRUITER_ALLOCATED',
+          job_id: jobId,
+          is_read: false,
+          created_at: newNotif.createdAt
+        };
+        await supabase.from('notifications').upsert([notifRow]);
+      } catch (notifErr) {
+        console.warn('[Supabase notifications insert warning]', notifErr);
+      }
+
+      // 3. Supabase Realtime broadcast on 'jobsner_realtime' channel
+      try {
+        const channel = supabase.channel('jobsner_realtime');
+        channel.send({
+          type: 'broadcast',
+          event: 'recruiter_notification',
+          payload: newNotif
+        });
+      } catch (broadcastErr) {
+        console.warn('[Supabase Realtime Broadcast Warning]', broadcastErr);
+      }
+    } catch (supaErr) {
+      console.warn('[Supabase Notification Warning]', supaErr);
+    }
+  }
+
+  // 4. Send Mobile Android FCM Push Notification
+  sendPushNotificationToRecruiter(recruiterId, title, message, {
+    type: 'RECRUITER_ALLOCATED',
+    notificationId: newNotif.id,
+    jobId,
+    candidateId,
+    candidateName: fullName,
+    candidateMobile: mobile,
+    candidateCity: city
+  });
+
+  return newNotif;
 }
 
 function readDB() {
@@ -1161,7 +1477,7 @@ app.post('/api/firebase-auth', async (req, res) => {
     db.candidates = liveCandidates;
 
     // Look for existing candidate with this verified Firebase UID, Email, or Mobile
-    let candidate = db.candidates.find((c: any) => c.id === verifiedUid);
+    let candidate = db.candidates.find((c: any) => c.id === verifiedUid || c.firebaseUid === verifiedUid);
 
     if (!candidate) {
       // Check if candidate exists by email or mobile number
@@ -1175,8 +1491,8 @@ app.post('/api/firebase-auth', async (req, res) => {
       });
 
       if (candidate) {
-        // Associate this existing account with the verified Firebase UID for future lookups
-        candidate.id = verifiedUid;
+        // Associate with Firebase UID while PRESERVING the primary key ID
+        candidate.firebaseUid = verifiedUid;
         if (cleanEmail && !candidate.email) candidate.email = cleanEmail;
         if (cleanMobile && !candidate.mobile) candidate.mobile = cleanMobile;
       }
@@ -1202,6 +1518,7 @@ app.post('/api/firebase-auth', async (req, res) => {
       // Create new candidate record
       candidate = {
         id: verifiedUid,
+        firebaseUid: verifiedUid,
         mobile: cleanMobile || '0000000000',
         fullName: cleanName,
         email: cleanEmail || undefined,
@@ -1265,7 +1582,7 @@ app.post('/api/firebase-auth', async (req, res) => {
     const db = readDB();
     db.recruiters = liveRecruiters;
 
-    let recruiter = db.recruiters.find((r: any) => r.id === verifiedUid);
+    let recruiter = db.recruiters.find((r: any) => r.id === verifiedUid || r.firebaseUid === verifiedUid);
 
     if (!recruiter) {
       recruiter = db.recruiters.find((r: any) => {
@@ -1278,7 +1595,7 @@ app.post('/api/firebase-auth', async (req, res) => {
       });
 
       if (recruiter) {
-        recruiter.id = verifiedUid;
+        recruiter.firebaseUid = verifiedUid;
         if (cleanEmail && !recruiter.email) recruiter.email = cleanEmail;
       }
     }
@@ -1395,9 +1712,13 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
       db.candidates.push(dbCandidate);
     }
 
-    // Handle profile photo upload to Supabase Storage if sent as base64
+    // Handle profile photo upload to Supabase Storage if sent as base64 (strictly <= 50KB)
     let profilePhotoUrl = updatedProfile.profilePhoto !== undefined ? updatedProfile.profilePhoto : dbCandidate.profile?.profilePhoto;
     if (profilePhotoUrl && profilePhotoUrl.startsWith('data:image')) {
+      const photoSizeInBytes = (profilePhotoUrl.length * 3) / 4;
+      if (photoSizeInBytes > 52 * 1024) {
+        return res.status(400).json({ error: 'Profile photo size must not exceed 50KB.' });
+      }
       try {
         let base64Img = profilePhotoUrl;
         let mimeType = 'image/jpeg';
@@ -1522,9 +1843,13 @@ app.post('/api/documents', authenticateToken, async (req, res) => {
     }
   }
 
-  // Estimate base64 size (limit to 5MB)
+  // Estimate base64 size (strictly <= 50KB for photos, 5MB for resumes/documents)
   const sizeInBytes = (fileContent.length * 3) / 4;
-  if (sizeInBytes > 5 * 1024 * 1024) {
+  if (documentType === 'photo') {
+    if (sizeInBytes > 52 * 1024) {
+      return res.status(400).json({ error: 'Profile image size must not exceed 50KB. Please compress the photo.' });
+    }
+  } else if (sizeInBytes > 5 * 1024 * 1024) {
     return res.status(400).json({ error: 'File size must be under 5MB.' });
   }
 
@@ -1659,9 +1984,13 @@ app.put('/api/documents/:type', authenticateToken, async (req, res) => {
     }
   }
 
-  // Estimate base64 size (limit to 5MB)
+  // Estimate base64 size (strictly <= 50KB for photos, 5MB for resumes/documents)
   const sizeInBytes = (fileContent.length * 3) / 4;
-  if (sizeInBytes > 5 * 1024 * 1024) {
+  if (documentType === 'photo') {
+    if (sizeInBytes > 52 * 1024) {
+      return res.status(400).json({ error: 'Profile image size must not exceed 50KB. Please compress the photo.' });
+    }
+  } else if (sizeInBytes > 5 * 1024 * 1024) {
     return res.status(400).json({ error: 'File size must be under 5MB.' });
   }
 
@@ -1887,6 +2216,14 @@ app.post('/api/recruiter/register', async (req, res) => {
     return res.status(400).json({ error: 'Passwords do not match.' });
   }
 
+  // Validate companyLogo size if provided as base64 (strictly <= 50KB)
+  if (companyLogo && typeof companyLogo === 'string' && companyLogo.startsWith('data:image')) {
+    const logoSizeInBytes = (companyLogo.length * 3) / 4;
+    if (logoSizeInBytes > 52 * 1024) {
+      return res.status(400).json({ error: 'Company logo size must not exceed 50KB. Please compress the logo.' });
+    }
+  }
+
   try {
     const liveRecruiters = await getLiveRecruiters();
     const db = readDB();
@@ -2072,6 +2409,14 @@ app.put('/api/recruiter/profile', authenticateRecruiter, async (req, res) => {
       }
     }
 
+    // Validate companyLogo size if provided as base64 (strictly <= 50KB)
+    if (companyLogo && typeof companyLogo === 'string' && companyLogo.startsWith('data:image')) {
+      const logoSizeInBytes = (companyLogo.length * 3) / 4;
+      if (logoSizeInBytes > 52 * 1024) {
+        return res.status(400).json({ error: 'Company logo size must not exceed 50KB. Please compress the logo.' });
+      }
+    }
+
     // Update fields
     const updatedRecruiter = {
       ...db.recruiters[index],
@@ -2090,6 +2435,22 @@ app.put('/api/recruiter/profile', authenticateRecruiter, async (req, res) => {
     };
 
     db.recruiters[index] = updatedRecruiter;
+
+    // Cascade updated companyLogo and companyName to all jobs by this recruiter so all candidates see the new logo immediately
+    db.jobs = db.jobs || [];
+    db.jobs.forEach((job: any) => {
+      if (String(job.recruiterId) === String(loggedInRecruiter.id) || String(job.recruiter_id) === String(loggedInRecruiter.id)) {
+        if (updatedRecruiter.companyLogo !== undefined) {
+          job.companyLogo = updatedRecruiter.companyLogo;
+          job.company_logo = updatedRecruiter.companyLogo;
+        }
+        if (updatedRecruiter.companyName) {
+          job.companyName = updatedRecruiter.companyName;
+          job.company_name = updatedRecruiter.companyName;
+        }
+      }
+    });
+
     await writeDB(db);
 
     if (isSupabaseConfigured()) {
@@ -2097,6 +2458,14 @@ app.put('/api/recruiter/profile', authenticateRecruiter, async (req, res) => {
         const recRow = toSupabaseRecruiterRow(updatedRecruiter);
         if (recRow) {
           await safeSupabaseUpsert('recruiters', [recRow]);
+        }
+        // Cascade to Supabase jobs table
+        if (updatedRecruiter.companyLogo) {
+          const supabase = getSupabase();
+          await supabase.from('jobs').update({
+            company_logo: updatedRecruiter.companyLogo,
+            company_name: updatedRecruiter.companyName
+          }).eq('recruiter_id', String(loggedInRecruiter.id));
         }
       } catch (supaErr) {
         console.warn('[Supabase Direct Recruiter Profile Update Upsert Warning]', supaErr);
@@ -2154,6 +2523,7 @@ app.post('/api/recruiter/jobs', authenticateRecruiter, async (req, res) => {
 
   const {
     title,
+    companyLogo,
     category,
     openings,
     employmentType,
@@ -2212,11 +2582,55 @@ app.post('/api/recruiter/jobs', authenticateRecruiter, async (req, res) => {
     const db = readDB();
     db.jobs = db.jobs || [];
 
+    // Process particular company logo for this job (strictly <= 50KB & Supabase Storage)
+    let jobCompanyLogo = recruiter.companyLogo || '';
+    if (companyLogo && typeof companyLogo === 'string' && companyLogo.trim() !== '') {
+      if (companyLogo.startsWith('data:image')) {
+        const logoSizeInBytes = (companyLogo.length * 3) / 4;
+        if (logoSizeInBytes > 52 * 1024) {
+          return res.status(400).json({ error: 'Company logo size must not exceed 50KB. Please compress the logo.' });
+        }
+        try {
+          let base64Img = companyLogo;
+          let mimeType = 'image/jpeg';
+          let ext = '.jpg';
+          if (companyLogo.includes(';base64,')) {
+            const parts = companyLogo.split(';base64,');
+            mimeType = parts[0].replace('data:', '') || 'image/jpeg';
+            ext = mimeType.includes('png') ? '.png' : (mimeType.includes('webp') ? '.webp' : '.jpg');
+            base64Img = parts[1];
+          }
+          const imgBuffer = Buffer.from(base64Img, 'base64');
+          const imgFileName = `job-${recruiter.id}-${Date.now()}${ext}`;
+
+          try {
+            const localFilePath = path.join(UPLOADS_DIR, imgFileName);
+            fs.writeFileSync(localFilePath, imgBuffer);
+          } catch (e) {
+            console.warn('[Disk save warning for job logo]', e);
+          }
+          let uploadedLogoUrl = `/uploads/${imgFileName}`;
+
+          const supaUrl = await uploadToSupabaseStorage('avatars', imgFileName, imgBuffer, mimeType);
+          if (supaUrl) {
+            uploadedLogoUrl = supaUrl;
+          }
+          jobCompanyLogo = uploadedLogoUrl;
+        } catch (logoErr) {
+          console.warn('[Supabase Storage Job Logo Upload Error]', logoErr);
+          jobCompanyLogo = companyLogo;
+        }
+      } else {
+        jobCompanyLogo = companyLogo;
+      }
+    }
+
     const rawJob = {
       id: crypto.randomUUID(),
       recruiterId: recruiter.id,
       companyName: recruiter.companyName,
-      companyLogo: recruiter.companyLogo || '',
+      companyLogo: jobCompanyLogo,
+      company_logo: jobCompanyLogo,
       title: title.trim(),
       category: category.trim(),
       openings: Number(openings),
@@ -2365,6 +2779,7 @@ app.put('/api/recruiter/jobs/:id', authenticateRecruiter, async (req, res) => {
     const currentJob = db.jobs[index];
     const {
       title,
+      companyLogo,
       category,
       openings,
       employmentType,
@@ -2390,8 +2805,52 @@ app.put('/api/recruiter/jobs/:id', authenticateRecruiter, async (req, res) => {
       status
     } = req.body;
 
+    let updatedCompanyLogo = currentJob.companyLogo;
+    if (companyLogo !== undefined) {
+      if (companyLogo && typeof companyLogo === 'string' && companyLogo.startsWith('data:image')) {
+        const logoSizeInBytes = (companyLogo.length * 3) / 4;
+        if (logoSizeInBytes > 52 * 1024) {
+          return res.status(400).json({ error: 'Company logo size must not exceed 50KB. Please compress the logo.' });
+        }
+        try {
+          let base64Img = companyLogo;
+          let mimeType = 'image/jpeg';
+          let ext = '.jpg';
+          if (companyLogo.includes(';base64,')) {
+            const parts = companyLogo.split(';base64,');
+            mimeType = parts[0].replace('data:', '') || 'image/jpeg';
+            ext = mimeType.includes('png') ? '.png' : (mimeType.includes('webp') ? '.webp' : '.jpg');
+            base64Img = parts[1];
+          }
+          const imgBuffer = Buffer.from(base64Img, 'base64');
+          const imgFileName = `job-${recruiter.id}-${Date.now()}${ext}`;
+
+          try {
+            const localFilePath = path.join(UPLOADS_DIR, imgFileName);
+            fs.writeFileSync(localFilePath, imgBuffer);
+          } catch (e) {
+            console.warn('[Disk save warning for job logo]', e);
+          }
+          let uploadedLogoUrl = `/uploads/${imgFileName}`;
+
+          const supaUrl = await uploadToSupabaseStorage('avatars', imgFileName, imgBuffer, mimeType);
+          if (supaUrl) {
+            uploadedLogoUrl = supaUrl;
+          }
+          updatedCompanyLogo = uploadedLogoUrl;
+        } catch (logoErr) {
+          console.warn('[Supabase Storage Job Logo Upload Error]', logoErr);
+          updatedCompanyLogo = companyLogo;
+        }
+      } else {
+        updatedCompanyLogo = companyLogo;
+      }
+    }
+
     const updatedJobRaw = {
       ...currentJob,
+      companyLogo: updatedCompanyLogo,
+      company_logo: updatedCompanyLogo,
       title: title !== undefined ? title.trim() : currentJob.title,
       category: category !== undefined ? category.trim() : currentJob.category,
       openings: openings !== undefined ? Number(openings) : currentJob.openings,
@@ -2855,6 +3314,9 @@ async function applyCandidateToJob(candidate: any, rawJobId: any, res: any) {
     // Broadcast notifications
     try {
       const candidateDisplayName = fullName || 'A candidate';
+      const candDoc = (db.documents || []).find((d: any) => String(d.candidateId || d.candidate_id) === candidate.id && (d.documentType === 'photo' || d.type === 'photo'));
+      const candidatePhoto = candidate.profile?.profilePhoto || candDoc?.fileUrl || candDoc?.file_url || '';
+
       await createAndBroadcastNotification({
         title: '📄 New Candidate Application Received!',
         message: `${candidateDisplayName} has applied for "${job.title}" at ${job.companyName || 'Hiring Company'}.`,
@@ -2869,7 +3331,8 @@ async function applyCandidateToJob(candidate: any, rawJobId: any, res: any) {
           jobId: job.id,
           jobTitle: job.title,
           companyName: job.companyName,
-          candidateName: candidateDisplayName
+          candidateName: candidateDisplayName,
+          candidateProfilePhoto: candidatePhoto
         }
       });
 
@@ -3060,6 +3523,7 @@ app.get('/api/recruiter/applications', authenticateRecruiter, async (req, res) =
     const allApps = await getLiveApplications();
     const allCandidates = await getLiveCandidates();
     const allAllocations = await getLiveAllocations();
+    const allDocs = await getLiveDocuments();
 
     const visibleAppIds = new Set(
       allAllocations
@@ -3099,6 +3563,9 @@ app.get('/api/recruiter/applications', authenticateRecruiter, async (req, res) =
       const candidate = allCandidates.find((c: any) => String(c.id) === candidateId) || {};
       const profile = candidate.profile || {};
       
+      const candDoc = (allDocs || []).find((d: any) => String(d.candidateId || d.candidate_id) === candidateId && (d.documentType === 'photo' || d.type === 'photo'));
+      const candidatePhoto = profile.profilePhoto || candDoc?.fileUrl || candDoc?.file_url || '';
+
       appMap.set(id, {
         ...app,
         jobTitle: job.title || 'Unknown Position',
@@ -3106,7 +3573,7 @@ app.get('/api/recruiter/applications', authenticateRecruiter, async (req, res) =
         candidateName: profile.fullName || candidate.fullName || 'Candidate',
         candidateMobile: candidate.mobile || '',
         candidateEmail: candidate.email || '',
-        candidateProfilePhoto: profile.profilePhoto || '',
+        candidateProfilePhoto: candidatePhoto,
         candidateExperience: profile.experience !== undefined ? profile.experience : 0,
         candidateCity: profile.city || '',
         candidateState: profile.state || ''
@@ -3988,6 +4455,17 @@ app.get('/api/admin/jobs/:jobId/allocations', async (req, res) => {
           console.warn('[Supabase Candidate Allocation Upsert Warning]', supaErr);
         }
       }
+
+      // Trigger instant notifications for newly allocated Recruiter Visible candidates
+      const visibleAllocations = newlyAllocatedRows.filter((r) => r.allocationStatus === 'Recruiter Visible');
+      for (const alloc of visibleAllocations) {
+        const cand = allCandidates.find((c: any) => String(c.id) === String(alloc.candidateId)) || {};
+        try {
+          await notifyRecruiterOnCandidateAllocation(alloc, cand, job);
+        } catch (notifErr) {
+          console.warn('[Recruiter Allocation Notification Error]', notifErr);
+        }
+      }
     }
 
     // Format candidate rows for the Excel Grid
@@ -4036,6 +4514,18 @@ app.get('/api/admin/jobs/:jobId/allocations', async (req, res) => {
         pending.push(formatRow(app, 'Pending Allocation'));
       }
     });
+
+    // Ensure all Recruiter Visible candidates for this job have a recruiter notification created
+    for (const item of recruiterVisible) {
+      try {
+        const alloc = allocMap.get(item.applicationId);
+        if (alloc) {
+          await notifyRecruiterOnCandidateAllocation(alloc, item.raw.candidate, job);
+        }
+      } catch (err) {
+        // Handled silently
+      }
+    }
 
     res.status(200).json({
       recruiterVisible,
@@ -4419,6 +4909,141 @@ app.post('/api/notifications/read-all', (req, res) => {
   }
 });
 
+// --- DEDICATED RECRUITER NOTIFICATION ENDPOINTS ---
+
+// GET Recruiter Notifications (Full candidate details, unread count, sorted newest first)
+app.get('/api/recruiter/notifications', async (req, res) => {
+  try {
+    let recruiterId = req.query.recruiterId as string;
+    
+    // Also support Authorization bearer token lookup
+    const authHeader = req.headers.authorization;
+    if (!recruiterId && authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      const db = readDB();
+      const tokenEntry = (db.tokens && db.tokens[token]) || (db.recruiterTokens && db.recruiterTokens[token]);
+      if (tokenEntry && tokenEntry.recruiterId) {
+        recruiterId = tokenEntry.recruiterId;
+      }
+    }
+
+    const notifications = await getLiveRecruiterNotifications(recruiterId);
+    const unreadCount = notifications.filter((n: any) => !n.isRead && !n.is_read).length;
+
+    res.json({
+      notifications,
+      unreadCount,
+      totalCount: notifications.length,
+      realtimeChannel: 'jobsner_realtime'
+    });
+  } catch (err: any) {
+    console.error('[Recruiter Notifications Fetch Error]', err);
+    res.status(500).json({ error: 'Failed to retrieve recruiter notifications' });
+  }
+});
+
+// POST Mark single recruiter notification as read
+app.post('/api/recruiter/notifications/:id/read', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const db = readDB();
+    db.recruiter_notifications = db.recruiter_notifications || [];
+    const notif = db.recruiter_notifications.find((n: any) => String(n.id) === String(id));
+    if (notif) {
+      notif.isRead = true;
+      notif.is_read = true;
+      writeDB(db);
+    }
+
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = getSupabase();
+        await supabase.from('recruiter_notifications').update({ is_read: true }).eq('id', id);
+        await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+      } catch (supaErr) {
+        console.warn('[Supabase Notification Read Update Warning]', supaErr);
+      }
+    }
+
+    res.json({ success: true, id });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to update notification status' });
+  }
+});
+
+// POST Mark all recruiter notifications as read
+app.post('/api/recruiter/notifications/read-all', async (req, res) => {
+  const { recruiterId } = req.body;
+  try {
+    const db = readDB();
+    db.recruiter_notifications = db.recruiter_notifications || [];
+    db.recruiter_notifications.forEach((n: any) => {
+      if (!recruiterId || String(n.recruiterId) === String(recruiterId)) {
+        n.isRead = true;
+        n.is_read = true;
+      }
+    });
+    writeDB(db);
+
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = getSupabase();
+        if (recruiterId) {
+          await supabase.from('recruiter_notifications').update({ is_read: true }).eq('recruiter_id', recruiterId);
+          await supabase.from('notifications').update({ is_read: true }).eq('candidate_id', recruiterId);
+        } else {
+          await supabase.from('recruiter_notifications').update({ is_read: true }).neq('id', '');
+          await supabase.from('notifications').update({ is_read: true }).eq('category', 'RECRUITER_ALLOCATED');
+        }
+      } catch (supaErr) {
+        console.warn('[Supabase Mark All Read Warning]', supaErr);
+      }
+    }
+
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to mark all as read' });
+  }
+});
+
+// POST Test trigger recruiter notification (Verification helper)
+app.post('/api/recruiter/notifications/test', async (req, res) => {
+  const { recruiterId, jobId, candidateName, mobile, city, jobTitle } = req.body;
+  try {
+    const fakeAlloc = {
+      recruiterId: recruiterId || 'test-recruiter',
+      jobId: jobId || 'test-job',
+      candidateId: 'test-cand-' + Date.now(),
+      applicationId: 'test-app-' + Date.now(),
+      allocatedAt: new Date().toISOString()
+    };
+    const fakeCandidate = {
+      id: fakeAlloc.candidateId,
+      fullName: candidateName || 'Rajesh Sharma',
+      mobile: mobile || '+91 98765 43210',
+      profile: {
+        fullName: candidateName || 'Rajesh Sharma',
+        city: city || 'Bengaluru',
+        state: 'Karnataka',
+        experience: 2,
+        bikeAvailable: 'Yes',
+        drivingLicenseAvailable: 'Yes'
+      }
+    };
+    const fakeJob = {
+      id: fakeAlloc.jobId,
+      title: jobTitle || 'Senior Delivery Associate',
+      recruiterId: fakeAlloc.recruiterId,
+      category: 'Delivery Jobs'
+    };
+
+    const created = await notifyRecruiterOnCandidateAllocation(fakeAlloc, fakeCandidate, fakeJob);
+    res.json({ success: true, notification: created });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to create test notification' });
+  }
+});
+
 // POST Register Android FCM Device Token
 app.post('/api/notifications/fcm-token', (req, res) => {
   try {
@@ -4610,7 +5235,22 @@ async function startServer() {
   if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: { 
+        middlewareMode: true,
+        watch: {
+          ignored: [
+            '**/data/**',
+            '**/data/db.json',
+            '**/data/uploads/**',
+            '**/dist/**',
+            '**/.git/**',
+            '**/*.md',
+            '**/*.log',
+            '**/test_*.js',
+            '**/test_*.ts'
+          ]
+        }
+      },
       appType: 'spa',
     });
     app.use(vite.middlewares);
