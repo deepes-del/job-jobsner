@@ -3741,6 +3741,42 @@ app.get('/api/recruiter/applications', authenticateRecruiter, async (req, res) =
       });
     });
 
+    // Also include urgent candidate assignments for the recruiter's jobs
+    const urgentAssignments = await getLiveUrgentAssignments();
+    const myUrgentAssignments = urgentAssignments.filter((a: any) => 
+      myJobIds.includes(String(a.jobId)) || 
+      String(a.recruiterId) === String(recruiter.id) || 
+      (recruiter.email && String(a.recruiterId).toLowerCase() === String(recruiter.email).toLowerCase())
+    );
+
+    myUrgentAssignments.forEach((a: any) => {
+      const id = String(a.id || '');
+      if (!id || appMap.has(id)) return;
+      const job = allJobs.find((j: any) => String(j.id) === String(a.jobId)) || {};
+
+      appMap.set(id, {
+        id,
+        assignmentId: id,
+        candidateId: String(a.candidateId),
+        jobId: String(a.jobId),
+        jobTitle: job.title || 'Logistics Opening',
+        jobCity: job.city || a.candidateLocation || '',
+        candidateName: a.candidateName || 'Candidate',
+        candidateMobile: a.candidateContact || '',
+        candidateContact: a.candidateContact || '',
+        candidateEmail: '',
+        candidateProfilePhoto: '',
+        candidateExperience: 0,
+        candidateCity: a.candidateLocation || '',
+        candidateEducation: a.candidateEducation || 'Graduate',
+        currentStatus: a.status || 'Pending',
+        status: a.status || 'Pending',
+        appliedDate: a.assignedAt || new Date().toISOString(),
+        assignedAt: a.assignedAt,
+        isUrgentCandidate: true
+      });
+    });
+
     res.status(200).json({ applications: Array.from(appMap.values()) });
   } catch (err) {
     console.error(err);
@@ -3760,7 +3796,44 @@ app.get('/api/recruiter/applications/:id', authenticateRecruiter, async (req, re
     const allDocs = await getLiveDocuments();
     const allAllocations = await getLiveAllocations();
 
-    const application = allApps.find((a: any) => String(a.id) === String(appId));
+    let application = allApps.find((a: any) => String(a.id) === String(appId));
+    if (!application && String(appId).startsWith('urg_')) {
+      const urgentAssignments = await getLiveUrgentAssignments();
+      const assignment = urgentAssignments.find((a: any) => String(a.id) === String(appId));
+      if (assignment) {
+        const job = allJobs.find((j: any) => String(j.id) === String(assignment.jobId)) || {};
+        return res.status(200).json({
+          application: {
+            id: String(assignment.id),
+            candidateId: String(assignment.candidateId),
+            jobId: String(assignment.jobId),
+            jobTitle: job.title || 'Logistics Opening',
+            jobCity: job.city || assignment.candidateLocation || '',
+            candidateName: assignment.candidateName || 'Candidate',
+            candidateMobile: assignment.candidateContact || '',
+            candidateCity: assignment.candidateLocation || '',
+            candidateEducation: assignment.candidateEducation || 'Graduate',
+            candidateExperience: 0,
+            currentStatus: assignment.status || 'Pending',
+            appliedDate: assignment.assignedAt,
+            isUrgentCandidate: true
+          },
+          candidate: {
+            id: String(assignment.candidateId),
+            fullName: assignment.candidateName,
+            mobile: assignment.candidateContact,
+            profile: {
+              fullName: assignment.candidateName,
+              city: assignment.candidateLocation,
+              education: assignment.candidateEducation
+            }
+          },
+          job,
+          documents: []
+        });
+      }
+    }
+
     if (!application) {
       return res.status(404).json({ error: 'Application not found.' });
     }

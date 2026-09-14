@@ -2850,8 +2850,21 @@ export default function RecruiterDashboard({
                                   </div>
                                 )}
                                 <div>
-                                  <span className="font-bold text-slate-900 block">{app.candidateName}</span>
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className="font-bold text-slate-900 block">{app.candidateName}</span>
+                                    {app.isUrgentCandidate && (
+                                      <span className="inline-flex items-center gap-1 text-[9px] font-extrabold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-md">
+                                        <Sparkles className="w-2.5 h-2.5 text-amber-500 fill-amber-400" />
+                                        Urgent Candidate
+                                      </span>
+                                    )}
+                                  </div>
                                   <span className="text-[10px] text-gray-400 block">{app.candidateMobile}</span>
+                                  {app.isUrgentCandidate && (
+                                    <span className="text-[9.5px] font-medium text-amber-600 block mt-0.5">
+                                      ⚡ Assigned by Admin from Candidate Pool
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                             </td>
