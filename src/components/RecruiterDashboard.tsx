@@ -27,7 +27,7 @@ interface RecruiterDashboardProps {
   onProfileUpdated: (updated: Recruiter) => void;
 }
 
-type TabType = 'dashboard' | 'profile' | 'jobs' | 'applications' | 'settings';
+type TabType = 'dashboard' | 'profile' | 'jobs' | 'applications' | 'urgent-candidates' | 'settings';
 
 export default function RecruiterDashboard({ 
   recruiter, 
@@ -145,6 +145,67 @@ export default function RecruiterDashboard({
   const [unreadNotifCount, setUnreadNotifCount] = useState(0);
   const [showNotifDrawer, setShowNotifDrawer] = useState(false);
   const [loadingNotifs, setLoadingNotifs] = useState(false);
+
+  // Recruiter Urgent Candidates States
+  const [urgentCandidates, setUrgentCandidates] = useState<any[]>([]);
+  const [loadingUrgent, setLoadingUrgent] = useState(false);
+  const [urgentFilterJob, setUrgentFilterJob] = useState('All');
+  const [urgentFilterStatus, setUrgentFilterStatus] = useState('All');
+  const [urgentFilterCity, setUrgentFilterCity] = useState('All');
+  const [urgentFilterDate, setUrgentFilterDate] = useState('All');
+  const [urgentSearch, setUrgentSearch] = useState('');
+
+  const fetchUrgentCandidates = async () => {
+    setLoadingUrgent(true);
+    try {
+      const response = await fetch('/api/recruiter/urgent-candidates', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUrgentCandidates(data.urgentCandidates || []);
+      }
+    } catch (err) {
+      console.error('Error fetching urgent candidates:', err);
+    } finally {
+      setLoadingUrgent(false);
+    }
+  };
+
+  const filteredUrgentCandidates = urgentCandidates.filter((cand) => {
+    if (urgentSearch) {
+      const q = urgentSearch.toLowerCase();
+      const nameMatch = cand.candidateName?.toLowerCase().includes(q);
+      const mobileMatch = cand.candidateMobile?.toLowerCase().includes(q) || cand.candidateContact?.toLowerCase().includes(q);
+      if (!nameMatch && !mobileMatch) return false;
+    }
+    if (urgentFilterJob !== 'All' && cand.jobId !== urgentFilterJob) {
+      return false;
+    }
+    if (urgentFilterStatus !== 'All' && cand.currentStatus !== urgentFilterStatus) {
+      return false;
+    }
+    if (urgentFilterCity !== 'All' && (cand.candidateCity || cand.candidateLocation) !== urgentFilterCity) {
+      return false;
+    }
+    if (urgentFilterDate !== 'All') {
+      const dateVal = new Date(cand.assignedAt || cand.appliedDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (urgentFilterDate === 'Today') {
+        if (dateVal < today) return false;
+      } else if (urgentFilterDate === 'Last 7 Days') {
+        const diffDays = (today.getTime() - dateVal.getTime()) / (1000 * 60 * 60 * 24);
+        if (diffDays > 7) return false;
+      } else if (urgentFilterDate === 'Last 30 Days') {
+        const diffDays = (today.getTime() - dateVal.getTime()) / (1000 * 60 * 60 * 24);
+        if (diffDays > 30) return false;
+      }
+    }
+    return true;
+  });
 
   const fetchApplications = async () => {
     setLoadingApps(true);
@@ -266,10 +327,57 @@ export default function RecruiterDashboard({
     }
   };
 
+  const handleSelectUrgentCandidate = (cand: any) => {
+    setSelectedAppId(cand.id);
+    setSelectedAppDetail({
+      isUrgentCandidate: true,
+      assignmentId: cand.assignmentId || cand.id,
+      job: {
+        id: cand.jobId,
+        title: cand.jobTitle,
+        city: cand.jobCity,
+        category: 'Logistics'
+      },
+      application: {
+        id: cand.id,
+        jobId: cand.jobId,
+        jobTitle: cand.jobTitle,
+        jobCity: cand.jobCity,
+        appliedDate: cand.assignedAt || cand.appliedDate,
+        currentStatus: cand.currentStatus || 'Pending',
+        candidateProfilePhoto: '',
+      },
+      candidate: {
+        id: cand.candidateId,
+        fullName: cand.candidateName,
+        mobile: cand.candidateMobile || cand.candidateContact,
+        email: '',
+        profile: {
+          fullName: cand.candidateName,
+          city: cand.candidateLocation || cand.candidateCity,
+          education: cand.candidateEducation || 'Graduate',
+          experience: 0,
+          bikeAvailable: 'Yes',
+          drivingLicenseAvailable: 'Yes'
+        }
+      }
+    });
+    const currentSt = cand.currentStatus || 'Pending';
+    const mappedSt = currentSt === 'Hired' ? 'Approved' : currentSt;
+    setAuditStage(mappedSt);
+    setHasCalledCandidate(calledAppIds.includes(cand.id));
+  };
+
   const handleStatusUpdate = async (id: string, newStatus: string) => {
     setUpdatingStatus(newStatus);
     try {
-      const response = await fetch(`/api/recruiter/applications/${id}/status`, {
+      const isUrgent = selectedAppDetail?.isUrgentCandidate;
+      const targetId = selectedAppDetail?.assignmentId || id;
+      const endpoint = isUrgent
+        ? `/api/recruiter/urgent-candidates/${targetId}/status`
+        : `/api/recruiter/applications/${id}/status`;
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -280,10 +388,20 @@ export default function RecruiterDashboard({
       const data = await response.json();
       if (response.ok) {
         setSuccess(`Status updated to ${newStatus} successfully!`);
-        // Refresh detail
-        fetchAppDetail(id);
-        // Refresh master list
-        fetchApplications();
+        if (isUrgent) {
+          fetchUrgentCandidates();
+          if (selectedAppDetail) {
+            setSelectedAppDetail((prev: any) => ({
+              ...prev,
+              application: { ...prev.application, currentStatus: newStatus }
+            }));
+          }
+        } else {
+          // Refresh detail
+          fetchAppDetail(id);
+          // Refresh master list
+          fetchApplications();
+        }
         // Clear message after timeout
         setTimeout(() => setSuccess(null), 3000);
       } else {
@@ -467,6 +585,7 @@ export default function RecruiterDashboard({
   React.useEffect(() => {
     fetchJobs();
     fetchApplications();
+    fetchUrgentCandidates();
     fetchNotifications();
 
     // Regular polling fallback every 20 seconds
@@ -1133,6 +1252,7 @@ export default function RecruiterDashboard({
                 { id: 'profile', label: 'Company Profile', icon: Building2 },
                 { id: 'jobs', label: 'Jobs', icon: Briefcase, badge: jobs.length ? String(jobs.length) : undefined },
                 { id: 'applications', label: 'Applications', icon: FileText, badge: applications.length ? String(applications.length) : undefined },
+                { id: 'urgent-candidates', label: 'Urgent Candidates', icon: Sparkles, badge: urgentCandidates.length ? String(urgentCandidates.length) : undefined },
                 { id: 'settings', label: 'Settings', icon: Settings, badge: 'Soon' },
               ].map((item) => {
                 const IconComp = item.icon;
@@ -2769,6 +2889,231 @@ export default function RecruiterDashboard({
                                   setSelectedAppId(app.id);
                                   fetchAppDetail(app.id);
                                 }}
+                                className="px-3 py-1.5 bg-slate-950 hover:bg-slate-900 text-white text-[10px] font-extrabold rounded-xl shadow-sm transition-all cursor-pointer"
+                              >
+                                Review Details
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {/* URGENT CANDIDATES TAB (EXACTLY THE SAME CANDIDATE PRESENTATION FORMAT) */}
+          {activeTab === 'urgent-candidates' && (
+            <motion.div
+              key="urgent-candidates-tab"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.15 }}
+              className="space-y-6"
+            >
+              {/* Header Banner */}
+              <div className="bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-transparent border border-orange-500/20 rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="p-1.5 rounded-lg bg-orange-600 text-white">
+                      <Sparkles className="w-4 h-4" />
+                    </span>
+                    <h3 className="text-lg font-black text-gray-900 tracking-tight">Urgent Candidates</h3>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {urgentCandidates.length} candidate{urgentCandidates.length === 1 ? '' : 's'} require immediate recruiter attention and contact.
+                  </p>
+                </div>
+              </div>
+
+              {/* Summary Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                {[
+                  { label: 'Total Urgent', value: urgentCandidates.length, color: 'border-slate-150 bg-slate-50/50 text-slate-900' },
+                  { label: 'Pending / New', value: urgentCandidates.filter(a => a.currentStatus === 'Pending' || a.currentStatus === 'Applied').length, color: 'border-orange-100 bg-orange-50/30 text-orange-700' },
+                  { label: 'Contacted', value: urgentCandidates.filter(a => a.currentStatus === 'Contacted').length, color: 'border-blue-100 bg-blue-50/30 text-blue-700' },
+                  { label: 'Shortlisted', value: urgentCandidates.filter(a => a.currentStatus === 'Shortlisted').length, color: 'border-violet-100 bg-violet-50/30 text-violet-700' },
+                  { label: 'Hired / Approved', value: urgentCandidates.filter(a => a.currentStatus === 'Hired' || a.currentStatus === 'Approved').length, color: 'border-emerald-100 bg-emerald-50/30 text-emerald-700' },
+                ].map((stat, idx) => (
+                  <div key={idx} className={`border rounded-2xl p-4 shadow-sm text-center ${stat.color}`}>
+                    <span className="text-[10px] font-bold uppercase tracking-wider block leading-tight text-gray-400">{stat.label}</span>
+                    <span className="text-2xl font-black mt-1.5 block">{stat.value}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Filters & Search Board */}
+              <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm space-y-4">
+                <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+                  <div className="relative w-full sm:max-w-xs">
+                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search urgent candidate or mobile..."
+                      value={urgentSearch}
+                      onChange={(e) => setUrgentSearch(e.target.value)}
+                      className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all text-slate-800"
+                    />
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end">
+                    <button
+                      onClick={() => {
+                        setUrgentFilterJob('All');
+                        setUrgentFilterStatus('All');
+                        setUrgentFilterDate('All');
+                        setUrgentFilterCity('All');
+                        setUrgentSearch('');
+                      }}
+                      className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all cursor-pointer"
+                    >
+                      Reset Filters
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {/* Job Filter */}
+                  <div>
+                    <label className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Filter by Job</label>
+                    <select
+                      value={urgentFilterJob}
+                      onChange={(e) => setUrgentFilterJob(e.target.value)}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-2.5 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                    >
+                      <option value="All">All Jobs</option>
+                      {jobs.map((job) => (
+                        <option key={job.id} value={job.id}>{job.title}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Status Filter */}
+                  <div>
+                    <label className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Filter by Status</label>
+                    <select
+                      value={urgentFilterStatus}
+                      onChange={(e) => setUrgentFilterStatus(e.target.value)}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-2.5 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                    >
+                      <option value="All">All Statuses</option>
+                      <option value="Pending">Pending (New)</option>
+                      <option value="Contacted">Contacted</option>
+                      <option value="Shortlisted">Shortlisted</option>
+                      <option value="Hired">Hired / Approved</option>
+                      <option value="Rejected">Rejected</option>
+                    </select>
+                  </div>
+
+                  {/* City Filter */}
+                  <div>
+                    <label className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Candidate City</label>
+                    <select
+                      value={urgentFilterCity}
+                      onChange={(e) => setUrgentFilterCity(e.target.value)}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-2.5 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                    >
+                      <option value="All">All Cities</option>
+                      {Array.from(new Set(urgentCandidates.map(a => a.candidateCity || a.candidateLocation).filter(Boolean))).map((city: any) => (
+                        <option key={city} value={city}>{city}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Date Filter */}
+                  <div>
+                    <label className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Assigned Date</label>
+                    <select
+                      value={urgentFilterDate}
+                      onChange={(e) => setUrgentFilterDate(e.target.value)}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-2.5 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                    >
+                      <option value="All">All Time</option>
+                      <option value="Today">Today</option>
+                      <option value="Last 7 Days">Last 7 Days</option>
+                      <option value="Last 30 Days">Last 30 Days</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Table list (Identical layout to applications table) */}
+              <div className="bg-white border border-gray-150 rounded-2xl shadow-sm overflow-hidden">
+                {loadingUrgent ? (
+                  <div className="py-20 text-center text-xs text-gray-400 flex flex-col items-center justify-center gap-2">
+                    <RefreshCw className="w-6 h-6 animate-spin text-orange-500 mb-2" />
+                    Fetching urgent candidates...
+                  </div>
+                ) : filteredUrgentCandidates.length === 0 ? (
+                  <div className="py-16 text-center text-gray-400 flex flex-col items-center justify-center">
+                    <FileMinus className="w-10 h-10 text-gray-300 mb-2" />
+                    <p className="text-xs font-semibold">No urgent candidates found matching the current filters.</p>
+                    <p className="text-[10px] text-gray-400 mt-1">Check back soon or adjust your search filters.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-gray-50 border-b border-gray-150 text-[10px] font-black uppercase text-gray-400 tracking-wider">
+                          <th className="py-3 px-5">Candidate Name</th>
+                          <th className="py-3 px-5">Job Title</th>
+                          <th className="py-3 px-5">Assigned Date</th>
+                          <th className="py-3 px-5 text-center">Education</th>
+                          <th className="py-3 px-5">Location</th>
+                          <th className="py-3 px-5">Current Status</th>
+                          <th className="py-3 px-5 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 text-xs font-medium text-slate-700">
+                        {filteredUrgentCandidates.map((cand, idx) => (
+                          <tr key={cand.id ? `urg-${cand.id}` : `urg-row-${idx}`} className="hover:bg-gray-50/40 transition-colors">
+                            <td className="py-3 px-5">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 text-white flex items-center justify-center font-extrabold text-[10px] uppercase shadow-xs">
+                                  {cand.candidateName.split(' ').map((n: string) => n[0]).slice(0, 2).join('')}
+                                </div>
+                                <div>
+                                  <span className="font-bold text-slate-900 block">{cand.candidateName}</span>
+                                  <span className="text-[10px] text-gray-400 block font-mono">{cand.candidateMobile || cand.candidateContact}</span>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3 px-5">
+                              <span className="font-bold text-slate-800 block">{cand.jobTitle}</span>
+                              <span className="text-[10px] text-gray-400 block">{cand.jobCity}</span>
+                            </td>
+                            <td className="py-3 px-5 text-gray-500">
+                              {new Date(cand.assignedAt || cand.appliedDate).toLocaleDateString()}
+                            </td>
+                            <td className="py-3 px-5 text-center font-bold text-slate-800">
+                              {cand.candidateEducation || 'Graduate'}
+                            </td>
+                            <td className="py-3 px-5 text-gray-600">
+                              {cand.candidateLocation || cand.candidateCity || 'N/A'}
+                            </td>
+                            <td className="py-3 px-5">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wide border ${
+                                cand.currentStatus === 'Pending' || cand.currentStatus === 'Applied'
+                                  ? 'bg-orange-50 text-orange-700 border-orange-150' 
+                                  : cand.currentStatus === 'Contacted'
+                                    ? 'bg-blue-50 text-blue-700 border-blue-150'
+                                    : cand.currentStatus === 'Shortlisted' 
+                                      ? 'bg-violet-50 text-violet-700 border-violet-150'
+                                      : cand.currentStatus === 'Rejected'
+                                        ? 'bg-red-50 text-red-700 border-red-150'
+                                        : cand.currentStatus === 'Hired' || cand.currentStatus === 'Approved'
+                                          ? 'bg-emerald-50 text-emerald-700 border-emerald-150'
+                                          : 'bg-blue-50 text-blue-700 border-blue-150'
+                              }`}>
+                                {cand.currentStatus}
+                              </span>
+                            </td>
+                            <td className="py-3 px-5 text-right">
+                              <button
+                                onClick={() => handleSelectUrgentCandidate(cand)}
                                 className="px-3 py-1.5 bg-slate-950 hover:bg-slate-900 text-white text-[10px] font-extrabold rounded-xl shadow-sm transition-all cursor-pointer"
                               >
                                 Review Details

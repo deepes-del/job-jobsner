@@ -204,7 +204,7 @@ export function toSupabaseNotificationRow(n: any) {
   if (!n) return null;
   return {
     id: String(n.id || crypto.randomUUID()),
-    candidate_id: n.candidate_id || n.candidateId || n.recipientId || null,
+    candidate_id: n.candidate_id || n.candidateId || n.recipientId || n.recruiterId || 'system',
     title: String(n.title || ''),
     message: String(n.message || ''),
     category: n.category || n.type || 'GENERAL',
@@ -243,6 +243,38 @@ export function toSupabaseRecruiterNotificationRow(n: any) {
     candidate_details: n.candidateDetails || n.candidate_details || {},
     is_read: !!(n.isRead ?? n.is_read ?? false),
     created_at: n.createdAt || n.created_at || new Date().toISOString()
+  };
+}
+
+export function toSupabaseCandidatePoolRow(c: any) {
+  if (!c) return null;
+  return {
+    id: String(c.id || crypto.randomUUID()),
+    name: String(c.name || c.fullName || ''),
+    contact: String(c.contact || c.mobile || ''),
+    location: String(c.location || c.city || ''),
+    education: String(c.education || ''),
+    source: c.source || 'pool',
+    created_at: c.createdAt || c.created_at || new Date().toISOString(),
+    updated_at: c.updatedAt || c.updated_at || new Date().toISOString()
+  };
+}
+
+export function toSupabaseUrgentAssignmentRow(a: any) {
+  if (!a) return null;
+  return {
+    id: String(a.id || crypto.randomUUID()),
+    candidate_id: String(a.candidateId || a.candidate_id || ''),
+    job_id: String(a.jobId || a.job_id || ''),
+    recruiter_id: String(a.recruiterId || a.recruiter_id || ''),
+    candidate_name: String(a.candidateName || a.candidate_name || ''),
+    candidate_contact: String(a.candidateContact || a.candidate_contact || ''),
+    candidate_location: String(a.candidateLocation || a.candidate_location || ''),
+    candidate_education: String(a.candidateEducation || a.candidate_education || ''),
+    status: String(a.status || 'Pending'),
+    assigned_at: a.assignedAt || a.assigned_at || new Date().toISOString(),
+    assigned_by: String(a.assignedBy || a.assigned_by || 'admin'),
+    notes: a.notes || null
   };
 }
 
@@ -410,6 +442,14 @@ async function syncToSupabase(db: any) {
     if (db.notifications && db.notifications.length > 0) {
       const rows = db.notifications.map(toSupabaseNotificationRow).filter(Boolean);
       await safeSupabaseUpsert('notifications', rows);
+    }
+    if (db.candidatePool && db.candidatePool.length > 0) {
+      const rows = db.candidatePool.map(toSupabaseCandidatePoolRow).filter(Boolean);
+      await safeSupabaseUpsert('candidate_pool', rows);
+    }
+    if (db.urgentAssignments && db.urgentAssignments.length > 0) {
+      const rows = db.urgentAssignments.map(toSupabaseUrgentAssignmentRow).filter(Boolean);
+      await safeSupabaseUpsert('urgent_assignments', rows);
     }
   } catch (err: any) {
     console.warn('[Supabase Sync Warning] Failed to sync data to Supabase:', err.message || err);
@@ -940,6 +980,116 @@ async function getLiveRecruiterNotifications(recruiterId?: string): Promise<any[
   return list.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
+async function getLiveCandidatePool(): Promise<any[]> {
+  const db = readDB();
+  db.candidatePool = db.candidatePool || [];
+
+  // Seed candidate pool from existing candidates if empty
+  if (db.candidatePool.length === 0 && db.candidates && db.candidates.length > 0) {
+    db.candidatePool = db.candidates
+      .map((c: any) => {
+        const contact = String(c.mobile || '').replace(/\D/g, '').slice(-10);
+        return {
+          id: String(c.id),
+          name: c.fullName || c.profile?.fullName || 'Candidate',
+          contact,
+          location: c.profile?.city || c.profile?.location || c.city || 'Bengaluru',
+          education: c.profile?.education || c.education || 'Graduate',
+          source: 'platform',
+          createdAt: c.createdAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+      })
+      .filter((c: any) => c.contact && c.contact.length === 10);
+    writeDB(db);
+  }
+
+  try {
+    if (isSupabaseConfigured()) {
+      const supabase = getSupabase();
+      const { data, error } = await supabase.from('candidate_pool').select('*');
+      if (!error && data && Array.isArray(data)) {
+        const poolMap = new Map<string, any>();
+        (db.candidatePool || []).forEach((c: any) => {
+          if (c.id) poolMap.set(String(c.id), c);
+        });
+        data.forEach((r: any) => {
+          const id = String(r.id || '');
+          if (!id) return;
+          poolMap.set(id, {
+            id,
+            name: r.name || r.fullName || '',
+            contact: String(r.contact || r.mobile || '').replace(/\D/g, '').slice(-10),
+            location: r.location || r.city || '',
+            education: r.education || '',
+            source: r.source || 'pool',
+            createdAt: r.created_at || r.createdAt || new Date().toISOString(),
+            updatedAt: r.updated_at || r.updatedAt || new Date().toISOString()
+          });
+        });
+        db.candidatePool = Array.from(poolMap.values());
+        memoryDB = db;
+      }
+    }
+  } catch (err) {
+    console.warn('[Supabase Candidate Pool Fetch Warning]', err);
+  }
+
+  // Deduplicate by 10-digit contact
+  const seenContacts = new Set<string>();
+  const deduped: any[] = [];
+  for (const c of db.candidatePool || []) {
+    const contact = String(c.contact || '').trim();
+    if (!contact || seenContacts.has(contact)) continue;
+    seenContacts.add(contact);
+    deduped.push(c);
+  }
+  db.candidatePool = deduped;
+  return db.candidatePool;
+}
+
+async function getLiveUrgentAssignments(): Promise<any[]> {
+  const db = readDB();
+  db.urgentAssignments = db.urgentAssignments || [];
+
+  try {
+    if (isSupabaseConfigured()) {
+      const supabase = getSupabase();
+      const { data, error } = await supabase.from('urgent_assignments').select('*');
+      if (!error && data && Array.isArray(data)) {
+        const assignMap = new Map<string, any>();
+        (db.urgentAssignments || []).forEach((a: any) => {
+          if (a.id) assignMap.set(String(a.id), a);
+        });
+        data.forEach((r: any) => {
+          const id = String(r.id || '');
+          if (!id) return;
+          assignMap.set(id, {
+            id,
+            candidateId: String(r.candidate_id || r.candidateId || ''),
+            jobId: String(r.job_id || r.jobId || ''),
+            recruiterId: String(r.recruiter_id || r.recruiterId || ''),
+            candidateName: r.candidate_name || r.candidateName || '',
+            candidateContact: String(r.candidate_contact || r.candidateContact || ''),
+            candidateLocation: r.candidate_location || r.candidateLocation || '',
+            candidateEducation: r.candidate_education || r.candidateEducation || '',
+            status: r.status || 'Pending',
+            assignedAt: r.assigned_at || r.assignedAt || new Date().toISOString(),
+            assignedBy: r.assigned_by || r.assignedBy || 'admin',
+            notes: r.notes || ''
+          });
+        });
+        db.urgentAssignments = Array.from(assignMap.values());
+        memoryDB = db;
+      }
+    }
+  } catch (err) {
+    console.warn('[Supabase Urgent Assignments Fetch Warning]', err);
+  }
+
+  return db.urgentAssignments || [];
+}
+
 async function sendPushNotificationToRecruiter(recruiterId: string, title: string, body: string, dataPayload: any) {
   try {
     const db = readDB();
@@ -1207,8 +1357,19 @@ async function authenticateRecruiter(req: express.Request, res: express.Response
     return res.status(401).json({ error: 'Access denied. No token provided.' });
   }
 
-  const db = readDB();
-  const recruiterId = db.recruiterTokens[token];
+  let db = readDB();
+  let recruiterId = db.recruiterTokens?.[token] || db.tokens?.[token]?.recruiterId || (typeof db.tokens?.[token] === 'string' ? db.tokens[token] : null);
+
+  if (!recruiterId) {
+    try {
+      const diskDb = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'));
+      recruiterId = diskDb.recruiterTokens?.[token] || diskDb.tokens?.[token]?.recruiterId || (typeof diskDb.tokens?.[token] === 'string' ? diskDb.tokens[token] : null);
+      if (recruiterId) {
+        db.recruiterTokens = db.recruiterTokens || {};
+        db.recruiterTokens[token] = recruiterId;
+      }
+    } catch (_) {}
+  }
 
   if (!recruiterId) {
     return res.status(403).json({ error: 'Invalid or expired token.' });
@@ -4686,6 +4847,737 @@ app.get('/api/admin/jobs', async (req, res) => {
     res.json(allJobs);
   } catch (err: any) {
     res.status(500).json({ error: 'Failed to retrieve jobs' });
+  }
+});
+
+// ========================================================
+// SECTION 3: CANDIDATE POOL & URGENT ASSIGNMENTS API
+// ========================================================
+
+// 1. GET Candidate Pool (with pagination, search, sort, and summary stats)
+app.get('/api/admin/candidate-pool', async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(String(req.query.page || '1'), 10));
+    const limit = Math.max(1, Math.min(200, parseInt(String(req.query.limit || '50'), 10)));
+    const search = String(req.query.search || '').trim().toLowerCase();
+    const sortBy = String(req.query.sortBy || 'createdAt');
+    const sortOrder = String(req.query.sortOrder || 'desc').toLowerCase();
+    const locationFilter = String(req.query.location || 'All');
+    const educationFilter = String(req.query.education || 'All');
+    const jobId = String(req.query.jobId || '').trim();
+
+    const pool = await getLiveCandidatePool();
+    const assignments = await getLiveUrgentAssignments();
+
+    // Calculate Summary numbers
+    const totalCandidates = pool.length;
+    
+    // If a specific job is selected, calculate available/assigned relative to this job
+    let assignedToJobCount = 0;
+    let availableForJobCount = 0;
+    
+    if (jobId) {
+      const assignedIdsForJob = new Set(
+        assignments
+          .filter((a: any) => String(a.jobId) === String(jobId))
+          .map((a: any) => String(a.candidateId))
+      );
+      assignedToJobCount = assignedIdsForJob.size;
+      availableForJobCount = Math.max(0, totalCandidates - assignedToJobCount);
+    } else {
+      const distinctAssignedIds = new Set(assignments.map((a: any) => String(a.candidateId)));
+      assignedToJobCount = distinctAssignedIds.size;
+      availableForJobCount = Math.max(0, totalCandidates - assignedToJobCount);
+    }
+
+    // Apply Filters
+    let filtered = pool.filter((c: any) => {
+      if (search) {
+        const nameMatches = String(c.name || '').toLowerCase().includes(search);
+        const contactMatches = String(c.contact || '').includes(search);
+        const locationMatches = String(c.location || '').toLowerCase().includes(search);
+        const educationMatches = String(c.education || '').toLowerCase().includes(search);
+        if (!nameMatches && !contactMatches && !locationMatches && !educationMatches) return false;
+      }
+      if (locationFilter !== 'All' && String(c.location || '').toLowerCase() !== locationFilter.toLowerCase()) {
+        return false;
+      }
+      if (educationFilter !== 'All' && String(c.education || '').toLowerCase() !== educationFilter.toLowerCase()) {
+        return false;
+      }
+      return true;
+    });
+
+    // Apply Sorting
+    filtered.sort((a: any, b: any) => {
+      let valA = a[sortBy] || '';
+      let valB = b[sortBy] || '';
+      if (typeof valA === 'string') valA = valA.toLowerCase();
+      if (typeof valB === 'string') valB = valB.toLowerCase();
+      if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+      if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    // Pagination
+    const totalFiltered = filtered.length;
+    const totalPages = Math.ceil(totalFiltered / limit) || 1;
+    const startIndex = (page - 1) * limit;
+    const paginated = filtered.slice(startIndex, startIndex + limit);
+
+    res.json({
+      candidates: paginated,
+      totalCandidates,
+      availableCandidates: availableForJobCount,
+      assignedCandidates: assignedToJobCount,
+      totalFiltered,
+      totalPages,
+      currentPage: page,
+      limit
+    });
+  } catch (err: any) {
+    console.error('[Admin] Error fetching candidate pool:', err);
+    res.status(500).json({ error: 'Failed to retrieve candidate pool' });
+  }
+});
+
+// 2. POST Add Candidate Manually
+app.post('/api/admin/candidate-pool', async (req, res) => {
+  const { name, contact, location, education } = req.body;
+
+  if (!name || !name.trim()) {
+    return res.status(400).json({ error: 'Candidate Name is required.' });
+  }
+  if (!contact || !contact.trim()) {
+    return res.status(400).json({ error: 'Contact number is required.' });
+  }
+  if (!location || !location.trim()) {
+    return res.status(400).json({ error: 'Location is required.' });
+  }
+
+  const cleanContact = String(contact).replace(/\D/g, '').slice(-10);
+  if (cleanContact.length !== 10) {
+    return res.status(400).json({ error: 'Contact must be a valid 10-digit mobile number.' });
+  }
+
+  try {
+    const pool = await getLiveCandidatePool();
+    if (pool.some((c: any) => c.contact === cleanContact)) {
+      return res.status(400).json({ error: `A candidate with mobile ${cleanContact} already exists in the Candidate Pool.` });
+    }
+
+    const newCand = {
+      id: crypto.randomUUID(),
+      name: name.trim(),
+      contact: cleanContact,
+      location: location.trim(),
+      education: education ? education.trim() : 'Graduate',
+      source: 'manual',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    const db = readDB();
+    db.candidatePool = db.candidatePool || [];
+    db.candidatePool.unshift(newCand);
+
+    // Also link into db.candidates to keep central single record
+    db.candidates = db.candidates || [];
+    if (!db.candidates.some((c: any) => String(c.mobile || '').replace(/\D/g, '').slice(-10) === cleanContact)) {
+      const { salt, hash } = hashPassword('Candidate2026!');
+      db.candidates.unshift({
+        id: newCand.id,
+        fullName: newCand.name,
+        mobile: cleanContact,
+        salt,
+        hash,
+        profile: {
+          fullName: newCand.name,
+          city: newCand.location,
+          education: newCand.education,
+          languagesKnown: ['Hindi', 'English']
+        },
+        createdAt: newCand.createdAt
+      });
+    }
+    writeDB(db);
+
+    if (isSupabaseConfigured()) {
+      try {
+        await safeSupabaseUpsert('candidate_pool', [toSupabaseCandidatePoolRow(newCand)]);
+      } catch (e) {
+        console.warn('[Supabase Candidate Pool Upsert Warning]', e);
+      }
+    }
+
+    res.status(201).json({ message: 'Candidate added to pool successfully', candidate: newCand });
+  } catch (err: any) {
+    console.error('[Admin] Error adding candidate to pool:', err);
+    res.status(500).json({ error: 'Failed to add candidate to pool' });
+  }
+});
+
+// 3. PUT Edit Candidate Cell / Record Inline
+app.put('/api/admin/candidate-pool/:id', async (req, res) => {
+  const { id } = req.params;
+  const { name, contact, location, education } = req.body;
+  try {
+    const db = readDB();
+    db.candidatePool = db.candidatePool || [];
+
+    const existingIdx = db.candidatePool.findIndex((c: any) => String(c.id) === String(id));
+    if (existingIdx === -1) {
+      return res.status(404).json({ error: 'Candidate not found in pool.' });
+    }
+
+    const current = db.candidatePool[existingIdx];
+    const newName = name !== undefined ? String(name).trim() : current.name;
+    const newLocation = location !== undefined ? String(location).trim() : current.location;
+    const newEducation = education !== undefined ? String(education).trim() : (current.education || 'Graduate');
+
+    if (!newName) {
+      return res.status(400).json({ error: 'Candidate Name cannot be empty.' });
+    }
+    if (!newLocation) {
+      return res.status(400).json({ error: 'Location cannot be empty.' });
+    }
+
+    let cleanContact = current.contact;
+    if (contact !== undefined) {
+      cleanContact = String(contact).replace(/\D/g, '').slice(-10);
+      if (cleanContact.length !== 10) {
+        return res.status(400).json({ error: 'Contact must be a valid 10-digit mobile number.' });
+      }
+
+      // Check duplicate contact with other candidates
+      const duplicate = db.candidatePool.some(
+        (c: any, idx: number) => idx !== existingIdx && c.contact === cleanContact
+      );
+      if (duplicate) {
+        return res.status(400).json({ error: `Mobile number ${cleanContact} belongs to another candidate in the pool.` });
+      }
+    }
+
+    const updated = {
+      ...current,
+      name: newName,
+      contact: cleanContact,
+      location: newLocation,
+      education: newEducation,
+      updatedAt: new Date().toISOString()
+    };
+
+    db.candidatePool[existingIdx] = updated;
+
+    // Update corresponding record in db.candidates if exists
+    db.candidates = db.candidates || [];
+    const candIdx = db.candidates.findIndex((c: any) => String(c.id) === String(id) || String(c.mobile) === cleanContact);
+    if (candIdx >= 0) {
+      db.candidates[candIdx].fullName = updated.name;
+      db.candidates[candIdx].mobile = updated.contact;
+      if (db.candidates[candIdx].profile) {
+        db.candidates[candIdx].profile.fullName = updated.name;
+        db.candidates[candIdx].profile.city = updated.location;
+        db.candidates[candIdx].profile.education = updated.education;
+      }
+    }
+
+    writeDB(db);
+
+    if (isSupabaseConfigured()) {
+      try {
+        await safeSupabaseUpsert('candidate_pool', [toSupabaseCandidatePoolRow(updated)]);
+      } catch (e) {}
+    }
+
+    res.json({ message: 'Candidate updated successfully', candidate: updated });
+  } catch (err: any) {
+    console.error('[Admin] Error updating candidate in pool:', err);
+    res.status(500).json({ error: 'Failed to update candidate' });
+  }
+});
+
+// 4. DELETE Single Candidate from Pool
+app.delete('/api/admin/candidate-pool/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const db = readDB();
+    db.candidatePool = (db.candidatePool || []).filter((c: any) => String(c.id) !== String(id));
+    writeDB(db);
+
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = getSupabase();
+        await supabase.from('candidate_pool').delete().eq('id', id);
+      } catch (e) {}
+    }
+
+    res.json({ success: true, message: 'Candidate removed from pool' });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to delete candidate' });
+  }
+});
+
+// 5. POST Delete Multiple Candidates
+app.post('/api/admin/candidate-pool/delete-bulk', async (req, res) => {
+  const { ids } = req.body;
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ error: 'ids array required.' });
+  }
+
+  try {
+    const idSet = new Set(ids.map(String));
+    const db = readDB();
+    db.candidatePool = (db.candidatePool || []).filter((c: any) => !idSet.has(String(c.id)));
+    writeDB(db);
+
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = getSupabase();
+        await supabase.from('candidate_pool').delete().in('id', ids);
+      } catch (e) {}
+    }
+
+    res.json({ success: true, count: ids.length, message: `Removed ${ids.length} candidates` });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to bulk delete candidates' });
+  }
+});
+
+// 6. POST Bulk Import Candidates from Excel/CSV
+app.post('/api/admin/candidate-pool/import', async (req, res) => {
+  const { candidates } = req.body;
+  if (!candidates || !Array.isArray(candidates) || candidates.length === 0) {
+    return res.status(400).json({ error: 'No candidates provided for import.' });
+  }
+
+  try {
+    const pool = await getLiveCandidatePool();
+    const existingContacts = new Set(pool.map((c: any) => c.contact));
+
+    const totalRows = candidates.length;
+    let validRows = 0;
+    let duplicateRows = 0;
+    let invalidRows = 0;
+
+    const seenInBatch = new Set<string>();
+    const validCandidatesToInsert: any[] = [];
+
+    candidates.forEach((row: any) => {
+      const name = String(row.name || row.fullName || '').trim();
+      const rawContact = String(row.contact || row.mobile || row.phone || '').trim();
+      const cleanContact = rawContact.replace(/\D/g, '').slice(-10);
+      const location = String(row.location || row.city || row.area || '').trim();
+      const education = String(row.education || row.qualification || 'Graduate').trim();
+
+      // Check required fields & 10-digit mobile
+      if (!name || !location || cleanContact.length !== 10) {
+        invalidRows++;
+        return;
+      }
+
+      // Check duplicate against existing pool or within the same batch
+      if (existingContacts.has(cleanContact) || seenInBatch.has(cleanContact)) {
+        duplicateRows++;
+        return;
+      }
+
+      seenInBatch.add(cleanContact);
+      validRows++;
+
+      validCandidatesToInsert.push({
+        id: crypto.randomUUID(),
+        name,
+        contact: cleanContact,
+        location,
+        education: education || 'Graduate',
+        source: 'import',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+    });
+
+    if (validCandidatesToInsert.length > 0) {
+      const db = readDB();
+      db.candidatePool = db.candidatePool || [];
+      db.candidatePool.unshift(...validCandidatesToInsert);
+
+      // Sync central candidates table
+      db.candidates = db.candidates || [];
+      const existingCandMobiles = new Set(db.candidates.map((c: any) => String(c.mobile).replace(/\D/g, '').slice(-10)));
+      validCandidatesToInsert.forEach((c) => {
+        if (!existingCandMobiles.has(c.contact)) {
+          const { salt, hash } = hashPassword('Candidate2026!');
+          db.candidates.unshift({
+            id: c.id,
+            fullName: c.name,
+            mobile: c.contact,
+            salt,
+            hash,
+            profile: {
+              fullName: c.name,
+              city: c.location,
+              education: c.education,
+              languagesKnown: ['Hindi', 'English']
+            },
+            createdAt: c.createdAt
+          });
+        }
+      });
+      writeDB(db);
+
+      if (isSupabaseConfigured()) {
+        try {
+          const supaRows = validCandidatesToInsert.map(toSupabaseCandidatePoolRow).filter(Boolean);
+          await safeSupabaseUpsert('candidate_pool', supaRows);
+        } catch (e) {}
+      }
+    }
+
+    res.json({
+      totalRows,
+      validRows,
+      duplicateRows,
+      invalidRows,
+      importedCandidates: validCandidatesToInsert,
+      message: `Successfully imported ${validCandidatesToInsert.length} candidates. (Skipped ${duplicateRows} duplicates, ${invalidRows} invalid)`
+    });
+  } catch (err: any) {
+    console.error('[Admin] Error importing candidates:', err);
+    res.status(500).json({ error: 'Failed to import candidates' });
+  }
+});
+
+// 7. GET Eligible Candidates for a Job (Excluding already-assigned candidates)
+app.get('/api/admin/candidate-pool/eligible', async (req, res) => {
+  const jobId = String(req.query.jobId || '').trim();
+  if (!jobId) {
+    return res.status(400).json({ error: 'jobId is required.' });
+  }
+
+  try {
+    const pool = await getLiveCandidatePool();
+    const assignments = await getLiveUrgentAssignments();
+
+    const alreadyAssignedCandidateIds = new Set(
+      assignments
+        .filter((a: any) => String(a.jobId) === jobId)
+        .map((a: any) => String(a.candidateId))
+    );
+
+    const eligibleCandidates = pool.filter(
+      (c: any) => !alreadyAssignedCandidateIds.has(String(c.id))
+    );
+
+    res.json({
+      jobId,
+      totalPool: pool.length,
+      alreadyAssignedCount: alreadyAssignedCandidateIds.size,
+      eligibleCount: eligibleCandidates.length,
+      eligibleCandidates
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to check eligible candidates' });
+  }
+});
+
+// 8. POST Random Selection of Candidates (Truly randomized Fisher-Yates with count safeguards)
+app.post('/api/admin/candidate-pool/random-select', async (req, res) => {
+  const { jobId, recruiterId, count } = req.body;
+  if (!jobId) {
+    return res.status(400).json({ error: 'jobId is required.' });
+  }
+
+  const requestedCount = parseInt(String(count || '20'), 10);
+  if (isNaN(requestedCount) || requestedCount <= 0) {
+    return res.status(400).json({ error: 'Invalid count requested.' });
+  }
+
+  try {
+    const pool = await getLiveCandidatePool();
+    const assignments = await getLiveUrgentAssignments();
+
+    // Exclude candidates already assigned to the SAME job
+    const alreadyAssignedCandidateIds = new Set(
+      assignments
+        .filter((a: any) => String(a.jobId) === String(jobId))
+        .map((a: any) => String(a.candidateId))
+    );
+
+    const eligible = pool.filter(
+      (c: any) => !alreadyAssignedCandidateIds.has(String(c.id))
+    );
+
+    if (eligible.length === 0) {
+      return res.status(200).json({
+        selectedCandidates: [],
+        requestedCount,
+        actualCount: 0,
+        warning: 'No eligible candidates available in the pool for this job. All pool candidates are already assigned or pool is empty.'
+      });
+    }
+
+    // Cryptographic / True Fisher-Yates shuffle
+    const shuffled = [...eligible];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    const selectCount = Math.min(requestedCount, shuffled.length);
+    const selected = shuffled.slice(0, selectCount);
+
+    let warning: string | null = null;
+    if (eligible.length < requestedCount) {
+      warning = `Only ${eligible.length} eligible candidate${eligible.length === 1 ? ' is' : 's are'} available.`;
+    }
+
+    res.json({
+      selectedCandidates: selected,
+      requestedCount,
+      actualCount: selected.length,
+      warning
+    });
+  } catch (err: any) {
+    console.error('[Admin] Error randomly selecting candidates:', err);
+    res.status(500).json({ error: 'Failed to randomly select candidates' });
+  }
+});
+
+// 9. POST Confirm Assignment of Candidates to Recruiter's Job
+app.post('/api/admin/candidate-pool/assign', async (req, res) => {
+  const { jobId, recruiterId, candidateIds } = req.body;
+
+  if (!jobId || !recruiterId || !candidateIds || !Array.isArray(candidateIds) || candidateIds.length === 0) {
+    return res.status(400).json({ error: 'jobId, recruiterId, and candidateIds array are required.' });
+  }
+
+  try {
+    const pool = await getLiveCandidatePool();
+    const allJobs = await getLiveJobs();
+    const allRecruiters = await getLiveRecruiters();
+    const existingAssignments = await getLiveUrgentAssignments();
+
+    const job = allJobs.find((j: any) => String(j.id) === String(jobId));
+    if (!job) {
+      return res.status(404).json({ error: 'Target job not found.' });
+    }
+
+    const recruiter = allRecruiters.find((r: any) => String(r.id) === String(recruiterId));
+
+    const candMap = new Map<string, any>();
+    pool.forEach((c: any) => candMap.set(String(c.id), c));
+
+    // Filter out already assigned candidates to this specific job
+    const assignedIdsForThisJob = new Set(
+      existingAssignments
+        .filter((a: any) => String(a.jobId) === String(jobId))
+        .map((a: any) => String(a.candidateId))
+    );
+
+    const newAssignments: any[] = [];
+    const now = new Date().toISOString();
+
+    for (const candId of candidateIds) {
+      const idStr = String(candId);
+      if (assignedIdsForThisJob.has(idStr)) continue;
+
+      const candidate = candMap.get(idStr);
+      if (!candidate) continue;
+
+      newAssignments.push({
+        id: `urg_${crypto.randomUUID()}`,
+        candidateId: idStr,
+        jobId: String(jobId),
+        recruiterId: String(recruiterId),
+        candidateName: candidate.name,
+        candidateContact: candidate.contact,
+        candidateLocation: candidate.location,
+        candidateEducation: candidate.education,
+        status: 'Pending',
+        assignedAt: now,
+        assignedBy: 'admin',
+        notes: ''
+      });
+    }
+
+    if (newAssignments.length === 0) {
+      return res.status(400).json({ error: 'All selected candidates are already assigned to this job.' });
+    }
+
+    const db = readDB();
+    db.urgentAssignments = db.urgentAssignments || [];
+    db.urgentAssignments.unshift(...newAssignments);
+    writeDB(db);
+
+    // Sync to Supabase urgent_assignments table
+    if (isSupabaseConfigured()) {
+      try {
+        const rows = newAssignments.map(toSupabaseUrgentAssignmentRow).filter(Boolean);
+        await safeSupabaseUpsert('urgent_assignments', rows);
+      } catch (e) {
+        console.warn('[Supabase Urgent Assignments Upsert Warning]', e);
+      }
+    }
+
+    // Broadcast notification to Recruiter
+    try {
+      await createAndBroadcastNotification({
+        title: '⚡ Urgent Candidates Assigned',
+        message: `${newAssignments.length} urgent candidate${newAssignments.length === 1 ? '' : 's'} assigned to "${job.title}" require attention.`,
+        type: 'GENERAL',
+        targetRole: 'RECRUITER',
+        recruiterId: String(recruiterId),
+        jobId: String(jobId)
+      });
+    } catch (notifErr) {
+      console.warn('[Assign Notification Warning]', notifErr);
+    }
+
+    res.json({
+      success: true,
+      assignedCount: newAssignments.length,
+      message: `${newAssignments.length} candidates have been added to Urgent Candidates.`
+    });
+  } catch (err: any) {
+    console.error('[Admin] Error assigning candidates:', err);
+    res.status(500).json({ error: 'Failed to assign candidates' });
+  }
+});
+
+// 10. GET Urgent Candidates Count for Job
+app.get('/api/admin/jobs/:jobId/urgent-count', async (req, res) => {
+  const { jobId } = req.params;
+  try {
+    const assignments = await getLiveUrgentAssignments();
+    const count = assignments.filter((a: any) => String(a.jobId) === String(jobId)).length;
+    res.json({ jobId, urgentCount: count });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to get count' });
+  }
+});
+
+// 11. RECRUITER: GET Urgent Candidates for Recruiter's Jobs
+app.get('/api/recruiter/urgent-candidates', authenticateRecruiter, async (req, res) => {
+  const recruiter = (req as any).recruiter;
+  try {
+    const allJobs = await getLiveJobs();
+    const assignments = await getLiveUrgentAssignments();
+
+    const isRecruiterJob = (j: any) => {
+      if (!j) return false;
+      if (recruiter.role === 'admin') return true;
+      const recId = String(recruiter.id || '');
+      const recEmail = String(recruiter.email || '').toLowerCase();
+      const jobRecId = String(j.recruiterId || j.recruiter_id || '');
+      if (jobRecId && (jobRecId === recId || jobRecId.toLowerCase() === recEmail)) return true;
+      if (recruiter.companyName && j.companyName && recruiter.companyName.trim().toLowerCase() === j.companyName.trim().toLowerCase()) return true;
+      return false;
+    };
+
+    const myJobs = allJobs.filter(isRecruiterJob);
+    const myJobIds = new Set(myJobs.map((j: any) => String(j.id)));
+
+    // Filter assignments that belong to the recruiter or the recruiter's jobs
+    const myAssignments = assignments.filter((a: any) => 
+      myJobIds.has(String(a.jobId)) || 
+      String(a.recruiterId) === String(recruiter.id) || 
+      (recruiter.email && String(a.recruiterId).toLowerCase() === String(recruiter.email).toLowerCase())
+    );
+
+    // Transform into standard applicant shape for exact UI reuse
+    const normalized = myAssignments.map((a: any) => {
+      const job = allJobs.find((j: any) => String(j.id) === String(a.jobId)) || {};
+      return {
+        id: String(a.id),
+        assignmentId: String(a.id),
+        candidateId: String(a.candidateId),
+        jobId: String(a.jobId),
+        jobTitle: job.title || 'Logistics Opening',
+        jobCity: job.city || a.candidateLocation || '',
+        jobArea: job.area || '',
+        recruiterId: String(a.recruiterId),
+        candidateName: a.candidateName || 'Candidate',
+        candidateMobile: a.candidateContact || '',
+        candidateContact: a.candidateContact || '',
+        candidateLocation: a.candidateLocation || '',
+        candidateCity: a.candidateLocation || '',
+        candidateEducation: a.candidateEducation || 'Graduate',
+        candidateExperience: 0,
+        currentStatus: a.status || 'Pending',
+        status: a.status || 'Pending',
+        assignedAt: a.assignedAt,
+        appliedDate: a.assignedAt, // Compatibility with existing applicant UI date sorting
+        isUrgentCandidate: true
+      };
+    });
+
+    res.json({
+      urgentCandidates: normalized,
+      total: normalized.length
+    });
+  } catch (err: any) {
+    console.error('[Recruiter] Error fetching urgent candidates:', err);
+    res.status(500).json({ error: 'Server error retrieving urgent candidates.' });
+  }
+});
+
+// 12. RECRUITER: Update Urgent Candidate Status
+app.post('/api/recruiter/urgent-candidates/:id/status', authenticateRecruiter, async (req, res) => {
+  const recruiter = (req as any).recruiter;
+  const assignmentId = req.params.id;
+  const { status: newStatus } = req.body;
+
+  const allowedStatuses = ['Pending', 'Contacted', 'Shortlisted', 'Rejected', 'Hired', 'Approved'];
+  if (!newStatus || !allowedStatuses.includes(newStatus)) {
+    return res.status(400).json({ error: `Invalid status. Allowed: ${allowedStatuses.join(', ')}` });
+  }
+
+  try {
+    const db = readDB();
+    db.urgentAssignments = db.urgentAssignments || [];
+    const allAssignments = await getLiveUrgentAssignments();
+    const allJobs = await getLiveJobs();
+
+    let assignment = db.urgentAssignments.find((a: any) => String(a.id) === String(assignmentId));
+    if (!assignment) {
+      assignment = allAssignments.find((a: any) => String(a.id) === String(assignmentId));
+      if (assignment) db.urgentAssignments.push(assignment);
+    }
+
+    if (!assignment) {
+      return res.status(404).json({ error: 'Urgent candidate assignment not found.' });
+    }
+
+    const job = allJobs.find((j: any) => String(j.id) === String(assignment.jobId));
+    const isOwner = 
+      !job ||
+      recruiter.role === 'admin' ||
+      String(assignment.recruiterId) === String(recruiter.id) ||
+      (recruiter.email && String(assignment.recruiterId).toLowerCase() === String(recruiter.email).toLowerCase()) ||
+      String(job.recruiterId || job.recruiter_id) === String(recruiter.id) ||
+      String(job.recruiterId || job.recruiter_id).toLowerCase() === String(recruiter.email || '').toLowerCase() ||
+      (recruiter.companyName && job.companyName && recruiter.companyName.trim().toLowerCase() === job.companyName.trim().toLowerCase());
+
+    if (!isOwner) {
+      return res.status(403).json({ error: 'Unauthorized to modify this candidate.' });
+    }
+
+    const normalizedStatus = newStatus === 'Approved' ? 'Hired' : newStatus;
+    assignment.status = normalizedStatus;
+    assignment.updatedAt = new Date().toISOString();
+    writeDB(db);
+
+    if (isSupabaseConfigured()) {
+      try {
+        await safeSupabaseUpsert('urgent_assignments', [toSupabaseUrgentAssignmentRow(assignment)]);
+      } catch (e) {}
+    }
+
+    res.json({ success: true, status: normalizedStatus, message: 'Status updated successfully' });
+  } catch (err: any) {
+    console.error('[Recruiter] Error updating urgent candidate status:', err);
+    res.status(500).json({ error: 'Failed to update urgent candidate status.' });
   }
 });
 

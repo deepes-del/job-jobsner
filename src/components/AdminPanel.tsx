@@ -26,6 +26,7 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 import { ExcelCandidateGrid, CandidateGridRow } from './ExcelCandidateGrid';
+import CandidatePoolSection from './CandidatePoolSection';
 
 interface AdminPanelProps {
   isOpen: boolean;
@@ -394,20 +395,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose, onJobPo
                 Expansion Slots
               </div>
 
-              {/* Section 3: Reserved */}
+              {/* Section 3: Candidate Pool */}
               <button
                 onClick={() => setActiveSection(3)}
                 className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition ${
                   activeSection === 3
-                    ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30 shadow-sm'
-                    : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
+                    ? 'bg-orange-500/15 text-orange-400 border border-orange-500/30 shadow-sm'
+                    : 'text-slate-300 hover:bg-slate-900 hover:text-white'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <Box className="w-4 h-4 text-slate-500" />
-                  <span>3. Reserved Section</span>
+                  <FileSpreadsheet className={`w-4 h-4 ${activeSection === 3 ? 'text-orange-400' : 'text-slate-400'}`} />
+                  <span className="truncate">3. Candidate Pool</span>
                 </div>
-                <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">Slot 3</span>
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30 font-bold">Pool</span>
               </button>
 
               {/* Section 4: Reserved */}
@@ -914,20 +915,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose, onJobPo
               </div>
             )}
 
-            {/* SECTION 3: RESERVED */}
+            {/* SECTION 3: CANDIDATE POOL */}
             {activeSection === 3 && (
-              <div className="flex-1 flex flex-col items-center justify-center py-20 text-center animate-fade-in max-w-lg mx-auto">
-                <div className="w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-4 shadow-xl">
-                  <Box className="w-8 h-8" />
-                </div>
-                <h3 className="text-lg font-bold text-white">Section 3: Reserved for Future Expansion</h3>
-                <p className="text-xs text-slate-400 mt-2 leading-relaxed">
-                  This section is deliberately reserved for upcoming platform modules such as automated AI resume matching, bulk WhatsApp candidate broadcast, and recruiter billing ledger.
-                </p>
-                <div className="mt-6 px-3 py-1.5 rounded-full bg-slate-800 text-slate-400 text-xs font-mono border border-slate-700">
-                  SLOT_3_AVAILABLE
-                </div>
-              </div>
+              <CandidatePoolSection
+                recruiters={recruiters}
+                onAssignmentComplete={() => {
+                  fetchRecruiters();
+                }}
+              />
             )}
 
             {/* SECTION 4: RESERVED */}
