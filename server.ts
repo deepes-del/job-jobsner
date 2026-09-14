@@ -5378,6 +5378,8 @@ app.post('/api/admin/candidate-pool/assign', async (req, res) => {
     const newAssignments: any[] = [];
     const now = new Date().toISOString();
 
+    const effectiveRecruiterId = job.recruiterId || job.recruiter_id || String(recruiterId);
+
     for (const candId of candidateIds) {
       const idStr = String(candId);
       if (assignedIdsForThisJob.has(idStr)) continue;
@@ -5389,7 +5391,7 @@ app.post('/api/admin/candidate-pool/assign', async (req, res) => {
         id: `urg_${crypto.randomUUID()}`,
         candidateId: idStr,
         jobId: String(jobId),
-        recruiterId: String(recruiterId),
+        recruiterId: String(effectiveRecruiterId),
         candidateName: candidate.name,
         candidateContact: candidate.contact,
         candidateLocation: candidate.location,
