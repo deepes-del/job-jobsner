@@ -212,8 +212,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose, onJobPo
       setAuthUsername('');
       setAuthPassword('');
       setAuthError(null);
+      sessionStorage.removeItem('jobsner_admin_token');
     }
   }, [isOpen]);
+
+  const handleClosePanel = () => {
+    setIsAdminAuth(false);
+    setAuthUsername('');
+    setAuthPassword('');
+    setAuthError(null);
+    sessionStorage.removeItem('jobsner_admin_token');
+    onClose();
+  };
 
   useEffect(() => {
     if (selectedRecruiterId) {
@@ -363,7 +373,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose, onJobPo
         <div className="bg-slate-900 border border-slate-800 text-slate-100 rounded-2xl w-full max-w-md shadow-2xl p-6 sm:p-8 flex flex-col relative font-sans">
           
           <button
-            onClick={onClose}
+            onClick={handleClosePanel}
             className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-800 rounded-lg transition"
             title="Close"
           >
@@ -508,7 +518,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose, onJobPo
               <span>Log Out</span>
             </button>
             <button
-              onClick={onClose}
+              onClick={handleClosePanel}
               className="p-2 text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-800 rounded-lg border border-slate-700/60 transition"
               title="Close Admin Panel"
             >
