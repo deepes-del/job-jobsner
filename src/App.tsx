@@ -148,15 +148,25 @@ export default function App() {
     };
 
     const restoreAll = async () => {
-      await fetchDbStatus();
-      const candidateRestored = await checkCandidate();
-      if (!candidateRestored) {
-        const recruiterRestored = await checkRecruiter();
-        if (!recruiterRestored) {
-          setUserRole(null);
+      try {
+        fetchDbStatus().catch(() => {});
+        const candidateRestored = await checkCandidate();
+        if (!candidateRestored) {
+          const recruiterRestored = await checkRecruiter();
+          if (!recruiterRestored) {
+            setUserRole(null);
+            setView('login');
+            setRecruiterView('login');
+          }
         }
+      } catch (err) {
+        console.error('Session restore error:', err);
+        setUserRole(null);
+        setView('login');
+        setRecruiterView('login');
+      } finally {
+        setInitialLoading(false);
       }
-      setInitialLoading(false);
     };
 
     restoreAll();
@@ -266,7 +276,6 @@ export default function App() {
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin" />
-          <p className="text-sm font-semibold text-gray-500">Restoring Jobsner session...</p>
         </div>
       </div>
     );
@@ -562,7 +571,7 @@ export default function App() {
               {/* --- CANDIDATE PORTAL VIEWS --- */}
               {portal === 'candidate' && (
                 <React.Fragment>
-                  {view === 'login' && (
+                  {(view === 'login' || (!candidate && (view === 'dashboard' || view === 'profile_edit' || view === 'documents'))) && (
                     <motion.div
                       key="cand-login"
                       initial={{ opacity: 0, y: 15 }}
@@ -683,7 +692,7 @@ export default function App() {
               {/* --- RECRUITER PORTAL VIEWS --- */}
               {portal === 'recruiter' && (
                 <React.Fragment>
-                  {recruiterView === 'login' && (
+                  {(recruiterView === 'login' || (!recruiter && recruiterView === 'dashboard')) && (
                     <motion.div
                       key="recruiter-login"
                       initial={{ opacity: 0, y: 15 }}
