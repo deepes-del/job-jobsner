@@ -427,10 +427,6 @@ async function syncToSupabase(db: any) {
       const rows = db.recruiters.map(toSupabaseRecruiterRow).filter(Boolean);
       await safeSupabaseUpsert('recruiters', rows);
     }
-    if (db.jobs && db.jobs.length > 0) {
-      const rows = db.jobs.map(toSupabaseJobRow).filter(Boolean);
-      await safeSupabaseUpsert('jobs', rows);
-    }
     if (db.applications && db.applications.length > 0) {
       const rows = db.applications.map(toSupabaseApplicationRow).filter(Boolean);
       await safeSupabaseUpsert('applications', rows);

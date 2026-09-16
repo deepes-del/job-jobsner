@@ -893,14 +893,14 @@ export default function CandidateDashboard({
               Discover verified jobs and take the next step in your career
             </p>
             
-            <div className="flex items-center gap-3 mt-3">
+            <div className="flex flex-wrap items-center gap-3 mt-3">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/90 text-slate-800 border border-orange-200/70 shadow-2xs">
                 <Briefcase className="w-3.5 h-3.5 text-[#FF5500]" />
                 Job Seeker
               </span>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/90 text-slate-800 border border-orange-200/70 shadow-2xs">
                 <MapPin className="w-3.5 h-3.5 text-[#FF5500]" />
-                {profile.city || profile.locality || 'Bengal'}
+                {[profile.locality, profile.city, profile.state, profile.pincode ? `PIN: ${profile.pincode}` : ''].filter(Boolean).join(', ') || profile.location || 'Location Not Specified'}
               </span>
               <button
                 onClick={onLogout}
@@ -2295,46 +2295,68 @@ export default function CandidateDashboard({
 
               {/* Notification Items List */}
               <div className="p-6 overflow-y-auto space-y-4 divide-y divide-gray-100 flex-1">
-                {/* Notification 1: Active Applications */}
-                <div className="pt-3 first:pt-0 flex items-start gap-3.5">
-                  <div className="p-2.5 bg-orange-50 text-[#FF5500] rounded-2xl shrink-0 mt-0.5">
-                    <Briefcase className="w-4 h-4" />
+                
+                {/* Section A: Recruiter Application Review Status Updates */}
+                {myApplications.length > 0 && (
+                  <div className="space-y-3 pb-2">
+                    <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Recruiter Application Reviews</h4>
+                    {myApplications.slice(0, 4).map((app, idx) => (
+                      <div key={app.id || idx} className="pt-2 flex items-start gap-3.5">
+                        <div className="p-2.5 bg-orange-50 text-[#FF5500] rounded-2xl shrink-0 mt-0.5">
+                          <Briefcase className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <h5 className="text-xs font-extrabold text-slate-900">{app.jobTitle || 'Job Opening'}</h5>
+                            <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">
+                              {app.currentStatus || 'Applied'}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                            <span className="font-semibold text-slate-800">{app.companyName || 'Recruiter'}</span> updated status to <span className="font-bold text-slate-900">{app.currentStatus || 'Applied'}</span>.
+                          </p>
+                          <span className="text-[10px] text-slate-400 font-semibold block mt-1">
+                            Applied: {new Date(app.appliedDate).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-extrabold text-slate-900">Application Trackers Active</h4>
-                      <span className="text-[10px] font-bold text-slate-400">Just Now</span>
-                    </div>
-                    <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                      You have <span className="font-bold text-[#FF5500]">{myApplications.length}</span> active job application{myApplications.length === 1 ? '' : 's'}. Fleet employers receive your profile automatically.
-                    </p>
-                  </div>
-                </div>
+                )}
 
-                {/* Notification 2: Matching Jobs Alert */}
-                <div className="pt-3 flex items-start gap-3.5">
-                  <div className="p-2.5 bg-blue-50 text-blue-600 rounded-2xl shrink-0 mt-0.5">
-                    <Sparkles className="w-4 h-4" />
+                {/* Section B: Recently Posted Jobs */}
+                {activeJobs.length > 0 && (
+                  <div className="space-y-3 pt-3">
+                    <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Recently Posted Jobs</h4>
+                    {activeJobs.slice(0, 4).map((job, idx) => (
+                      <div key={job.id || idx} className="pt-2 flex items-start gap-3.5">
+                        <div className="p-2.5 bg-blue-50 text-blue-600 rounded-2xl shrink-0 mt-0.5">
+                          <Sparkles className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <h5 className="text-xs font-extrabold text-slate-900">{job.title}</h5>
+                            <span className="text-[10px] font-bold text-slate-400">
+                              {job.createdAt ? new Date(job.createdAt).toLocaleDateString() : 'Recent'}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                            <span className="font-semibold text-slate-800">{job.companyName || 'Fleet Hiring'}</span> in <span className="font-semibold text-slate-800">{job.city || 'India'}</span>. Salary: <span className="font-bold text-emerald-600">₹{job.minSalary || 15000} - ₹{job.maxSalary || 25000}/mo</span>
+                          </p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-extrabold text-slate-900">New Verified Jobs Found</h4>
-                      <span className="text-[10px] font-bold text-slate-400">Today</span>
-                    </div>
-                    <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                      Found <span className="font-bold text-slate-900">{activeJobs.length}</span> verified delivery and warehouse openings in your region.
-                    </p>
-                  </div>
-                </div>
+                )}
 
-                {/* Notification 3: Profile Compliance */}
+                {/* Section C: System & Profile Verification Status */}
                 <div className="pt-3 flex items-start gap-3.5">
                   <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-2xl shrink-0 mt-0.5">
                     <CheckCircle className="w-4 h-4" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-extrabold text-slate-900">Profile Verified</h4>
+                      <h4 className="text-xs font-extrabold text-slate-900">Profile & Mobile Verified</h4>
                       <span className="text-[10px] font-bold text-slate-400">System</span>
                     </div>
                     <p className="text-xs text-slate-600 mt-1 leading-relaxed">
@@ -2342,6 +2364,7 @@ export default function CandidateDashboard({
                     </p>
                   </div>
                 </div>
+
               </div>
 
               {/* Modal Footer */}
