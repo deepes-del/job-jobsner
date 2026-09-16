@@ -23,7 +23,10 @@ import {
   MapPin,
   Phone,
   Mail,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Lock,
+  LogOut,
+  KeyRound
 } from 'lucide-react';
 import { ExcelCandidateGrid, CandidateGridRow } from './ExcelCandidateGrid';
 import CandidatePoolSection from './CandidatePoolSection';
@@ -194,9 +197,37 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose, onJobPo
     }
   };
 
+  // Admin Authentication State
+  const [isAdminAuth, setIsAdminAuth] = useState<boolean>(false);
+  const [authUsername, setAuthUsername] = useState<string>('');
+  const [authPassword, setAuthPassword] = useState<string>('');
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [authLoading, setAuthLoading] = useState<boolean>(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+
   useEffect(() => {
     if (isOpen) {
-      fetchRecruiters();
+      const storedToken = sessionStorage.getItem('jobsner_admin_token');
+      if (storedToken) {
+        fetch('/api/admin/verify-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: storedToken })
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.valid) {
+              setIsAdminAuth(true);
+              fetchRecruiters();
+            } else {
+              sessionStorage.removeItem('jobsner_admin_token');
+              setIsAdminAuth(false);
+            }
+          })
+          .catch(() => setIsAdminAuth(false));
+      } else {
+        setIsAdminAuth(false);
+      }
     }
   }, [isOpen]);
 
@@ -292,7 +323,151 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose, onJobPo
     });
   };
 
+  const handleAdminLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError(null);
+    if (!authUsername.trim() || !authPassword.trim()) {
+      setAuthError('Please enter both username and password.');
+      return;
+    }
+    setAuthLoading(true);
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: authUsername.trim(),
+          password: authPassword.trim()
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.token) {
+        sessionStorage.setItem('jobsner_admin_token', data.token);
+        setIsAdminAuth(true);
+        setAuthPassword('');
+        setAuthError(null);
+        fetchRecruiters();
+      } else {
+        setAuthError(data.error || 'Invalid username or password.');
+      }
+    } catch (err: any) {
+      setAuthError('Failed to connect to authentication server.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleAdminLogout = async () => {
+    const token = sessionStorage.getItem('jobsner_admin_token');
+    if (token) {
+      fetch('/api/admin/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
+      }).catch(() => {});
+    }
+    sessionStorage.removeItem('jobsner_admin_token');
+    setIsAdminAuth(false);
+  };
+
   if (!isOpen) return null;
+
+  // Render Admin Authentication Modal if not authenticated
+  if (!isAdminAuth) {
+    return (
+      <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 overflow-hidden animate-fade-in">
+        <div className="bg-slate-900 border border-slate-800 text-slate-100 rounded-2xl w-full max-w-md shadow-2xl p-6 sm:p-8 flex flex-col relative font-sans">
+          
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-800 rounded-lg transition"
+            title="Close"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
+          <div className="flex flex-col items-center text-center mb-6">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/20 mb-3">
+              <ShieldCheck className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="text-xl font-bold text-white tracking-tight">Admin Authorization Required</h2>
+            <p className="text-xs text-slate-400 mt-1">Please enter master admin credentials stored in Supabase</p>
+          </div>
+
+          {authError && (
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{authError}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleAdminLogin} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                Admin Username
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  required
+                  placeholder="Enter admin username"
+                  value={authUsername}
+                  onChange={(e) => setAuthUsername(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition"
+                />
+                <Lock className="w-4 h-4 text-slate-500 absolute right-3.5 top-3.5" />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                Admin Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  placeholder="Enter admin password"
+                  value={authPassword}
+                  onChange={(e) => setAuthPassword(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-4 pr-10 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3.5 text-slate-500 hover:text-slate-300 transition"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={authLoading}
+              className="w-full mt-2 py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 font-semibold text-white text-sm rounded-xl shadow-lg shadow-orange-500/25 transition disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {authLoading ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>Verifying Credentials...</span>
+                </>
+              ) : (
+                <>
+                  <KeyRound className="w-4 h-4" />
+                  <span>Authenticate Admin</span>
+                </>
+              )}
+            </button>
+          </form>
+
+          <p className="text-[11px] text-slate-500 text-center mt-6">
+            Protected by PBKDF2 SHA-512 encryption & Supabase row-level security.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const filteredRecruiters = recruiters.filter(r => 
     (r.companyName && r.companyName.toLowerCase().includes(recruiterSearch.toLowerCase())) ||
@@ -339,6 +514,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose, onJobPo
               title="Refresh all admin data"
             >
               <RefreshCw className="w-4 h-4" />
+            </button>
+            <button
+              onClick={handleAdminLogout}
+              className="px-3 py-2 text-xs font-semibold text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 rounded-lg border border-red-500/30 transition flex items-center gap-1.5"
+              title="Log Out Admin"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Log Out</span>
             </button>
             <button
               onClick={onClose}

@@ -4475,6 +4475,106 @@ async function initDatabase() {
   }
 }
 
+// --- ADMIN AUTHENTICATION & SESSION ENDPOINTS ---
+
+const activeAdminTokens = new Set<string>();
+
+// Endpoint to verify Admin login against Supabase 'admins' table
+app.post('/api/admin/login', async (req, res) => {
+  try {
+    const { username, password } = req.body || {};
+    if (!username || !password) {
+      return res.status(400).json({ success: false, error: 'Username and password are required.' });
+    }
+
+    const trimmedUser = String(username).trim();
+    const trimmedPass = String(password).trim();
+
+    let adminRecord: { username: string; password_hash: string; salt: string; role?: string } | null = null;
+
+    // First attempt query against Supabase 'admins' table
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = getSupabase();
+        const { data, error } = await supabase
+          .from('admins')
+          .select('*')
+          .eq('username', trimmedUser)
+          .maybeSingle();
+
+        if (data && !error) {
+          adminRecord = data;
+        }
+      } catch (dbErr: any) {
+        console.warn('[Admin Auth] Supabase admins query failed/warning:', dbErr?.message || dbErr);
+      }
+    }
+
+    // Secure server-side PBKDF2 SHA-512 fallback (matches Supabase SQL seed for Jobsner2026@)
+    const fallbackSalt = '3a450d8ef002e04046ff3539f63fe963';
+    const fallbackHash = '987cf8f8734d7d1c5f8892b1b891fef1789d306c676218fc66207b108d51d5539ab5b241fc4b57caa4ab6b629028fa90f09cb36b1195004a9087f248e0665864';
+
+    if (!adminRecord && trimmedUser === 'Jobsner2026@') {
+      adminRecord = {
+        username: 'Jobsner2026@',
+        password_hash: fallbackHash,
+        salt: fallbackSalt,
+        role: 'superadmin'
+      };
+    }
+
+    if (!adminRecord) {
+      return res.status(401).json({ success: false, error: 'Invalid username or password.' });
+    }
+
+    // Recompute PBKDF2 SHA-512 Hash with salt from DB
+    const computedHash = crypto.pbkdf2Sync(trimmedPass, adminRecord.salt, 1000, 64, 'sha512').toString('hex');
+    
+    // Timing-safe comparison to prevent side-channel timing attacks
+    const hashBuf = Buffer.from(adminRecord.password_hash, 'hex');
+    const compBuf = Buffer.from(computedHash, 'hex');
+
+    if (hashBuf.length !== compBuf.length || !crypto.timingSafeEqual(hashBuf, compBuf)) {
+      return res.status(401).json({ success: false, error: 'Invalid username or password.' });
+    }
+
+    // Success: Generate secure session token
+    const token = 'admin_sess_' + crypto.randomBytes(32).toString('hex');
+    activeAdminTokens.add(token);
+
+    return res.status(200).json({
+      success: true,
+      token,
+      message: 'Admin authenticated successfully',
+      user: {
+        username: adminRecord.username,
+        role: adminRecord.role || 'superadmin'
+      }
+    });
+  } catch (err: any) {
+    console.error('[Admin Auth Error]:', err);
+    return res.status(500).json({ success: false, error: 'Internal server error during authentication.' });
+  }
+});
+
+// Endpoint to verify existing admin session token
+app.post('/api/admin/verify-session', (req, res) => {
+  const { token } = req.body || {};
+  if (token && activeAdminTokens.has(token)) {
+    return res.status(200).json({ success: true, valid: true });
+  }
+  return res.status(401).json({ success: false, valid: false });
+});
+
+// Endpoint to logout admin session
+app.post('/api/admin/logout', (req, res) => {
+  const { token } = req.body || {};
+  if (token) {
+    activeAdminTokens.delete(token);
+  }
+  return res.status(200).json({ success: true });
+});
+
 // --- ADMIN PANEL DIRECT ACCESS ENDPOINTS ---
 
 // Section 1 & 2: Get all recruiters (safely formatted)
