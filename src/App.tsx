@@ -82,6 +82,9 @@ export default function App() {
   const [recruiterPrefill, setRecruiterPrefill] = useState<{ mobile?: string; email?: string; name?: string } | null>(null);
   const [recruiterView, setRecruiterView] = useState<'login' | 'register' | 'dashboard'>('login');
 
+  // Modal / Notification States
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
+
   // Restore session tokens on mount
   useEffect(() => {
     let isSyncingFirebaseAuth = false;
@@ -283,8 +286,6 @@ export default function App() {
 
   const isCandidateLoggedIn = !!candidate && !!token;
   const isRecruiterLoggedIn = !!recruiter && !!recruiterToken;
-
-  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans" id="app-root-container">
