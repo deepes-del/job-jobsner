@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Truck, LogIn, UserPlus, CheckCircle, Briefcase, User, Database, Package } from 'lucide-react';
+import { Truck, LogIn, UserPlus, CheckCircle, Briefcase, User, Database, Package, Bell, Heart, ChevronDown, Search } from 'lucide-react';
 import { Candidate, Profile, Recruiter } from './types';
 import CandidateRegistration from './components/CandidateRegistration';
 import CandidateLogin from './components/CandidateLogin';
@@ -74,6 +74,7 @@ export default function App() {
   const [candidate, setCandidate] = useState<Candidate | null>(null);
   const [candidatePrefill, setCandidatePrefill] = useState<{ mobile?: string; email?: string; fullName?: string } | null>(null);
   const [view, setView] = useState<'login' | 'register' | 'dashboard' | 'profile_edit' | 'documents'>('login');
+  const [candidateActiveTab, setCandidateActiveTab] = useState<'find_jobs' | 'applications' | 'saved' | 'overview'>('find_jobs');
 
   // Recruiter States
   const [recruiterToken, setRecruiterToken] = useState<string | null>(null);
@@ -277,8 +278,8 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans" id="app-root-container">
       {/* Top Navbar Header */}
-      <header className="bg-white border-b border-gray-150/80 sticky top-0 z-30 shadow-sm shadow-gray-100/10" id="global-navbar">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-xs" id="global-navbar">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           
           {/* Logo brand */}
           <div 
@@ -290,52 +291,111 @@ export default function App() {
             <JobsnerLogo variant="header" size="sm" />
             <div className="flex flex-col">
               <span className="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-none group-hover:text-orange-600 transition-colors">
-                JOBS<span className="text-orange-500">NER</span>
+                JOBS<span className="text-[#FF5500]">NER</span>
               </span>
-              <span className="text-[9px] font-bold tracking-widest text-slate-400 uppercase">Connecting Careers</span>
+              <span className="text-[9px] font-extrabold tracking-widest text-slate-400 uppercase">CONNECTING CAREERS</span>
             </div>
-            {userRole !== null && (
+            {userRole !== null && userRole !== 'candidate' && (
               <span className="text-[11px] font-bold text-orange-600 uppercase bg-orange-50 border border-orange-100 px-2.5 py-1 rounded-full tracking-wider shrink-0 hidden xs:inline-block ml-1">
                 {portal === 'candidate' ? 'Candidate Portal' : 'Recruiter Portal'}
               </span>
             )}
           </div>
 
-          {/* Mini Info Badge & Portal Switcher */}
+          {/* Center Navigation Links (Matching Reference Image) */}
+          {isCandidateLoggedIn && portal === 'candidate' && view === 'dashboard' ? (
+            <nav className="hidden md:flex items-center gap-8 text-sm font-extrabold text-slate-600">
+              <button 
+                onClick={() => setCandidateActiveTab('find_jobs')} 
+                className={`relative py-5 px-1 cursor-pointer transition-colors ${candidateActiveTab === 'find_jobs' ? 'text-[#FF5500]' : 'hover:text-slate-900'}`}
+              >
+                Jobs
+                {candidateActiveTab === 'find_jobs' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FF5500] rounded-full" />}
+              </button>
+              <button 
+                onClick={() => setCandidateActiveTab('applications')} 
+                className={`relative py-5 px-1 cursor-pointer transition-colors ${candidateActiveTab === 'applications' ? 'text-[#FF5500]' : 'hover:text-slate-900'}`}
+              >
+                My Applications
+                {candidateActiveTab === 'applications' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FF5500] rounded-full" />}
+              </button>
+              <button 
+                onClick={() => setCandidateActiveTab('saved')} 
+                className={`relative py-5 px-1 cursor-pointer transition-colors flex items-center gap-1.5 ${candidateActiveTab === 'saved' ? 'text-[#FF5500]' : 'hover:text-slate-900'}`}
+              >
+                <Heart className="w-4 h-4" /> Saved Jobs
+                {candidateActiveTab === 'saved' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FF5500] rounded-full" />}
+              </button>
+              <button 
+                onClick={() => setCandidateActiveTab('overview')} 
+                className={`relative py-5 px-1 cursor-pointer transition-colors flex items-center gap-1.5 ${candidateActiveTab === 'overview' ? 'text-[#FF5500]' : 'hover:text-slate-900'}`}
+              >
+                <User className="w-4 h-4" /> My Profile
+                {candidateActiveTab === 'overview' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FF5500] rounded-full" />}
+              </button>
+            </nav>
+          ) : null}
+
+          {/* Right Controls: Notifications + User Profile Badge (Matching Reference Image) */}
           <div className="flex items-center gap-3 sm:gap-4" id="navbar-controls">
-            
-            {/* If logged in, show status. Otherwise, show portal toggle button */}
-            {userRole === null ? (
+            {isCandidateLoggedIn && portal === 'candidate' && candidate ? (
+              <div className="flex items-center gap-4">
+                {/* Notification Bell */}
+                <div className="relative cursor-pointer p-2 hover:bg-gray-100 rounded-full text-slate-700 transition-colors" title="Notifications">
+                  <Bell className="w-5 h-5" />
+                  <span className="absolute top-1 right-1 w-4 h-4 bg-[#FF5500] text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-xs">
+                    3
+                  </span>
+                </div>
+
+                {/* Profile Badge & Dropdown */}
+                <div 
+                  onClick={() => setCandidateActiveTab('overview')} 
+                  className="flex items-center gap-2.5 pl-3 border-l border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
+                  title="View Profile"
+                >
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-sky-400 to-blue-600 overflow-hidden border-2 border-white shadow-xs shrink-0 flex items-center justify-center text-white font-extrabold text-xs">
+                    {candidate.profile?.profilePhoto ? (
+                      <img src={candidate.profile.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      candidate.profile?.fullName?.[0]?.toUpperCase() || 'D'
+                    )}
+                  </div>
+                  <div className="hidden sm:flex flex-col text-left">
+                    <span className="text-xs font-extrabold text-slate-900 leading-tight">
+                      {candidate.profile?.fullName?.toLowerCase() || candidate.fullName?.toLowerCase() || 'deepesh'}
+                    </span>
+                    <span className="text-[10px] font-semibold text-slate-500">
+                      Job Seeker
+                    </span>
+                  </div>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                </div>
+              </div>
+            ) : userRole === null ? (
               <span className="text-[10px] font-bold text-orange-600 uppercase tracking-widest bg-orange-50 border border-orange-100 px-2.5 py-1 rounded-full">
                 Gateway Select
               </span>
             ) : portal === 'candidate' ? (
-              isCandidateLoggedIn ? (
-                <div className="hidden sm:flex items-center gap-2.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-xs font-semibold text-gray-600">Logged in as {candidate.profile.fullName}</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <button 
-                    onClick={() => {
-                      setView('login');
-                      setPortal('recruiter');
-                      setRecruiterView('login');
-                      setUserRole('recruiter');
-                    }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 hover:border-orange-500 hover:text-orange-600 rounded-lg text-xs font-bold transition-all cursor-pointer text-gray-600 bg-white"
-                    id="switch-to-recruiter-portal"
-                  >
-                    <Briefcase className="w-3.5 h-3.5" /> For Employers
-                  </button>
-                </div>
-              )
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => {
+                    setView('login');
+                    setPortal('recruiter');
+                    setRecruiterView('login');
+                    setUserRole('recruiter');
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 hover:border-orange-500 hover:text-orange-600 rounded-lg text-xs font-bold transition-all cursor-pointer text-gray-600 bg-white"
+                  id="switch-to-recruiter-portal"
+                >
+                  <Briefcase className="w-3.5 h-3.5" /> For Employers
+                </button>
+              </div>
             ) : (
               isRecruiterLoggedIn ? (
                 <div className="hidden sm:flex items-center gap-2.5">
-                  <span className={`w-2.5 h-2.5 rounded-full animate-pulse ${recruiter.status === 'Approved' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                  <span className="text-xs font-semibold text-gray-600">Logged in as {recruiter.recruiterName} ({recruiter.companyName})</span>
+                  <span className={`w-2.5 h-2.5 rounded-full animate-pulse ${recruiter?.status === 'Approved' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                  <span className="text-xs font-semibold text-gray-600">Logged in as {recruiter?.recruiterName} ({recruiter?.companyName})</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
@@ -560,7 +620,9 @@ export default function App() {
                       <CandidateDashboard 
                         candidate={candidate}
                         token={token}
-                        onEditProfile={() => setView('profile_edit')}
+                        activeTab={candidateActiveTab}
+                        onTabChange={setCandidateActiveTab}
+                        onEditProfile={() => setCandidateActiveTab('overview')}
                         onLogout={handleCandidateLogout}
                         onManageDocuments={() => setView('documents')}
                         onUpdateProfile={handleCandidateProfileSaveSuccess}

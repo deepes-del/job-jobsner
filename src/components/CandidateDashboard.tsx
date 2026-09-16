@@ -6,7 +6,8 @@ import {
   AlertCircle, Edit2, LogOut, Phone, Mail, Sparkles, AlertTriangle, Upload,
   Search, SlidersHorizontal, ArrowUpDown, Clock, Building, UserCheck, ShieldAlert,
   FileMinus, ExternalLink, ChevronRight, X, Info, RefreshCw,
-  RotateCcw, Heart, ThumbsUp, ThumbsDown, ClipboardList, Bookmark
+  RotateCcw, Heart, ThumbsUp, ThumbsDown, ClipboardList, Bookmark,
+  Shield, Store, Car, ChevronDown, Bell, Package, Users, BarChart2
 } from 'lucide-react';
 import { Candidate, Profile } from '../types';
 import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
@@ -16,6 +17,8 @@ import CandidateProfileEdit from './CandidateProfileEdit';
 interface CandidateDashboardProps {
   candidate: Candidate;
   token: string | null;
+  activeTab?: 'overview' | 'find_jobs' | 'applications' | 'saved';
+  onTabChange?: (tab: 'overview' | 'find_jobs' | 'applications' | 'saved') => void;
   onEditProfile: () => void;
   onLogout: () => void;
   onManageDocuments: () => void;
@@ -25,6 +28,8 @@ interface CandidateDashboardProps {
 export default function CandidateDashboard({ 
   candidate, 
   token,
+  activeTab: externalActiveTab,
+  onTabChange,
   onEditProfile, 
   onLogout,
   onManageDocuments,
@@ -33,7 +38,13 @@ export default function CandidateDashboard({
   const { profile, mobile, email } = candidate;
 
   // Navigation state
-  const [activeTab, setActiveTab] = React.useState<'overview' | 'find_jobs' | 'applications' | 'saved'>('find_jobs');
+  const [internalActiveTab, setInternalActiveTab] = React.useState<'overview' | 'find_jobs' | 'applications' | 'saved'>('find_jobs');
+  const activeTab = externalActiveTab || internalActiveTab;
+
+  const setActiveTab = (tab: 'overview' | 'find_jobs' | 'applications' | 'saved') => {
+    setInternalActiveTab(tab);
+    if (onTabChange) onTabChange(tab);
+  };
 
   // Saved / Bookmarked Jobs state
   const [savedJobIds, setSavedJobIds] = React.useState<string[]>(() => {
@@ -825,117 +836,60 @@ export default function CandidateDashboard({
         )}
       </AnimatePresence>
 
-      {/* Upper Brand / Welcome bar */}
+      {/* Welcome Banner (Matching Reference Image) */}
       <div 
-        className="relative overflow-hidden rounded-2xl bg-slate-950 text-white p-6 border border-slate-800 shadow-xl"
-        id="dashboard-header-banner"
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#FFF6F0] via-[#FFF3EB] to-[#FFEAE0] border border-orange-100 p-6 md:p-8 shadow-xs flex flex-col md:flex-row items-center justify-between gap-6"
+        id="dashboard-welcome-banner"
       >
-        <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-radial-gradient from-orange-500/10 to-transparent pointer-events-none" />
-        
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-orange-500/15 border-2 border-orange-500/40 flex items-center justify-center overflow-hidden shrink-0 shadow-inner">
-              {profile.profilePhoto ? (
-                <img src={profile.profilePhoto} alt={profile.fullName} className="w-full h-full object-cover" referrerpolicy="no-referrer" />
-              ) : (
-                <User className="w-6 h-6 text-orange-400" />
-              )}
-            </div>
-
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-extrabold tracking-tight md:text-2xl">Welcome, {profile.fullName || 'Driver Candidate'}!</h1>
-                <Sparkles className="w-4 h-4 text-orange-400 animate-pulse" />
-              </div>
-              <p className="text-slate-400 text-xs mt-1 flex items-center gap-1.5">
-                <span className="text-orange-400 font-semibold">{profile.currentJobRole || profile.recentAppliedCategory || 'Job Seeker'}</span>
-                {profile.locality || profile.city ? <span>• {profile.locality || profile.city}</span> : null}
-              </p>
-            </div>
+        {/* Left Section: Candidate Profile & Greeting */}
+        <div className="flex items-center gap-5 relative z-10 w-full md:w-auto">
+          <div className="w-20 h-20 rounded-full border-4 border-white shadow-md overflow-hidden bg-gradient-to-tr from-sky-400 to-blue-600 flex items-center justify-center text-white font-black text-2xl shrink-0">
+            {profile.profilePhoto ? (
+              <img src={profile.profilePhoto} alt={profile.fullName || candidate.fullName} className="w-full h-full object-cover" referrerpolicy="no-referrer" />
+            ) : (
+              <span className="text-2xl font-black">{profile.fullName?.[0]?.toUpperCase() || candidate.fullName?.[0]?.toUpperCase() || 'D'}</span>
+            )}
           </div>
 
-          <div className="flex gap-2 w-full md:w-auto">
-            <button
-              onClick={onEditProfile}
-              className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 py-2 px-4 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-xl shadow-lg shadow-orange-600/10 transition-colors cursor-pointer"
-              id="dashboard-edit-top-btn"
-            >
-              <Edit2 className="w-3.5 h-3.5" /> Edit Profile
-            </button>
-            <button
-              onClick={onLogout}
-              className="flex items-center justify-center gap-1.5 py-2 px-3 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-bold rounded-xl border border-slate-800 transition-colors cursor-pointer"
-              id="dashboard-logout-btn"
-            >
-              <LogOut className="w-3.5 h-3.5" /> Logout
-            </button>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+              Welcome back, {profile.fullName?.toLowerCase() || candidate.fullName?.toLowerCase() || 'deepesh'}! 👋
+            </h1>
+            <p className="text-slate-600 text-xs sm:text-sm font-semibold mt-1">
+              Discover verified jobs and take the next step in your career
+            </p>
+            
+            <div className="flex items-center gap-3 mt-3">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/90 text-slate-800 border border-orange-200/70 shadow-2xs">
+                <Briefcase className="w-3.5 h-3.5 text-[#FF5500]" />
+                Job Seeker
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/90 text-slate-800 border border-orange-200/70 shadow-2xs">
+                <MapPin className="w-3.5 h-3.5 text-[#FF5500]" />
+                {profile.city || profile.locality || 'Bengal'}
+              </span>
+            </div>
           </div>
         </div>
-      </div>      {/* Persistent Navigation Tabs Bar */}
-      <div className="flex border-b border-gray-200 bg-white p-1 rounded-xl shadow-sm gap-1 overflow-x-auto no-scrollbar" id="candidate-sub-navbar">
-        <button
-          onClick={() => { setActiveTab('find_jobs'); setSubmitError(null); }}
-          className={`flex-1 min-w-[90px] py-2.5 px-3 rounded-lg text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-            activeTab === 'find_jobs'
-              ? 'bg-slate-950 text-white shadow'
-              : 'text-gray-500 hover:text-slate-900 hover:bg-gray-50'
-          }`}
-          id="nav-tab-find-jobs"
-        >
-          <Search className="w-4 h-4" />
-          <span>Jobs</span>
-          {activeJobs.length > 0 && (
-            <span className={`text-[10px] py-0.5 px-1.5 rounded-full font-black ${activeTab === 'find_jobs' ? 'bg-orange-500 text-white' : 'bg-orange-50 text-orange-600'}`}>
-              {activeJobs.length}
-            </span>
-          )}
-        </button>
-        <button
-          onClick={() => { setActiveTab('applications'); setSubmitError(null); }}
-          className={`flex-1 min-w-[90px] py-2.5 px-3 rounded-lg text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-            activeTab === 'applications'
-              ? 'bg-slate-950 text-white shadow'
-              : 'text-gray-500 hover:text-slate-900 hover:bg-gray-50'
-          }`}
-          id="nav-tab-my-applications"
-        >
-          <Briefcase className="w-4 h-4" />
-          <span>Applies</span>
-          {myApplications.length > 0 && (
-            <span className={`text-[10px] py-0.5 px-1.5 rounded-full font-black ${activeTab === 'applications' ? 'bg-orange-500 text-white' : 'bg-orange-50 text-orange-600'}`}>
-              {myApplications.length}
-            </span>
-          )}
-        </button>
-        <button
-          onClick={() => { setActiveTab('saved'); setSubmitError(null); }}
-          className={`flex-1 min-w-[90px] py-2.5 px-3 rounded-lg text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-            activeTab === 'saved'
-              ? 'bg-slate-950 text-white shadow'
-              : 'text-gray-500 hover:text-slate-900 hover:bg-gray-50'
-          }`}
-          id="nav-tab-saved-jobs"
-        >
-          <Heart className="w-4 h-4" />
-          <span>Saved</span>
-          {savedJobIds.length > 0 && (
-            <span className={`text-[10px] py-0.5 px-1.5 rounded-full font-black ${activeTab === 'saved' ? 'bg-orange-500 text-white' : 'bg-orange-50 text-orange-600'}`}>
-              {savedJobIds.length}
-            </span>
-          )}
-        </button>
-        <button
-          onClick={() => { setActiveTab('overview'); setSubmitError(null); }}
-          className={`flex-1 min-w-[90px] py-2.5 px-3 rounded-lg text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-            activeTab === 'overview'
-              ? 'bg-teal-700 text-white shadow'
-              : 'text-gray-500 hover:text-slate-900 hover:bg-gray-50'
-          }`}
-          id="nav-tab-my-profile"
-        >
-          <User className="w-4 h-4" />
-          <span>My Profile</span>
-        </button>
+
+        {/* Center Quote (Matching Reference Image) */}
+        <div className="hidden lg:flex flex-col items-center text-center px-4 relative z-10">
+          <h3 className="text-lg font-black text-slate-900 tracking-tight italic">
+            “Better Jobs<br />Brighter Futures”
+          </h3>
+          <div className="w-12 h-1 bg-[#FF5500] rounded-full mt-2" />
+        </div>
+
+        {/* Right Section: Professional Hero Job-Seeker Cutout Graphic (Matching Reference Image) */}
+        <div className="relative shrink-0 flex items-center justify-center">
+          <div className="relative w-36 h-36 md:w-44 md:h-44 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gradient-to-tr from-amber-400 via-orange-400 to-orange-500">
+            <img 
+              src="/job_seeker_hero.png" 
+              alt="Professional Job Seeker" 
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Error & Success Messages */}
@@ -1002,96 +956,183 @@ export default function CandidateDashboard({
           className="flex flex-col gap-6"
           id="tab-find-jobs-content"
         >
-          {/* Category Quick Filter Pills (Matching Android App 2 Categories) */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar order-1">
-            <button
-              onClick={() => setSelectedCategory('All')}
-              className={`py-2 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 border ${
-                selectedCategory === 'All'
-                  ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-                  : 'bg-white text-slate-700 border-gray-200 hover:bg-gray-50'
-              }`}
-            >
-              All Openings
-            </button>
-            <button
-              onClick={() => setSelectedCategory('Delivery Jobs')}
-              className={`py-2 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 border flex items-center gap-1.5 ${
-                selectedCategory === 'Delivery Jobs'
-                  ? 'bg-orange-600 text-white border-orange-600 shadow-md shadow-orange-500/20'
-                  : 'bg-white text-slate-700 border-gray-200 hover:bg-orange-50/50'
-              }`}
-            >
-              <Bike className="w-3.5 h-3.5" /> Delivery Jobs
-            </button>
-            <button
-              onClick={() => setSelectedCategory('Warehouse / Picker&Packer')}
-              className={`py-2 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 border flex items-center gap-1.5 ${
-                selectedCategory === 'Warehouse / Picker&Packer'
-                  ? 'bg-orange-600 text-white border-orange-600 shadow-md shadow-orange-500/20'
-                  : 'bg-white text-slate-700 border-gray-200 hover:bg-orange-50/50'
-              }`}
-            >
-              <Building className="w-3.5 h-3.5" /> Warehouse / Picker & Packer
-            </button>
-          </div>
-          {/* Filtering Accordion / Search Card */}
-          <div className="bg-white border border-gray-150 rounded-2xl p-4 shadow-sm space-y-4 order-2">
-            {/* Search Bar */}
-            <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400" />
+          {/* Search Bar Container (Matching Reference Image) */}
+          <div className="bg-white border border-gray-200 rounded-2xl p-2.5 shadow-xs flex flex-col md:flex-row items-center gap-3">
+            <div className="relative flex-1 w-full">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search jobs by Job Title, Company Name, or City..."
+                placeholder="Search jobs by title, company, skills, or location..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-11 pr-4 py-3 bg-gray-50 hover:bg-gray-100/50 focus:bg-white text-slate-800 text-xs font-bold rounded-xl border border-gray-150 focus:border-orange-500 focus:outline-none transition-all placeholder:text-gray-400"
+                className="w-full pl-11 pr-4 py-3 bg-transparent text-slate-800 text-xs sm:text-sm font-bold focus:outline-none placeholder:text-slate-400"
                 id="jobs-search-input"
               />
               {searchQuery && (
                 <button 
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-slate-900 cursor-pointer text-xs"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-900 cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
               )}
             </div>
+
+            {/* Location selector & Search Button */}
+            <div className="flex flex-col sm:flex-row items-center gap-2 border-t md:border-t-0 md:border-l border-gray-200 pt-2.5 md:pt-0 pl-0 md:pl-3 w-full md:w-auto">
+              <div className="flex items-center gap-2 px-3 py-2.5 text-slate-700 font-bold text-xs sm:text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-colors w-full sm:w-auto justify-between sm:justify-start">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
+                  <span>Bengaluru, Karnataka</span>
+                </div>
+                <ChevronDown className="w-4 h-4 text-slate-400" />
+              </div>
+
+              <button
+                onClick={() => {}}
+                className="w-full sm:w-auto bg-[#FF5500] hover:bg-orange-600 text-white font-extrabold px-7 py-3 rounded-xl shadow-xs transition-all text-xs sm:text-sm cursor-pointer shrink-0"
+              >
+                Search Jobs
+              </button>
+            </div>
           </div>
 
-          {/* Results Info and Cards Display */}
-          <div id="jobs-grid-section" className="order-1">
-            <div className="flex items-center justify-between mb-5 bg-gray-50 border border-gray-150 p-3 rounded-2xl">
-              <span className="text-xs font-extrabold text-slate-700 uppercase tracking-wide flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-orange-500 animate-pulse" />
-                Found {filteredJobsList.length} matching jobs
-              </span>
+          {/* Category Quick Filter Pills (Matching Reference Image) */}
+          <div className="flex items-center gap-2.5 overflow-x-auto pb-1 no-scrollbar">
+            <button
+              onClick={() => setSelectedCategory('All')}
+              className={`py-2.5 px-5 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 shadow-xs ${
+                selectedCategory === 'All'
+                  ? 'bg-[#1E293B] text-white'
+                  : 'bg-white text-slate-700 border border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              All Openings
+            </button>
+
+            <button
+              onClick={() => setSelectedCategory('Delivery Jobs')}
+              className={`py-2.5 px-4 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 border flex items-center gap-2 ${
+                selectedCategory === 'Delivery Jobs'
+                  ? 'bg-[#FF5500] text-white border-[#FF5500]'
+                  : 'bg-white text-slate-700 border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              <Bike className="w-4 h-4" /> Delivery Jobs
+            </button>
+
+            <button
+              onClick={() => setSelectedCategory('Warehouse / Picker&Packer')}
+              className={`py-2.5 px-4 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 border flex items-center gap-2 ${
+                selectedCategory === 'Warehouse / Picker&Packer'
+                  ? 'bg-[#FF5500] text-white border-[#FF5500]'
+                  : 'bg-white text-slate-700 border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              <Package className="w-4 h-4" /> Warehouse / Picker & Packer
+            </button>
+
+            <button
+              onClick={() => setSelectedCategory('Security Jobs')}
+              className={`py-2.5 px-4 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 border flex items-center gap-2 ${
+                selectedCategory === 'Security Jobs'
+                  ? 'bg-[#FF5500] text-white border-[#FF5500]'
+                  : 'bg-white text-slate-700 border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              <Shield className="w-4 h-4" /> Security Jobs
+            </button>
+
+            <button
+              onClick={() => setSelectedCategory('Housekeeping')}
+              className={`py-2.5 px-4 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 border flex items-center gap-2 ${
+                selectedCategory === 'Housekeeping'
+                  ? 'bg-[#FF5500] text-white border-[#FF5500]'
+                  : 'bg-white text-slate-700 border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              <Sparkles className="w-4 h-4" /> Housekeeping
+            </button>
+
+            <button
+              onClick={() => setSelectedCategory('Retail')}
+              className={`py-2.5 px-4 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 border flex items-center gap-2 ${
+                selectedCategory === 'Retail'
+                  ? 'bg-[#FF5500] text-white border-[#FF5500]'
+                  : 'bg-white text-slate-700 border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              <Store className="w-4 h-4" /> Retail
+            </button>
+
+            <button
+              onClick={() => setSelectedCategory('Driver')}
+              className={`py-2.5 px-4 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 border flex items-center gap-2 ${
+                selectedCategory === 'Driver'
+                  ? 'bg-[#FF5500] text-white border-[#FF5500]'
+                  : 'bg-white text-slate-700 border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              <Car className="w-4 h-4" /> Driver
+            </button>
+
+            <button className="py-2.5 px-4 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 border bg-white text-slate-700 border-gray-200 hover:bg-gray-50 flex items-center gap-1.5">
+              More <ChevronDown className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Results Header and Cards Section (Matching Reference Image) */}
+          <div id="jobs-grid-section">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                  Found <span className="text-[#FF5500]">{filteredJobsList.length}</span> matching jobs
+                </h2>
+                <p className="text-xs font-semibold text-slate-500 mt-0.5">
+                  Jobs from verified companies across India
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <div className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-extrabold text-slate-700 shadow-xs">
+                  <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Sort by</span>
+                  <select
+                    value={sortOrder}
+                    onChange={(e) => setSortOrder(e.target.value)}
+                    className="bg-transparent font-extrabold text-slate-900 focus:outline-none cursor-pointer"
+                  >
+                    <option value="newest">Latest First</option>
+                    <option value="oldest">Oldest First</option>
+                  </select>
+                </div>
+              </div>
             </div>
 
             {loadingJobs ? (
-              <div className="py-24 text-center bg-white rounded-2xl border border-gray-150 shadow-sm">
-                <RefreshCw className="w-8 h-8 text-orange-600 animate-spin mx-auto" />
-                <p className="text-xs font-bold text-gray-400 mt-3 uppercase tracking-wide">Syncing Logistics Dispatch Grid...</p>
+              <div className="py-24 text-center bg-white rounded-2xl border border-gray-200 shadow-xs">
+                <RefreshCw className="w-8 h-8 text-[#FF5500] animate-spin mx-auto" />
+                <p className="text-xs font-bold text-slate-400 mt-3 uppercase tracking-wide">Syncing Logistics Dispatch Grid...</p>
               </div>
             ) : filteredJobsList.length === 0 ? (
-              <div className="py-20 text-center bg-white rounded-2xl border border-gray-150 shadow-sm" id="empty-jobs-view">
-                <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+              <div className="py-20 text-center bg-white rounded-2xl border border-gray-200 shadow-xs" id="empty-jobs-view">
+                <Briefcase className="w-12 h-12 text-slate-300 mx-auto mb-4" />
                 <h4 className="font-extrabold text-slate-800 text-sm uppercase">No matching jobs found</h4>
-                <p className="text-xs text-gray-400 max-w-sm mx-auto mt-2 leading-relaxed">
+                <p className="text-xs text-slate-400 max-w-sm mx-auto mt-2 leading-relaxed font-medium">
                   Try adjusting your keywords or clearing your search term to see all available openings.
                 </p>
                 <button
                   onClick={() => {
                     setSearchQuery('');
-                    setSelectedCategory('All Jobs');
+                    setSelectedCategory('All');
                   }}
-                  className="mt-5 text-xs font-bold bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-xl transition-all cursor-pointer shadow-md shadow-orange-600/10"
+                  className="mt-5 text-xs font-extrabold bg-[#FF5500] hover:bg-orange-600 text-white px-5 py-2.5 rounded-xl transition-all cursor-pointer shadow-xs"
                 >
                   Clear Search
                 </button>
               </div>
             ) : (
-              // GRID VIEW LIST
+              /* 3-COLUMN DESKTOP JOB CARDS GRID (Matching Reference Image) */
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredJobsList.map((job) => {
                   const alreadyApplied = myApplications.some(app => (String(app.jobId) === String(job.id) || String(app.job_id) === String(job.id)) && app.withdrawStatus !== 'Withdrawn');
@@ -1099,14 +1140,14 @@ export default function CandidateDashboard({
                   return (
                     <div 
                       key={job.id} 
-                      className="p-5 border border-gray-150 rounded-2xl bg-white hover:border-orange-300 transition-all shadow-sm hover:shadow-md flex flex-col justify-between"
+                      className="p-5 border border-gray-200/90 rounded-2xl bg-white hover:border-orange-300 transition-all shadow-xs hover:shadow-md flex flex-col justify-between"
                       id={`job-card-${job.id}`}
                     >
                       <div>
-                        {/* Company branding row */}
-                        <div className="flex items-start justify-between gap-3 mb-3.5">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+                        {/* Company Logo, Company Name, Posted Date, Status Badge, Saved Heart */}
+                        <div className="flex items-start justify-between gap-3 mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center overflow-hidden shrink-0 shadow-xs">
                               {job.companyLogo ? (
                                 <img
                                   src={job.companyLogo}
@@ -1122,96 +1163,103 @@ export default function CandidateDashboard({
                               )}
                             </div>
                             <div>
-                              <span className="text-[10px] font-black uppercase text-orange-600 block leading-tight">{job.companyName}</span>
-                              <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wide block mt-0.5">
-                                Posted {new Date(job.createdAt).toLocaleDateString()}
+                              <span className="text-xs font-black uppercase text-[#FF5500] block leading-tight tracking-wide">{job.companyName}</span>
+                              <span className="text-[10px] font-semibold text-slate-400 block mt-0.5">
+                                Posted {job.createdAt ? new Date(job.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recently'}
                               </span>
                             </div>
                           </div>
-                          <div className="flex items-center gap-1.5">
-                            {String(job.status || '').toLowerCase() === 'draft' ? (
-                              <span className="text-[9px] font-black tracking-widest uppercase py-0.5 px-2 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-                                Draft Listing
-                              </span>
-                            ) : (
-                              <span className={`text-[9px] font-black tracking-widest uppercase py-0.5 px-2 rounded-full ${job.status === 'Closed' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}>
-                                {job.status === 'Closed' ? 'Closed' : 'Active'}
-                              </span>
-                            )}
+
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-black uppercase py-1 px-2.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">
+                              Active
+                            </span>
                             <button
                               onClick={(e) => handleToggleSaveJob(job.id, e)}
-                              className="p-1 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
+                              className="p-1.5 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
                               title={savedJobIds.includes(job.id) ? "Saved" : "Save job"}
                             >
-                              <Heart className={`w-4 h-4 transition-colors ${savedJobIds.includes(job.id) ? 'fill-orange-500 text-orange-500' : 'text-gray-400 hover:text-orange-500'}`} />
+                              <Heart className={`w-4 h-4 transition-colors ${savedJobIds.includes(job.id) ? 'fill-[#FF5500] text-[#FF5500]' : 'text-slate-400 hover:text-[#FF5500]'}`} />
                             </button>
                           </div>
                         </div>
 
-                        {/* Title & Position */}
-                        <h4 className="font-extrabold text-slate-900 text-sm leading-snug line-clamp-1">{job.title}</h4>
+                        {/* Job Title */}
+                        <h3 className="font-black text-slate-900 text-base leading-snug tracking-tight line-clamp-1">{job.title}</h3>
                         
-                        {/* Location details */}
-                        <p className="text-[11px] font-bold text-gray-400 mt-1 flex items-center gap-1 uppercase">
-                          <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                        {/* Location */}
+                        <p className="text-xs font-bold text-slate-500 mt-1 flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                           {job.area ? `${job.area}, ` : ''}{job.city}, {job.state}
                         </p>
 
-                        {/* Core features grid */}
-                        <div className="grid grid-cols-2 gap-2 mt-4 text-[10px] font-bold text-slate-700">
-                          <div className="p-2 bg-gray-50 rounded-lg flex flex-col">
-                            <span className="text-[8px] text-gray-400 uppercase leading-none mb-1">Employment Type</span>
+                        {/* 2x2 Specs Grid (Matching Reference Image) */}
+                        <div className="grid grid-cols-2 gap-2 mt-4 text-xs font-bold text-slate-800">
+                          <div className="p-2.5 bg-slate-50 rounded-xl flex flex-col">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase leading-none mb-1 flex items-center gap-1">
+                              <Briefcase className="w-3 h-3 text-slate-400" /> Employment Type
+                            </span>
                             <span className="line-clamp-1">{job.employmentType || 'Full Time'}</span>
                           </div>
-                          <div className="p-2 bg-gray-50 rounded-lg flex flex-col">
-                            <span className="text-[8px] text-gray-400 uppercase leading-none mb-1">Preferred Shift</span>
-                            <span className="line-clamp-1">{job.shift || 'Day Shift'}</span>
+                          <div className="p-2.5 bg-slate-50 rounded-xl flex flex-col">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase leading-none mb-1 flex items-center gap-1">
+                              <Clock className="w-3 h-3 text-slate-400" /> Preferred Shift
+                            </span>
+                            <span className="line-clamp-1">{job.shift || 'Day'}</span>
                           </div>
-                          <div className="p-2 bg-gray-50 rounded-lg flex flex-col">
-                            <span className="text-[8px] text-gray-400 uppercase leading-none mb-1">Experience Required</span>
-                            <span>{job.experienceRequired === 0 ? 'Fresher Friendly' : `${job.experienceRequired}+ Yr Exp`}</span>
+                          <div className="p-2.5 bg-slate-50 rounded-xl flex flex-col">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase leading-none mb-1 flex items-center gap-1">
+                              <BarChart2 className="w-3 h-3 text-slate-400" /> Experience Required
+                            </span>
+                            <span>{job.experienceRequired === 0 || !job.experienceRequired ? 'Fresher Friendly' : `${job.experienceRequired}+ Yr Exp`}</span>
                           </div>
-                          <div className="p-2 bg-gray-50 rounded-lg flex flex-col">
-                            <span className="text-[8px] text-gray-400 uppercase leading-none mb-1">Open Positions</span>
+                          <div className="p-2.5 bg-slate-50 rounded-xl flex flex-col">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase leading-none mb-1 flex items-center gap-1">
+                              <Users className="w-3 h-3 text-slate-400" /> Open Positions
+                            </span>
                             <span>{job.openings || '1'} Opening{job.openings > 1 ? 's' : ''}</span>
                           </div>
                         </div>
 
                         {/* Description clip */}
-                        <p className="text-xs text-gray-500 mt-3 leading-relaxed line-clamp-2 border-t border-gray-50 pt-2.5">
-                          {job.description}
-                        </p>
+                        {job.description && (
+                          <p className="text-xs text-slate-500 mt-3 line-clamp-2 leading-relaxed font-medium">
+                            {job.description}
+                          </p>
+                        )}
                       </div>
 
-                      {/* Footer salary and actions */}
-                      <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between gap-4">
-                        <div className="text-xs font-black text-slate-800 shrink-0">
-                          <span className="text-[9px] font-bold text-gray-400 block uppercase leading-none mb-1">Monthly Salary</span>
-                          ₹ {job.minSalary ? `${job.minSalary.toLocaleString()} - ${job.maxSalary.toLocaleString()}` : (job.salary || 'Best in Class')}
+                      {/* Card Footer: Monthly Salary & Actions */}
+                      <div className="mt-5 pt-4 border-t border-gray-150 flex items-center justify-between gap-3">
+                        <div>
+                          <span className="text-[9px] font-bold text-slate-400 block uppercase leading-none mb-1">Monthly Salary</span>
+                          <span className="text-sm font-black text-slate-900">
+                            ₹ {job.minSalary ? `${job.minSalary.toLocaleString()} - ${job.maxSalary.toLocaleString()}` : (job.salary || 'Best in Class')}
+                          </span>
                         </div>
 
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleViewDetails(job)}
-                            className="py-2 px-2.5 bg-gray-50 hover:bg-gray-100 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1 border border-gray-150"
+                            className="py-2.5 px-3 bg-white hover:bg-gray-50 text-slate-700 text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center gap-1 border border-gray-200"
                             id={`view-details-btn-${job.id}`}
                           >
                             <ExternalLink className="w-3.5 h-3.5" /> Details
                           </button>
                           
                           {alreadyApplied ? (
-                            <span className="py-2 px-3 bg-emerald-50 text-emerald-700 border border-emerald-150 text-xs font-black rounded-xl">
+                            <span className="py-2.5 px-4 bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-black rounded-xl flex items-center gap-1">
                               Applied ✓
                             </span>
                           ) : job.status === 'Closed' ? (
-                            <span className="py-2 px-3 bg-gray-100 text-gray-400 border border-gray-150 text-xs font-black rounded-xl">
+                            <span className="py-2.5 px-4 bg-gray-100 text-gray-400 border border-gray-200 text-xs font-black rounded-xl">
                               Closed
                             </span>
                           ) : (
                             <button
                               onClick={() => handleApplyNow(job)}
                               disabled={applyingJobId === job.id}
-                              className="py-2 px-3 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white text-xs font-black rounded-xl transition-all cursor-pointer shadow-md shadow-orange-600/10 flex items-center gap-1"
+                              className="py-2.5 px-4 bg-[#FF5500] hover:bg-orange-600 disabled:bg-orange-300 text-white text-xs font-black rounded-xl transition-all cursor-pointer shadow-xs flex items-center gap-1"
                               id={`apply-now-btn-${job.id}`}
                             >
                               {applyingJobId === job.id ? 'Applying...' : 'Apply Now'}
