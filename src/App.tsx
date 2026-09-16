@@ -275,6 +275,8 @@ export default function App() {
   const isCandidateLoggedIn = !!candidate && !!token;
   const isRecruiterLoggedIn = !!recruiter && !!recruiterToken;
 
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans" id="app-root-container">
       {/* Top Navbar Header */}
@@ -341,12 +343,17 @@ export default function App() {
             {isCandidateLoggedIn && portal === 'candidate' && candidate ? (
               <div className="flex items-center gap-4">
                 {/* Notification Bell */}
-                <div className="relative cursor-pointer p-2 hover:bg-gray-100 rounded-full text-slate-700 transition-colors" title="Notifications">
+                <button 
+                  onClick={() => setIsNotificationModalOpen(true)}
+                  className="relative cursor-pointer p-2 hover:bg-gray-100 rounded-full text-slate-700 transition-colors border-none bg-transparent" 
+                  title="View Notifications"
+                  id="header-notification-bell"
+                >
                   <Bell className="w-5 h-5" />
                   <span className="absolute top-1 right-1 w-4 h-4 bg-[#FF5500] text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-xs">
                     3
                   </span>
-                </div>
+                </button>
 
                 {/* Profile Badge & Dropdown */}
                 <div 
@@ -626,6 +633,8 @@ export default function App() {
                         onLogout={handleCandidateLogout}
                         onManageDocuments={() => setView('documents')}
                         onUpdateProfile={handleCandidateProfileSaveSuccess}
+                        isNotificationOpen={isNotificationModalOpen}
+                        onCloseNotification={() => setIsNotificationModalOpen(false)}
                       />
                     </motion.div>
                   )}

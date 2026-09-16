@@ -23,6 +23,8 @@ interface CandidateDashboardProps {
   onLogout: () => void;
   onManageDocuments: () => void;
   onUpdateProfile?: (updatedProfile: Profile) => void;
+  isNotificationOpen?: boolean;
+  onCloseNotification?: () => void;
 }
 
 export default function CandidateDashboard({ 
@@ -33,9 +35,20 @@ export default function CandidateDashboard({
   onEditProfile, 
   onLogout,
   onManageDocuments,
-  onUpdateProfile
+  onUpdateProfile,
+  isNotificationOpen: externalNotificationOpen,
+  onCloseNotification
 }: CandidateDashboardProps) {
   const { profile, mobile, email } = candidate;
+
+  // Notification Modal state
+  const [internalNotificationOpen, setInternalNotificationOpen] = React.useState(false);
+  const isNotificationOpen = externalNotificationOpen !== undefined ? externalNotificationOpen : internalNotificationOpen;
+
+  const closeNotificationModal = () => {
+    setInternalNotificationOpen(false);
+    if (onCloseNotification) onCloseNotification();
+  };
 
   // Navigation state
   const [internalActiveTab, setInternalActiveTab] = React.useState<'overview' | 'find_jobs' | 'applications' | 'saved'>('find_jobs');
@@ -997,88 +1010,124 @@ export default function CandidateDashboard({
             </div>
           </div>
 
-          {/* Category Quick Filter Pills (Matching Reference Image) */}
-          <div className="flex items-center gap-2.5 overflow-x-auto pb-1 no-scrollbar">
-            <button
-              onClick={() => setSelectedCategory('All')}
-              className={`py-2.5 px-5 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 shadow-xs ${
-                selectedCategory === 'All'
-                  ? 'bg-[#1E293B] text-white'
-                  : 'bg-white text-slate-700 border border-gray-200 hover:bg-gray-50'
-              }`}
-            >
-              All Openings
-            </button>
+          {/* Category Quick Filter Pills & Advanced Filters */}
+          <div className="flex flex-col gap-4">
+            {/* Category Pills (Toggle selection / deselection supported) */}
+            <div className="flex items-center gap-2.5 overflow-x-auto pb-1 no-scrollbar">
+              <button
+                onClick={() => setSelectedCategory('All')}
+                className={`py-2.5 px-5 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 shadow-xs ${
+                  selectedCategory === 'All'
+                    ? 'bg-[#1E293B] text-white'
+                    : 'bg-white text-slate-700 border border-gray-200 hover:bg-gray-50'
+                }`}
+              >
+                All Openings
+              </button>
 
-            <button
-              onClick={() => setSelectedCategory('Delivery Jobs')}
-              className={`py-2.5 px-4 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 border flex items-center gap-2 ${
-                selectedCategory === 'Delivery Jobs'
-                  ? 'bg-[#FF5500] text-white border-[#FF5500]'
-                  : 'bg-white text-slate-700 border-gray-200 hover:bg-gray-50'
-              }`}
-            >
-              <Bike className="w-4 h-4" /> Delivery Jobs
-            </button>
+              <button
+                onClick={() => setSelectedCategory(prev => prev === 'Delivery Jobs' ? 'All' : 'Delivery Jobs')}
+                className={`py-2.5 px-4 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 border flex items-center gap-2 ${
+                  selectedCategory === 'Delivery Jobs'
+                    ? 'bg-[#FF5500] text-white border-[#FF5500] shadow-sm'
+                    : 'bg-white text-slate-700 border-gray-200 hover:bg-gray-50'
+                }`}
+                title={selectedCategory === 'Delivery Jobs' ? 'Click to deselect & show all jobs' : 'Filter Delivery Jobs'}
+              >
+                <Bike className="w-4 h-4" /> Delivery Jobs
+                {selectedCategory === 'Delivery Jobs' && <X className="w-3.5 h-3.5 ml-1 opacity-80" />}
+              </button>
 
-            <button
-              onClick={() => setSelectedCategory('Warehouse / Picker&Packer')}
-              className={`py-2.5 px-4 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 border flex items-center gap-2 ${
-                selectedCategory === 'Warehouse / Picker&Packer'
-                  ? 'bg-[#FF5500] text-white border-[#FF5500]'
-                  : 'bg-white text-slate-700 border-gray-200 hover:bg-gray-50'
-              }`}
-            >
-              <Package className="w-4 h-4" /> Warehouse / Picker & Packer
-            </button>
+              <button
+                onClick={() => setSelectedCategory(prev => prev === 'Warehouse / Picker&Packer' ? 'All' : 'Warehouse / Picker&Packer')}
+                className={`py-2.5 px-4 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 border flex items-center gap-2 ${
+                  selectedCategory === 'Warehouse / Picker&Packer'
+                    ? 'bg-[#FF5500] text-white border-[#FF5500] shadow-sm'
+                    : 'bg-white text-slate-700 border-gray-200 hover:bg-gray-50'
+                }`}
+                title={selectedCategory === 'Warehouse / Picker&Packer' ? 'Click to deselect & show all jobs' : 'Filter Warehouse Jobs'}
+              >
+                <Package className="w-4 h-4" /> Warehouse / Picker & Packer
+                {selectedCategory === 'Warehouse / Picker&Packer' && <X className="w-3.5 h-3.5 ml-1 opacity-80" />}
+              </button>
+            </div>
 
-            <button
-              onClick={() => setSelectedCategory('Security Jobs')}
-              className={`py-2.5 px-4 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 border flex items-center gap-2 ${
-                selectedCategory === 'Security Jobs'
-                  ? 'bg-[#FF5500] text-white border-[#FF5500]'
-                  : 'bg-white text-slate-700 border-gray-200 hover:bg-gray-50'
-              }`}
-            >
-              <Shield className="w-4 h-4" /> Security Jobs
-            </button>
+            {/* Filter Bar: Salary, Experience, Preferred Shift */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-3.5 shadow-xs flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-xs font-black text-slate-800 uppercase tracking-wider">
+                <SlidersHorizontal className="w-4 h-4 text-[#FF5500]" />
+                <span>Filter Jobs:</span>
+              </div>
 
-            <button
-              onClick={() => setSelectedCategory('Housekeeping')}
-              className={`py-2.5 px-4 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 border flex items-center gap-2 ${
-                selectedCategory === 'Housekeeping'
-                  ? 'bg-[#FF5500] text-white border-[#FF5500]'
-                  : 'bg-white text-slate-700 border-gray-200 hover:bg-gray-50'
-              }`}
-            >
-              <Sparkles className="w-4 h-4" /> Housekeeping
-            </button>
+              <div className="flex flex-wrap items-center gap-2.5 flex-1">
+                {/* Salary Filter */}
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-slate-700">
+                  <IndianRupee className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Salary:</span>
+                  <select
+                    value={selectedSalary}
+                    onChange={(e) => setSelectedSalary(Number(e.target.value))}
+                    className="bg-transparent font-extrabold text-slate-900 focus:outline-none cursor-pointer text-xs"
+                  >
+                    <option value={0}>All Salaries</option>
+                    <option value={15000}>₹15,000+ / mo</option>
+                    <option value={20000}>₹20,000+ / mo</option>
+                    <option value={25000}>₹25,000+ / mo</option>
+                    <option value={30000}>₹30,000+ / mo</option>
+                  </select>
+                </div>
 
-            <button
-              onClick={() => setSelectedCategory('Retail')}
-              className={`py-2.5 px-4 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 border flex items-center gap-2 ${
-                selectedCategory === 'Retail'
-                  ? 'bg-[#FF5500] text-white border-[#FF5500]'
-                  : 'bg-white text-slate-700 border-gray-200 hover:bg-gray-50'
-              }`}
-            >
-              <Store className="w-4 h-4" /> Retail
-            </button>
+                {/* Experience Filter */}
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-slate-700">
+                  <Briefcase className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Experience:</span>
+                  <select
+                    value={selectedExperience}
+                    onChange={(e) => setSelectedExperience(e.target.value)}
+                    className="bg-transparent font-extrabold text-slate-900 focus:outline-none cursor-pointer text-xs"
+                  >
+                    <option value="All">All Experience</option>
+                    <option value="0">Freshers (0 Yrs)</option>
+                    <option value="1">Max 1 Year</option>
+                    <option value="2">Max 2 Years</option>
+                    <option value="3">3+ Years</option>
+                  </select>
+                </div>
 
-            <button
-              onClick={() => setSelectedCategory('Driver')}
-              className={`py-2.5 px-4 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 border flex items-center gap-2 ${
-                selectedCategory === 'Driver'
-                  ? 'bg-[#FF5500] text-white border-[#FF5500]'
-                  : 'bg-white text-slate-700 border-gray-200 hover:bg-gray-50'
-              }`}
-            >
-              <Car className="w-4 h-4" /> Driver
-            </button>
+                {/* Preferred Shift Filter */}
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-slate-700">
+                  <Clock className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Shift:</span>
+                  <select
+                    value={selectedShift}
+                    onChange={(e) => setSelectedShift(e.target.value)}
+                    className="bg-transparent font-extrabold text-slate-900 focus:outline-none cursor-pointer text-xs"
+                  >
+                    <option value="All">All Shifts</option>
+                    <option value="Day Shift">Day Shift</option>
+                    <option value="Night Shift">Night Shift</option>
+                    <option value="Rotational Shift">Rotational Shift</option>
+                    <option value="Flexible">Flexible</option>
+                  </select>
+                </div>
 
-            <button className="py-2.5 px-4 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 border bg-white text-slate-700 border-gray-200 hover:bg-gray-50 flex items-center gap-1.5">
-              More <ChevronDown className="w-3.5 h-3.5" />
-            </button>
+                {/* Reset Filters Button */}
+                {(selectedCategory !== 'All' || selectedSalary > 0 || selectedExperience !== 'All' || selectedShift !== 'All' || searchQuery) && (
+                  <button
+                    onClick={() => {
+                      setSelectedCategory('All');
+                      setSelectedSalary(0);
+                      setSelectedExperience('All');
+                      setSelectedShift('All');
+                      setSearchQuery('');
+                    }}
+                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-extrabold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors cursor-pointer"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" /> Reset Filters
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Results Header and Cards Section (Matching Reference Image) */}
@@ -2178,6 +2227,103 @@ export default function CandidateDashboard({
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Candidate Notifications Slide-Over Drawer / Modal */}
+      <AnimatePresence>
+        {isNotificationOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs" id="candidate-notifications-overlay">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.2 }}
+              className="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-gray-100 flex flex-col max-h-[85vh]"
+            >
+              {/* Modal Header */}
+              <div className="p-6 bg-gradient-to-r from-slate-900 via-slate-800 to-orange-950 text-white flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-[#FF5500] text-white rounded-2xl shadow-sm">
+                    <Bell className="w-5 h-5 animate-bounce" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black tracking-tight">Notifications & Alerts</h3>
+                    <p className="text-xs text-slate-300 font-medium">Realtime updates for your job search</p>
+                  </div>
+                </div>
+                <button
+                  onClick={closeNotificationModal}
+                  className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer"
+                  title="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Notification Items List */}
+              <div className="p-6 overflow-y-auto space-y-4 divide-y divide-gray-100 flex-1">
+                {/* Notification 1: Active Applications */}
+                <div className="pt-3 first:pt-0 flex items-start gap-3.5">
+                  <div className="p-2.5 bg-orange-50 text-[#FF5500] rounded-2xl shrink-0 mt-0.5">
+                    <Briefcase className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-extrabold text-slate-900">Application Trackers Active</h4>
+                      <span className="text-[10px] font-bold text-slate-400">Just Now</span>
+                    </div>
+                    <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                      You have <span className="font-bold text-[#FF5500]">{myApplications.length}</span> active job application{myApplications.length === 1 ? '' : 's'}. Fleet employers receive your profile automatically.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Notification 2: Matching Jobs Alert */}
+                <div className="pt-3 flex items-start gap-3.5">
+                  <div className="p-2.5 bg-blue-50 text-blue-600 rounded-2xl shrink-0 mt-0.5">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-extrabold text-slate-900">New Verified Jobs Found</h4>
+                      <span className="text-[10px] font-bold text-slate-400">Today</span>
+                    </div>
+                    <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                      Found <span className="font-bold text-slate-900">{activeJobs.length}</span> verified delivery and warehouse openings in your region.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Notification 3: Profile Compliance */}
+                <div className="pt-3 flex items-start gap-3.5">
+                  <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-2xl shrink-0 mt-0.5">
+                    <CheckCircle className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-extrabold text-slate-900">Profile Verified</h4>
+                      <span className="text-[10px] font-bold text-slate-400">System</span>
+                    </div>
+                    <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                      Your phone number and candidate profile are verified for instant 1-click job application.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                <span className="text-[11px] font-bold text-slate-400">3 Unread Alerts</span>
+                <button
+                  onClick={closeNotificationModal}
+                  className="py-2 px-5 bg-[#FF5500] hover:bg-orange-600 text-white font-extrabold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
+                >
+                  Close Notifications
+                </button>
+              </div>
             </motion.div>
           </div>
         )}
