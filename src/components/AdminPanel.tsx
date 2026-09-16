@@ -207,27 +207,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose, onJobPo
 
   useEffect(() => {
     if (isOpen) {
-      const storedToken = sessionStorage.getItem('jobsner_admin_token');
-      if (storedToken) {
-        fetch('/api/admin/verify-session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: storedToken })
-        })
-          .then(res => res.json())
-          .then(data => {
-            if (data.valid) {
-              setIsAdminAuth(true);
-              fetchRecruiters();
-            } else {
-              sessionStorage.removeItem('jobsner_admin_token');
-              setIsAdminAuth(false);
-            }
-          })
-          .catch(() => setIsAdminAuth(false));
-      } else {
-        setIsAdminAuth(false);
-      }
+      // Always require fresh credential entry whenever Admin Panel opens
+      setIsAdminAuth(false);
+      setAuthUsername('');
+      setAuthPassword('');
+      setAuthError(null);
     }
   }, [isOpen]);
 

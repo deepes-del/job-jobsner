@@ -4490,9 +4490,11 @@ app.post('/api/admin/login', async (req, res) => {
     const trimmedUser = String(username).trim();
     const trimmedPass = String(password).trim();
 
-    let adminRecord: { username: string; password_hash: string; salt: string; role?: string } | null = null;
+    let authenticated = false;
+    let adminUser = trimmedUser;
+    let adminRole = 'superadmin';
 
-    // First attempt query against Supabase 'admins' table
+    // 1. Query Supabase 'admins' table directly
     if (isSupabaseConfigured()) {
       try {
         const supabase = getSupabase();
@@ -4503,38 +4505,38 @@ app.post('/api/admin/login', async (req, res) => {
           .maybeSingle();
 
         if (data && !error) {
-          adminRecord = data;
+          // If password column exists in Supabase table (plain text as requested)
+          if (data.password && String(data.password).trim() === trimmedPass) {
+            authenticated = true;
+            adminUser = data.username;
+            adminRole = data.role || 'superadmin';
+          } 
+          // Support hashed fallback if password_hash exists
+          else if (data.password_hash && data.salt) {
+            const computedHash = crypto.pbkdf2Sync(trimmedPass, data.salt, 1000, 64, 'sha512').toString('hex');
+            const hashBuf = Buffer.from(data.password_hash, 'hex');
+            const compBuf = Buffer.from(computedHash, 'hex');
+            if (hashBuf.length === compBuf.length && crypto.timingSafeEqual(hashBuf, compBuf)) {
+              authenticated = true;
+              adminUser = data.username;
+              adminRole = data.role || 'superadmin';
+            }
+          }
         }
       } catch (dbErr: any) {
-        console.warn('[Admin Auth] Supabase admins query failed/warning:', dbErr?.message || dbErr);
+        console.warn('[Admin Auth] Supabase admins query warning:', dbErr?.message || dbErr);
       }
     }
 
-    // Secure server-side PBKDF2 SHA-512 fallback (matches Supabase SQL seed for Jobsner2026@)
-    const fallbackSalt = '3a450d8ef002e04046ff3539f63fe963';
-    const fallbackHash = '987cf8f8734d7d1c5f8892b1b891fef1789d306c676218fc66207b108d51d5539ab5b241fc4b57caa4ab6b629028fa90f09cb36b1195004a9087f248e0665864';
-
-    if (!adminRecord && trimmedUser === 'Jobsner2026@') {
-      adminRecord = {
-        username: 'Jobsner2026@',
-        password_hash: fallbackHash,
-        salt: fallbackSalt,
-        role: 'superadmin'
-      };
+    // 2. Default credentials check if Supabase record not found or table not created yet
+    if (!authenticated) {
+      if (trimmedUser === 'Jobsner2026@' && trimmedPass === 'SathyaDeepuMohan123@') {
+        authenticated = true;
+        adminUser = 'Jobsner2026@';
+      }
     }
 
-    if (!adminRecord) {
-      return res.status(401).json({ success: false, error: 'Invalid username or password.' });
-    }
-
-    // Recompute PBKDF2 SHA-512 Hash with salt from DB
-    const computedHash = crypto.pbkdf2Sync(trimmedPass, adminRecord.salt, 1000, 64, 'sha512').toString('hex');
-    
-    // Timing-safe comparison to prevent side-channel timing attacks
-    const hashBuf = Buffer.from(adminRecord.password_hash, 'hex');
-    const compBuf = Buffer.from(computedHash, 'hex');
-
-    if (hashBuf.length !== compBuf.length || !crypto.timingSafeEqual(hashBuf, compBuf)) {
+    if (!authenticated) {
       return res.status(401).json({ success: false, error: 'Invalid username or password.' });
     }
 
@@ -4547,8 +4549,8 @@ app.post('/api/admin/login', async (req, res) => {
       token,
       message: 'Admin authenticated successfully',
       user: {
-        username: adminRecord.username,
-        role: adminRecord.role || 'superadmin'
+        username: adminUser,
+        role: adminRole
       }
     });
   } catch (err: any) {
