@@ -13,6 +13,7 @@ import { Candidate, Profile } from '../types';
 import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
 import FlowerBlastAnimation from './FlowerBlastAnimation';
 import CandidateProfileEdit from './CandidateProfileEdit';
+import { playNotificationChime, showSystemNotification } from '../lib/webPush';
 
 interface CandidateDashboardProps {
   candidate: Candidate;
@@ -194,11 +195,8 @@ export default function CandidateDashboard({
               }
             });
 
-            if (!jobsRes.error && supaJobs && supaJobs.length > 0) {
+            if (!jobsRes.error && supaJobs) {
               const jobMap = new Map<string, any>();
-              jobsList.forEach((j: any) => {
-                if (j.id) jobMap.set(String(j.id), j);
-              });
               supaJobs.forEach((j: any) => {
                 const id = String(j.id || j.jobId || j.job_id || '');
                 if (!id) return;
@@ -374,13 +372,21 @@ export default function CandidateDashboard({
         const channel = supabase.channel('jobsner_realtime')
           .on('broadcast', { event: 'new_job' }, (payload: any) => {
             fetchJobs();
-            if (payload?.payload?.title) {
-              setLiveNotification({
-                title: `🚨 New Job Posted: ${payload.payload.title}`,
-                message: `${payload.payload.companyName || 'Company'} is hiring in ${payload.payload.city || 'your area'}! Salary: ${payload.payload.salary || 'Competitive'}.`,
-                type: 'job'
-              });
-            }
+            try { playNotificationChime(); } catch (e) {}
+            const title = payload?.payload?.title || 'New Job Opening';
+            const company = payload?.payload?.companyName || 'Company';
+            const city = payload?.payload?.city || 'your region';
+            
+            showSystemNotification({
+              title: `🚨 New Job Posted: ${title}`,
+              body: `${company} is hiring in ${city}!`
+            });
+
+            setLiveNotification({
+              title: `🚨 New Job Posted: ${title}`,
+              message: `${company} is hiring in ${city}! Salary: ${payload?.payload?.salary || 'Competitive'}.`,
+              type: 'job'
+            });
           })
           .on('broadcast', { event: 'notification' }, (payload: any) => {
             const notif = payload?.payload;
@@ -388,6 +394,11 @@ export default function CandidateDashboard({
               const forMe = !notif.recipientId || notif.recipientId === 'ALL' || notif.recipientId === candidate?.id;
               const forRole = !notif.targetRole || notif.targetRole === 'ALL' || notif.targetRole === 'CANDIDATE';
               if (forMe && forRole) {
+                try { playNotificationChime(); } catch (e) {}
+                showSystemNotification({
+                  title: notif.title || 'Notification | Jobsner',
+                  body: notif.message || ''
+                });
                 setLiveNotification({
                   title: notif.title || 'Notification',
                   message: notif.message || '',
@@ -402,6 +413,16 @@ export default function CandidateDashboard({
             fetchJobs();
           })
           .on('postgres_changes', { event: '*', schema: 'public', table: 'applications' }, () => {
+            try { playNotificationChime(); } catch (e) {}
+            showSystemNotification({
+              title: '📋 Application Status Updated',
+              body: 'A recruiter updated your job application status!'
+            });
+            setLiveNotification({
+              title: '📋 Application Status Updated',
+              message: 'A recruiter updated your job application status! Check your applications tab.',
+              type: 'application'
+            });
             fetchMyApplications();
           })
           .subscribe();
@@ -881,6 +902,15 @@ export default function CandidateDashboard({
                 <MapPin className="w-3.5 h-3.5 text-[#FF5500]" />
                 {profile.city || profile.locality || 'Bengal'}
               </span>
+              <button
+                onClick={onLogout}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/70 shadow-2xs transition-colors cursor-pointer"
+                title="Log Out"
+                id="banner-candidate-logout-btn"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                Log Out
+              </button>
             </div>
           </div>
         </div>

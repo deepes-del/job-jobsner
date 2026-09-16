@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Truck, LogIn, UserPlus, CheckCircle, Briefcase, User, Database, Package, Bell, Heart, ChevronDown, Search } from 'lucide-react';
+import { Truck, LogIn, UserPlus, CheckCircle, Briefcase, User, Database, Package, Bell, Heart, ChevronDown, Search, LogOut } from 'lucide-react';
 import { Candidate, Profile, Recruiter } from './types';
 import CandidateRegistration from './components/CandidateRegistration';
 import CandidateLogin from './components/CandidateLogin';
@@ -365,28 +365,38 @@ export default function App() {
                   </span>
                 </button>
 
-                {/* Profile Badge & Dropdown */}
-                <div 
-                  onClick={() => setCandidateActiveTab('overview')} 
-                  className="flex items-center gap-2.5 pl-3 border-l border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
-                  title="View Profile"
-                >
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-sky-400 to-blue-600 overflow-hidden border-2 border-white shadow-xs shrink-0 flex items-center justify-center text-white font-extrabold text-xs">
-                    {candidate.profile?.profilePhoto ? (
-                      <img src={candidate.profile.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
-                    ) : (
-                      candidate.profile?.fullName?.[0]?.toUpperCase() || 'D'
-                    )}
+                {/* Profile Badge & Logout Control */}
+                <div className="flex items-center gap-2">
+                  <div 
+                    onClick={() => setCandidateActiveTab('overview')} 
+                    className="flex items-center gap-2.5 pl-3 border-l border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
+                    title="View Profile"
+                  >
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-sky-400 to-blue-600 overflow-hidden border-2 border-white shadow-xs shrink-0 flex items-center justify-center text-white font-extrabold text-xs">
+                      {candidate.profile?.profilePhoto ? (
+                        <img src={candidate.profile.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+                      ) : (
+                        candidate.profile?.fullName?.[0]?.toUpperCase() || 'D'
+                      )}
+                    </div>
+                    <div className="hidden sm:flex flex-col text-left">
+                      <span className="text-xs font-extrabold text-slate-900 leading-tight">
+                        {candidate.profile?.fullName?.toLowerCase() || candidate.fullName?.toLowerCase() || 'deepesh'}
+                      </span>
+                      <span className="text-[10px] font-semibold text-slate-500">
+                        Job Seeker
+                      </span>
+                    </div>
                   </div>
-                  <div className="hidden sm:flex flex-col text-left">
-                    <span className="text-xs font-extrabold text-slate-900 leading-tight">
-                      {candidate.profile?.fullName?.toLowerCase() || candidate.fullName?.toLowerCase() || 'deepesh'}
-                    </span>
-                    <span className="text-[10px] font-semibold text-slate-500">
-                      Job Seeker
-                    </span>
-                  </div>
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                  <button
+                    onClick={handleCandidateLogout}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/60 rounded-xl text-xs font-extrabold transition-all cursor-pointer shadow-2xs ml-1"
+                    title="Log Out of Candidate Account"
+                    id="header-candidate-logout-btn"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Log Out</span>
+                  </button>
                 </div>
               </div>
             ) : userRole === null ? (

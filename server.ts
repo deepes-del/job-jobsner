@@ -584,24 +584,14 @@ async function getLiveJobs(): Promise<any[]> {
       const { data, error } = await supabase.from('jobs').select('*');
 
       if (!error && data && Array.isArray(data)) {
-        const normalizedSupabaseJobs = data.map(normalizeJob);
-
-        // Merge Supabase jobs into local db.jobs
-        const jobMap = new Map<string, any>();
-        (db.jobs || []).forEach((j: any) => {
-          const norm = normalizeJob(j);
-          if (norm.id) jobMap.set(norm.id, norm);
-        });
-        normalizedSupabaseJobs.forEach((j: any) => {
-          if (j.id) jobMap.set(j.id, j);
-        });
-
-        db.jobs = Array.from(jobMap.values());
+        db.jobs = data.map(normalizeJob);
         memoryDB = db;
       } else if (error) {
         console.error('[Supabase Live Jobs Query Error]', error.message || error);
       }
     }
+  } catch (err) {
+    console.warn('[Supabase Jobs Sync Warning]', err);
   } catch (err) {
     console.warn('[Supabase Jobs Sync Warning]', err);
   }
