@@ -588,8 +588,6 @@ async function getLiveJobs(): Promise<any[]> {
     }
   } catch (err) {
     console.warn('[Supabase Jobs Sync Warning]', err);
-  } catch (err) {
-    console.warn('[Supabase Jobs Sync Warning]', err);
   }
 
   // Fetch recruiters to attach company logos and company names if missing on job records
