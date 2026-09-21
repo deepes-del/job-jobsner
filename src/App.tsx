@@ -288,9 +288,9 @@ export default function App() {
   const isRecruiterLoggedIn = !!recruiter && !!recruiterToken;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans" id="app-root-container">
+    <div className={`${userRole === null ? 'h-screen max-h-screen overflow-hidden' : 'min-h-screen'} bg-slate-50 flex flex-col font-sans`} id="app-root-container">
       {/* Top Navbar Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-xs" id="global-navbar">
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-30 shrink-0 shadow-xs" id="global-navbar">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           
           {/* Logo brand */}
@@ -298,7 +298,6 @@ export default function App() {
             onClick={handleLogoClick}
             className="flex items-center gap-3 select-none cursor-pointer group active:scale-95 transition-all" 
             id="navbar-brand"
-            title="Click 5 times to open central admin panel"
           >
             <JobsnerLogo variant="header" size="sm" />
             <div className="flex flex-col">
@@ -447,7 +446,7 @@ export default function App() {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10" id="main-content-layout">
+      <main className={`${userRole === null ? 'flex-1 flex flex-col justify-center items-center max-w-6xl w-full mx-auto px-4 py-2 overflow-hidden' : 'flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10'}`} id="main-content-layout">
         <AnimatePresence mode="wait">
           
           {userRole === null ? (
@@ -457,55 +456,55 @@ export default function App() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.25 }}
-              className="max-w-4xl mx-auto py-8 sm:py-12"
+              className="w-full max-w-4xl mx-auto flex flex-col justify-center items-center h-full my-auto"
             >
-              <div className="text-center max-w-2xl mx-auto mb-10 flex flex-col items-center">
-                <JobsnerLogo variant="full" size="xl" className="mb-4" />
-                <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight leading-none mb-3">
+              <div className="text-center max-w-2xl mx-auto mb-4 sm:mb-6 flex flex-col items-center">
+                <JobsnerLogo variant="full" size="md" className="mb-2" />
+                <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight leading-tight mb-2">
                   Connecting Fleet Owners with Certified Drivers
                 </h1>
-                <p className="text-sm sm:text-base text-gray-500 font-medium leading-relaxed">
+                <p className="text-xs sm:text-sm text-gray-500 font-medium leading-normal max-w-xl">
                   Jobsner is the leading compliance-first network for logistics and delivery hiring. Tell us who you are to get started.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full">
                 
                 {/* Recruiter Card */}
                 <motion.div
-                  whileHover={{ y: -4, boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.05), 0 8px 10px -6px rgb(0 0 0 / 0.05)' }}
-                  className="bg-white border border-gray-150 rounded-3xl p-8 flex flex-col justify-between shadow-sm transition-all relative overflow-hidden group"
+                  whileHover={{ y: -3, boxShadow: '0 15px 20px -5px rgb(0 0 0 / 0.05)' }}
+                  className="bg-white border border-gray-150 rounded-2xl p-5 sm:p-6 flex flex-col justify-between shadow-xs transition-all relative overflow-hidden group"
                 >
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50/50 rounded-bl-full -z-0 transition-colors group-hover:bg-orange-50" />
+                  <div className="absolute top-0 right-0 w-28 h-28 bg-orange-50/50 rounded-bl-full -z-0 transition-colors group-hover:bg-orange-50" />
                   
                   <div className="relative z-10">
-                    <div className="w-14 h-14 bg-orange-50 border border-orange-100 rounded-2xl flex items-center justify-center text-orange-600 mb-6">
-                      <Briefcase className="w-7 h-7" />
+                    <div className="w-11 h-11 bg-orange-50 border border-orange-100 rounded-xl flex items-center justify-center text-orange-600 mb-3">
+                      <Briefcase className="w-5 h-5" />
                     </div>
                     
-                    <span className="inline-block px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-orange-50 text-orange-700 border border-orange-100 mb-4">
+                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest bg-orange-50 text-orange-700 border border-orange-100 mb-2">
                       For Fleet Owners & Employers
                     </span>
                     
-                    <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight leading-tight">
+                    <h2 className="text-xl font-extrabold text-gray-900 tracking-tight leading-tight">
                       Are you a Recruiter?
                     </h2>
                     
-                    <p className="text-sm text-gray-400 mt-3 leading-relaxed font-medium">
-                      Post regional logistics job openings, perform verified document compliance audits, schedule screener interviews, and manage incoming applications.
+                    <p className="text-xs text-gray-400 mt-2 leading-relaxed font-medium">
+                      Post regional logistics job openings, perform verified document compliance audits, and manage applications.
                     </p>
 
-                    <ul className="mt-6 space-y-2.5 text-xs text-gray-500 font-medium">
+                    <ul className="mt-4 space-y-2 text-xs text-gray-500 font-medium">
                       <li className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-orange-500 shrink-0" />
+                        <CheckCircle className="w-3.5 h-3.5 text-orange-500 shrink-0" />
                         <span>Unlimited dispatch job postings</span>
                       </li>
                       <li className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-orange-500 shrink-0" />
+                        <CheckCircle className="w-3.5 h-3.5 text-orange-500 shrink-0" />
                         <span>Verified driving license check audits</span>
                       </li>
                       <li className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-orange-500 shrink-0" />
+                        <CheckCircle className="w-3.5 h-3.5 text-orange-500 shrink-0" />
                         <span>Interactive screening compliance tracker</span>
                       </li>
                     </ul>
@@ -517,7 +516,7 @@ export default function App() {
                       setRecruiterView('login');
                       setUserRole('recruiter');
                     }}
-                    className="mt-8 w-full py-3.5 bg-slate-950 hover:bg-slate-900 text-white font-extrabold text-xs uppercase tracking-wider rounded-2xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
+                    className="mt-6 w-full py-3 bg-slate-950 hover:bg-slate-900 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2"
                   >
                     Post a Job & Sign In
                   </button>
@@ -525,39 +524,39 @@ export default function App() {
 
                 {/* Candidate Card */}
                 <motion.div
-                  whileHover={{ y: -4, boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.05), 0 8px 10px -6px rgb(0 0 0 / 0.05)' }}
-                  className="bg-white border border-gray-150 rounded-3xl p-8 flex flex-col justify-between shadow-sm transition-all relative overflow-hidden group"
+                  whileHover={{ y: -3, boxShadow: '0 15px 20px -5px rgb(0 0 0 / 0.05)' }}
+                  className="bg-white border border-gray-150 rounded-2xl p-5 sm:p-6 flex flex-col justify-between shadow-xs transition-all relative overflow-hidden group"
                 >
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50/50 rounded-bl-full -z-0 transition-colors group-hover:bg-orange-50" />
+                  <div className="absolute top-0 right-0 w-28 h-28 bg-orange-50/50 rounded-bl-full -z-0 transition-colors group-hover:bg-orange-50" />
                   
                   <div className="relative z-10">
-                    <div className="w-14 h-14 bg-orange-50 border border-orange-100 rounded-2xl flex items-center justify-center text-orange-600 mb-6">
-                      <Truck className="w-7 h-7" />
+                    <div className="w-11 h-11 bg-orange-50 border border-orange-100 rounded-xl flex items-center justify-center text-orange-600 mb-3">
+                      <Truck className="w-5 h-5" />
                     </div>
                     
-                    <span className="inline-block px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-orange-50 text-orange-700 border border-orange-100 mb-4">
+                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest bg-orange-50 text-orange-700 border border-orange-100 mb-2">
                       For Drivers & Delivery Agents
                     </span>
                     
-                    <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight leading-tight">
+                    <h2 className="text-xl font-extrabold text-gray-900 tracking-tight leading-tight">
                       Find a Job
                     </h2>
                     
-                    <p className="text-sm text-gray-400 mt-3 leading-relaxed font-medium">
-                      Search for local transport & delivery driver careers, upload and secure your driving credentials, and receive job interview offers.
+                    <p className="text-xs text-gray-400 mt-2 leading-relaxed font-medium">
+                      Search for transport & delivery driver careers, upload driving credentials, and receive job interview offers.
                     </p>
 
-                    <ul className="mt-6 space-y-2.5 text-xs text-gray-500 font-medium">
+                    <ul className="mt-4 space-y-2 text-xs text-gray-500 font-medium">
                       <li className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-orange-500 shrink-0" />
+                        <CheckCircle className="w-3.5 h-3.5 text-orange-500 shrink-0" />
                         <span>Search verified fleet driver opportunities</span>
                       </li>
                       <li className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-orange-500 shrink-0" />
+                        <CheckCircle className="w-3.5 h-3.5 text-orange-500 shrink-0" />
                         <span>Quick profile creation & instant apply</span>
                       </li>
                       <li className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-orange-500 shrink-0" />
+                        <CheckCircle className="w-3.5 h-3.5 text-orange-500 shrink-0" />
                         <span>Real-time background vetting status checks</span>
                       </li>
                     </ul>
@@ -569,7 +568,7 @@ export default function App() {
                       setView('login');
                       setUserRole('candidate');
                     }}
-                    className="mt-8 w-full py-3.5 bg-orange-600 hover:bg-orange-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-2xl shadow-md shadow-orange-600/10 transition-all cursor-pointer flex items-center justify-center gap-2"
+                    className="mt-6 w-full py-3 bg-orange-600 hover:bg-orange-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2"
                   >
                     Find a Job & Sign In
                   </button>
@@ -782,7 +781,7 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-150 py-6" id="global-footer">
+      <footer className={`bg-white border-t border-gray-150 shrink-0 ${userRole === null ? 'py-3' : 'py-6'}`} id="global-footer">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-400">
           <p>© 2026 Jobsner. Connecting Careers. All rights reserved.</p>
           <div className="flex gap-4">
