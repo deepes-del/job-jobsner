@@ -70,7 +70,7 @@ export default function RecruiterDashboard({
   const [jobTitle, setJobTitle] = useState('');
   const [jobCategory, setJobCategory] = useState('Delivery Jobs');
   const [jobOpenings, setJobOpenings] = useState('1');
-  const [jobEmploymentType, setJobEmploymentType] = useState<'Full Time' | 'Part Time' | 'Contract' | 'Temporary'>('Full Time');
+  const [jobEmploymentType, setJobEmploymentType] = useState<'Full Time' | 'Part Time' | 'Flexible'>('Full Time');
   
   // Location
   const [jobState, setJobState] = useState('');
@@ -2057,8 +2057,7 @@ export default function RecruiterDashboard({
                             >
                               <option value="Full Time">Full Time</option>
                               <option value="Part Time">Part Time</option>
-                              <option value="Contract">Contract</option>
-                              <option value="Temporary">Temporary</option>
+                              <option value="Flexible">Flexible</option>
                             </select>
                           </div>
                         </div>
@@ -2247,6 +2246,7 @@ export default function RecruiterDashboard({
                             <option value="Day">Day Shift</option>
                             <option value="Night">Night Shift</option>
                             <option value="Rotational">Rotational Shift</option>
+                            <option value="Flexible">Flexible Shift</option>
                           </select>
                         </div>
 

@@ -531,7 +531,12 @@ export default function CandidateDashboard({
 
     // Employment Type
     if (selectedEmpType !== 'All') {
-      result = result.filter(j => j.employmentType === selectedEmpType);
+      result = result.filter(j => {
+        if (!j.employmentType) return false;
+        const emp = j.employmentType.toLowerCase();
+        const target = selectedEmpType.toLowerCase();
+        return emp === target || emp.includes(target) || target.includes(emp);
+      });
     }
 
     // Experience Limit
@@ -542,7 +547,12 @@ export default function CandidateDashboard({
 
     // Shift
     if (selectedShift !== 'All') {
-      result = result.filter(j => j.shift === selectedShift);
+      result = result.filter(j => {
+        if (!j.shift) return false;
+        const s = j.shift.toLowerCase();
+        const target = selectedShift.toLowerCase();
+        return s === target || s.includes(target) || target.includes(s);
+      });
     }
 
     // Bike requirement
@@ -1141,14 +1151,31 @@ export default function CandidateDashboard({
                   </select>
                 </div>
 
+                {/* Employment Type Filter */}
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-slate-700">
+                  <Briefcase className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Employment:</span>
+                  <select
+                    value={selectedEmpType}
+                    onChange={(e) => setSelectedEmpType(e.target.value)}
+                    className="bg-transparent font-extrabold text-slate-900 focus:outline-none cursor-pointer text-xs"
+                  >
+                    <option value="All">All Types</option>
+                    <option value="Full Time">Full Time</option>
+                    <option value="Part Time">Part Time</option>
+                    <option value="Flexible">Flexible</option>
+                  </select>
+                </div>
+
                 {/* Reset Filters Button */}
-                {(selectedCategory !== 'All' || selectedSalary > 0 || selectedExperience !== 'All' || selectedShift !== 'All' || searchQuery) && (
+                {(selectedCategory !== 'All' || selectedSalary > 0 || selectedExperience !== 'All' || selectedShift !== 'All' || selectedEmpType !== 'All' || searchQuery) && (
                   <button
                     onClick={() => {
                       setSelectedCategory('All');
                       setSelectedSalary(0);
                       setSelectedExperience('All');
                       setSelectedShift('All');
+                      setSelectedEmpType('All');
                       setSearchQuery('');
                     }}
                     className="flex items-center gap-1 px-3 py-1.5 text-xs font-extrabold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors cursor-pointer"

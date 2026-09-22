@@ -82,7 +82,7 @@ export interface Job {
   title: string;
   category: string;
   openings: number;
-  employmentType: 'Full Time' | 'Part Time' | 'Contract' | 'Temporary';
+  employmentType: 'Full Time' | 'Part Time' | 'Flexible';
   
   // Location
   state: string;
@@ -96,7 +96,7 @@ export interface Job {
   salaryType: 'Monthly' | 'Weekly' | 'Daily';
   
   // Job Details
-  shift: 'Day' | 'Night' | 'Rotational';
+  shift: 'Day' | 'Night' | 'Rotational' | 'Flexible';
   experienceRequired: number; // in years
   educationRequired: string;
   genderPreference: 'Male' | 'Female' | 'Any';
