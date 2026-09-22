@@ -1,8 +1,8 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  User, Calendar, MapPin, Briefcase, GraduationCap, 
-  IndianRupee, Languages, Bike, FileText, CheckCircle, 
+import {
+  User, Calendar, MapPin, Briefcase, GraduationCap,
+  IndianRupee, Languages, Bike, FileText, CheckCircle,
   AlertCircle, Edit2, LogOut, Phone, Mail, Sparkles, AlertTriangle, Upload,
   Search, SlidersHorizontal, ArrowUpDown, Clock, Building, UserCheck, ShieldAlert,
   FileMinus, ExternalLink, ChevronRight, X, Info, RefreshCw,
@@ -28,12 +28,12 @@ interface CandidateDashboardProps {
   onCloseNotification?: () => void;
 }
 
-export default function CandidateDashboard({ 
-  candidate, 
+export default function CandidateDashboard({
+  candidate,
   token,
   activeTab: externalActiveTab,
   onTabChange,
-  onEditProfile, 
+  onEditProfile,
   onLogout,
   onManageDocuments,
   onUpdateProfile,
@@ -77,7 +77,7 @@ export default function CandidateDashboard({
       const next = exists ? prev.filter(id => id !== jobId) : [...prev, jobId];
       try {
         localStorage.setItem(`saved_jobs_${candidate.id}`, JSON.stringify(next));
-      } catch (err) {}
+      } catch (err) { }
       return next;
     });
   };
@@ -286,7 +286,7 @@ export default function CandidateDashboard({
                 const jobId = String(a.jobId || a.job_id || '');
                 const id = String(a.id || a.appId || a.app_id || '');
                 const withdrawStatus = a.withdrawStatus || a.withdraw_status || 'Active';
-                
+
                 if (jobId && !appMap.has(jobId)) {
                   const job = activeJobs.find(j => String(j.id) === jobId) || {};
                   appMap.set(jobId, {
@@ -372,11 +372,11 @@ export default function CandidateDashboard({
         const channel = supabase.channel('jobsner_realtime')
           .on('broadcast', { event: 'new_job' }, (payload: any) => {
             fetchJobs();
-            try { playNotificationChime(); } catch (e) {}
+            try { playNotificationChime(); } catch (e) { }
             const title = payload?.payload?.title || 'New Job Opening';
             const company = payload?.payload?.companyName || 'Company';
             const city = payload?.payload?.city || 'your region';
-            
+
             showSystemNotification({
               title: `🚨 New Job Posted: ${title}`,
               body: `${company} is hiring in ${city}!`
@@ -394,7 +394,7 @@ export default function CandidateDashboard({
               const forMe = !notif.recipientId || notif.recipientId === 'ALL' || notif.recipientId === candidate?.id;
               const forRole = !notif.targetRole || notif.targetRole === 'ALL' || notif.targetRole === 'CANDIDATE';
               if (forMe && forRole) {
-                try { playNotificationChime(); } catch (e) {}
+                try { playNotificationChime(); } catch (e) { }
                 showSystemNotification({
                   title: notif.title || 'Notification | Jobsner',
                   body: notif.message || ''
@@ -413,7 +413,7 @@ export default function CandidateDashboard({
             fetchJobs();
           })
           .on('postgres_changes', { event: '*', schema: 'public', table: 'applications' }, () => {
-            try { playNotificationChime(); } catch (e) {}
+            try { playNotificationChime(); } catch (e) { }
             showSystemNotification({
               title: '📋 Application Status Updated',
               body: 'A recruiter updated your job application status!'
@@ -439,7 +439,7 @@ export default function CandidateDashboard({
         try {
           const supabase = getSupabase();
           supabase.removeChannel(realtimeSubscription);
-        } catch (e) {}
+        } catch (e) { }
       }
     };
   }, [fetchJobs, fetchMyApplications, fetchDocuments, candidate?.id]);
@@ -507,7 +507,7 @@ export default function CandidateDashboard({
     // Instant Search
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      result = result.filter(j => 
+      result = result.filter(j =>
         j.title.toLowerCase().includes(q) ||
         j.companyName.toLowerCase().includes(q) ||
         (j.city || '').toLowerCase().includes(q)
@@ -881,7 +881,7 @@ export default function CandidateDashboard({
       </AnimatePresence>
 
       {/* Welcome Banner (Matching Reference Image) */}
-      <div 
+      <div
         className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#FFF6F0] via-[#FFF3EB] to-[#FFEAE0] border border-orange-100 p-6 md:p-8 shadow-xs flex flex-col md:flex-row items-center justify-between gap-6"
         id="dashboard-welcome-banner"
       >
@@ -902,7 +902,7 @@ export default function CandidateDashboard({
             <p className="text-slate-600 text-xs sm:text-sm font-semibold mt-1">
               Discover verified jobs and take the next step in your career
             </p>
-            
+
             <div className="flex flex-wrap items-center gap-3 mt-3">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/90 text-slate-800 border border-orange-200/70 shadow-2xs">
                 <Briefcase className="w-3.5 h-3.5 text-[#FF5500]" />
@@ -936,9 +936,9 @@ export default function CandidateDashboard({
         {/* Right Section: Professional Hero Job-Seeker Cutout Graphic (Matching Reference Image) */}
         <div className="relative shrink-0 flex items-center justify-center">
           <div className="relative w-36 h-36 md:w-44 md:h-44 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gradient-to-tr from-amber-400 via-orange-400 to-orange-500">
-            <img 
-              src="/job_seeker_hero.png" 
-              alt="Professional Job Seeker" 
+            <img
+              src="/job_seeker_hero.png"
+              alt="Professional Job Seeker"
               className="w-full h-full object-cover"
             />
           </div>
@@ -983,7 +983,7 @@ export default function CandidateDashboard({
           transition={{ duration: 0.15 }}
           id="tab-overview-content"
         >
-          <CandidateProfileEdit 
+          <CandidateProfileEdit
             initialProfile={profile}
             candidate={candidate}
             token={token || ''}
@@ -1022,7 +1022,7 @@ export default function CandidateDashboard({
                 id="jobs-search-input"
               />
               {searchQuery && (
-                <button 
+                <button
                   onClick={() => setSearchQuery('')}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-900 cursor-pointer"
                 >
@@ -1042,7 +1042,7 @@ export default function CandidateDashboard({
               </div>
 
               <button
-                onClick={() => {}}
+                onClick={() => { }}
                 className="w-full sm:w-auto bg-[#FF5500] hover:bg-orange-600 text-white font-extrabold px-7 py-3 rounded-xl shadow-xs transition-all text-xs sm:text-sm cursor-pointer shrink-0"
               >
                 Search Jobs
@@ -1056,22 +1056,20 @@ export default function CandidateDashboard({
             <div className="flex items-center gap-2.5 overflow-x-auto pb-1 no-scrollbar">
               <button
                 onClick={() => setSelectedCategory('All')}
-                className={`py-2.5 px-5 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 shadow-xs ${
-                  selectedCategory === 'All'
+                className={`py-2.5 px-5 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 shadow-xs ${selectedCategory === 'All'
                     ? 'bg-[#1E293B] text-white'
                     : 'bg-white text-slate-700 border border-gray-200 hover:bg-gray-50'
-                }`}
+                  }`}
               >
                 All Openings
               </button>
 
               <button
                 onClick={() => setSelectedCategory(prev => prev === 'Delivery Jobs' ? 'All' : 'Delivery Jobs')}
-                className={`py-2.5 px-4 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 border flex items-center gap-2 ${
-                  selectedCategory === 'Delivery Jobs'
+                className={`py-2.5 px-4 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 border flex items-center gap-2 ${selectedCategory === 'Delivery Jobs'
                     ? 'bg-[#FF5500] text-white border-[#FF5500] shadow-sm'
                     : 'bg-white text-slate-700 border-gray-200 hover:bg-gray-50'
-                }`}
+                  }`}
                 title={selectedCategory === 'Delivery Jobs' ? 'Click to deselect & show all jobs' : 'Filter Delivery Jobs'}
               >
                 <Bike className="w-4 h-4" /> Delivery Jobs
@@ -1080,11 +1078,10 @@ export default function CandidateDashboard({
 
               <button
                 onClick={() => setSelectedCategory(prev => prev === 'Warehouse / Picker&Packer' ? 'All' : 'Warehouse / Picker&Packer')}
-                className={`py-2.5 px-4 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 border flex items-center gap-2 ${
-                  selectedCategory === 'Warehouse / Picker&Packer'
+                className={`py-2.5 px-4 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 border flex items-center gap-2 ${selectedCategory === 'Warehouse / Picker&Packer'
                     ? 'bg-[#FF5500] text-white border-[#FF5500] shadow-sm'
                     : 'bg-white text-slate-700 border-gray-200 hover:bg-gray-50'
-                }`}
+                  }`}
                 title={selectedCategory === 'Warehouse / Picker&Packer' ? 'Click to deselect & show all jobs' : 'Filter Warehouse Jobs'}
               >
                 <Package className="w-4 h-4" /> Warehouse / Picker & Packer
@@ -1242,10 +1239,10 @@ export default function CandidateDashboard({
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredJobsList.map((job) => {
                   const alreadyApplied = myApplications.some(app => (String(app.jobId) === String(job.id) || String(app.job_id) === String(job.id)) && app.withdrawStatus !== 'Withdrawn');
-                  
+
                   return (
-                    <div 
-                      key={job.id} 
+                    <div
+                      key={job.id}
                       className="p-5 border border-gray-200/90 rounded-2xl bg-white hover:border-orange-300 transition-all shadow-xs hover:shadow-md flex flex-col justify-between"
                       id={`job-card-${job.id}`}
                     >
@@ -1292,7 +1289,7 @@ export default function CandidateDashboard({
 
                         {/* Job Title */}
                         <h3 className="font-black text-slate-900 text-base leading-snug tracking-tight line-clamp-1">{job.title}</h3>
-                        
+
                         {/* Location */}
                         <p className="text-xs font-bold text-slate-500 mt-1 flex items-center gap-1.5">
                           <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
@@ -1352,7 +1349,7 @@ export default function CandidateDashboard({
                           >
                             <ExternalLink className="w-3.5 h-3.5" /> Details
                           </button>
-                          
+
                           {alreadyApplied ? (
                             <span className="py-2.5 px-4 bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-black rounded-xl flex items-center gap-1">
                               Applied ✓
@@ -1428,7 +1425,7 @@ export default function CandidateDashboard({
             ) : (
               <div className="space-y-4" id="applications-list-container">
                 {myApplications.map((app, idx) => (
-                  <div 
+                  <div
                     key={app.id ? `cand-app-${app.id}` : `cand-app-${idx}-${app.jobId || ''}`}
                     className="p-5 border border-gray-150 rounded-2xl bg-white hover:border-gray-300 transition-all shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-5"
                     id={`app-item-${app.id || idx}`}
@@ -1455,7 +1452,7 @@ export default function CandidateDashboard({
                         {/* Company & position info */}
                         <span className="text-[10px] font-black uppercase text-orange-600 block leading-tight">{app.companyName}</span>
                         <h4 className="font-extrabold text-slate-900 text-sm leading-snug mt-1">{app.jobTitle}</h4>
-                        
+
                         {/* Date row */}
                         <div className="flex items-center gap-3 text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-1.5 flex-wrap">
                           <span className="flex items-center gap-0.5"><Calendar className="w-3 h-3 text-gray-400" /> Applied: {new Date(app.appliedDate).toLocaleDateString()}</span>
@@ -1468,14 +1465,13 @@ export default function CandidateDashboard({
                     <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto border-t md:border-t-0 border-gray-50 pt-3 md:pt-0">
                       <div className="flex flex-col text-left md:text-right">
                         <span className="text-[8px] text-gray-400 font-extrabold uppercase leading-none mb-1">Dispatch Status</span>
-                        <span 
-                          className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest inline-block text-center border ${
-                            app.currentStatus === 'Withdrawn'
+                        <span
+                          className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest inline-block text-center border ${app.currentStatus === 'Withdrawn'
                               ? 'bg-red-50 text-red-700 border-red-150'
                               : app.currentStatus === 'Applied'
-                              ? 'bg-orange-50 text-orange-700 border-orange-150 animate-pulse'
-                              : 'bg-emerald-50 text-emerald-700 border-emerald-150'
-                          }`}
+                                ? 'bg-orange-50 text-orange-700 border-orange-150 animate-pulse'
+                                : 'bg-emerald-50 text-emerald-700 border-emerald-150'
+                            }`}
                         >
                           {app.currentStatus}
                         </span>
@@ -1489,7 +1485,7 @@ export default function CandidateDashboard({
                         >
                           Details <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
                         </button>
-                        
+
                         {app.currentStatus === 'Applied' && app.withdrawStatus !== 'Withdrawn' && (
                           <button
                             onClick={() => handleWithdrawApp(app.id)}
@@ -1555,8 +1551,8 @@ export default function CandidateDashboard({
                 const alreadyApplied = myApplications.some(app => (String(app.jobId) === String(job.id) || String(app.job_id) === String(job.id)) && app.withdrawStatus !== 'Withdrawn');
                 const isDraft = String(job.status || '').toLowerCase() === 'draft';
                 return (
-                  <div 
-                    key={job.id} 
+                  <div
+                    key={job.id}
                     className="p-5 border border-gray-150 rounded-2xl bg-white hover:border-orange-300 transition-all shadow-sm hover:shadow-md flex flex-col justify-between"
                     id={`saved-job-card-${job.id}`}
                   >
@@ -1716,7 +1712,7 @@ export default function CandidateDashboard({
 
               {/* Multi-section content container */}
               <div className="space-y-6 text-xs text-slate-700 leading-relaxed font-medium">
-                
+
                 {/* Section 1: Detailed description */}
                 <div>
                   <h4 className="text-[10px] font-black uppercase text-gray-400 tracking-wider mb-2.5">Job Description</h4>
@@ -1926,7 +1922,7 @@ export default function CandidateDashboard({
                   <div className="flex items-center justify-between relative mt-2 px-2">
                     {/* Background Line */}
                     <div className="absolute top-[13px] left-8 right-8 h-0.5 bg-gray-200 -z-10" />
-                    
+
                     {[
                       { id: 'Applied', label: 'Applied' },
                       { id: 'Shortlisted', label: 'Shortlisted' },
@@ -1936,11 +1932,11 @@ export default function CandidateDashboard({
                     ].map((step, idx) => {
                       // Determine status index in progression
                       const statuses = [
-                        'Applied', 'Contacted', 'Shortlisted', 'Interview Scheduled', 
+                        'Applied', 'Contacted', 'Shortlisted', 'Interview Scheduled',
                         'Interview Completed', 'Selected', 'Hired'
                       ];
                       const currentIdx = statuses.indexOf(selectedApp.currentStatus);
-                      
+
                       let isDone = false;
                       let isCurrent = false;
 
@@ -1966,12 +1962,11 @@ export default function CandidateDashboard({
 
                       return (
                         <div key={step.id} className="flex flex-col items-center flex-1 text-center">
-                          <div 
-                            className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold border-2 transition-all ${
-                              isDone 
-                                ? 'bg-orange-600 border-orange-600 text-white shadow-sm shadow-orange-600/25' 
+                          <div
+                            className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold border-2 transition-all ${isDone
+                                ? 'bg-orange-600 border-orange-600 text-white shadow-sm shadow-orange-600/25'
                                 : 'bg-white border-gray-200 text-gray-400'
-                            } ${isCurrent ? 'ring-4 ring-orange-50' : ''}`}
+                              } ${isCurrent ? 'ring-4 ring-orange-50' : ''}`}
                           >
                             {isDone ? '✓' : idx + 1}
                           </div>
@@ -2022,7 +2017,7 @@ export default function CandidateDashboard({
                 >
                   Close Audit Sheet
                 </button>
-                
+
                 {selectedApp.currentStatus === 'Applied' && selectedApp.withdrawStatus !== 'Withdrawn' && (
                   <button
                     onClick={() => handleWithdrawApp(selectedApp.id)}
@@ -2322,7 +2317,7 @@ export default function CandidateDashboard({
 
               {/* Notification Items List */}
               <div className="p-6 overflow-y-auto space-y-4 divide-y divide-gray-100 flex-1">
-                
+
                 {/* Section A: Recruiter Application Review Status Updates */}
                 {myApplications.length > 0 && (
                   <div className="space-y-3 pb-2">
@@ -2422,9 +2417,8 @@ export default function CandidateDashboard({
         <div className="max-w-md mx-auto grid grid-cols-4 gap-1">
           <button
             onClick={() => { setActiveTab('find_jobs'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-            className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all cursor-pointer ${
-              activeTab === 'find_jobs' ? 'text-orange-600 font-extrabold' : 'text-gray-500 font-medium hover:text-slate-800'
-            }`}
+            className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all cursor-pointer ${activeTab === 'find_jobs' ? 'text-orange-600 font-extrabold' : 'text-gray-500 font-medium hover:text-slate-800'
+              }`}
           >
             <div className="relative">
               <Search className="w-5 h-5" />
@@ -2439,9 +2433,8 @@ export default function CandidateDashboard({
 
           <button
             onClick={() => { setActiveTab('applications'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-            className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all cursor-pointer ${
-              activeTab === 'applications' ? 'text-orange-600 font-extrabold' : 'text-gray-500 font-medium hover:text-slate-800'
-            }`}
+            className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all cursor-pointer ${activeTab === 'applications' ? 'text-orange-600 font-extrabold' : 'text-gray-500 font-medium hover:text-slate-800'
+              }`}
           >
             <div className="relative">
               <Briefcase className="w-5 h-5" />
@@ -2456,9 +2449,8 @@ export default function CandidateDashboard({
 
           <button
             onClick={() => { setActiveTab('saved'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-            className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all cursor-pointer ${
-              activeTab === 'saved' ? 'text-orange-600 font-extrabold' : 'text-gray-500 font-medium hover:text-slate-800'
-            }`}
+            className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all cursor-pointer ${activeTab === 'saved' ? 'text-orange-600 font-extrabold' : 'text-gray-500 font-medium hover:text-slate-800'
+              }`}
           >
             <div className="relative">
               <Heart className={`w-5 h-5 ${activeTab === 'saved' ? 'fill-orange-600' : ''}`} />
@@ -2473,9 +2465,8 @@ export default function CandidateDashboard({
 
           <button
             onClick={() => { setActiveTab('overview'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-            className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all cursor-pointer ${
-              activeTab === 'overview' ? 'text-teal-700 font-extrabold' : 'text-gray-500 font-medium hover:text-slate-800'
-            }`}
+            className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all cursor-pointer ${activeTab === 'overview' ? 'text-teal-700 font-extrabold' : 'text-gray-500 font-medium hover:text-slate-800'
+              }`}
           >
             <User className="w-5 h-5" />
             <span className="text-[10px] mt-1">Profile</span>
