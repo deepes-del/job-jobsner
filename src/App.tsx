@@ -299,13 +299,7 @@ export default function App() {
             className="flex items-center gap-3 select-none cursor-pointer group active:scale-95 transition-all" 
             id="navbar-brand"
           >
-            <JobsnerLogo variant="header" size="sm" />
-            <div className="flex flex-col">
-              <span className="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-none group-hover:text-orange-600 transition-colors">
-                JOBS<span className="text-[#FF5500]">NER</span>
-              </span>
-              <span className="text-[9px] font-extrabold tracking-widest text-slate-400 uppercase">CONNECTING CAREERS</span>
-            </div>
+            <JobsnerLogo size="md" />
             {userRole !== null && userRole !== 'candidate' && (
               <span className="text-[11px] font-bold text-orange-600 uppercase bg-orange-50 border border-orange-100 px-2.5 py-1 rounded-full tracking-wider shrink-0 hidden xs:inline-block ml-1">
                 {portal === 'candidate' ? 'Candidate Portal' : 'Recruiter Portal'}
