@@ -930,13 +930,13 @@ export default function CandidateDashboard({
           </div>
         </div>
 
-        {/* Right Section: Hero Illustration - Delivery Rider on Scooter */}
+        {/* Right Section: Hero Illustration - Realistic Delivery Rider */}
         <div className="relative shrink-0 flex items-center justify-center">
-          <div className="relative w-44 h-44 sm:w-52 sm:h-52 md:w-60 md:h-60 rounded-3xl overflow-hidden border-4 border-white/40 shadow-2xl bg-white flex items-center justify-center p-2">
+          <div className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-3xl overflow-hidden border-4 border-white/40 shadow-2xl bg-white flex items-center justify-center">
             <img
               src="/delivery_rider_hero.png"
               alt="Delivery Rider on Scooter"
-              className="w-full h-full object-contain filter drop-shadow-md"
+              className="w-full h-full object-cover"
             />
           </div>
         </div>
