@@ -299,9 +299,9 @@ export default function App() {
             className="flex items-center gap-3 select-none cursor-pointer group active:scale-95 transition-all" 
             id="navbar-brand"
           >
-            <JobsnerLogo size="md" />
+            <JobsnerLogo size="lg" className="h-11 sm:h-14" />
             {userRole !== null && userRole !== 'candidate' && (
-              <span className="text-[11px] font-bold text-orange-600 uppercase bg-orange-50 border border-orange-100 px-2.5 py-1 rounded-full tracking-wider shrink-0 hidden xs:inline-block ml-1">
+              <span className="text-[11px] font-bold text-[#1D61F2] uppercase bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-full tracking-wider shrink-0 hidden xs:inline-block ml-1">
                 {portal === 'candidate' ? 'Candidate Portal' : 'Recruiter Portal'}
               </span>
             )}
@@ -309,34 +309,34 @@ export default function App() {
 
           {/* Center Navigation Links (Matching Reference Image) */}
           {isCandidateLoggedIn && portal === 'candidate' && view === 'dashboard' ? (
-            <nav className="hidden md:flex items-center gap-8 text-sm font-extrabold text-slate-600">
+            <nav className="hidden md:flex items-center gap-8 text-sm font-bold text-slate-600">
               <button 
                 onClick={() => setCandidateActiveTab('find_jobs')} 
-                className={`relative py-5 px-1 cursor-pointer transition-colors ${candidateActiveTab === 'find_jobs' ? 'text-[#FF5500]' : 'hover:text-slate-900'}`}
+                className={`relative py-5 px-1 cursor-pointer transition-colors ${candidateActiveTab === 'find_jobs' ? 'text-[#1D61F2] font-black' : 'hover:text-slate-900'}`}
               >
                 Jobs
-                {candidateActiveTab === 'find_jobs' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FF5500] rounded-full" />}
+                {candidateActiveTab === 'find_jobs' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#1D61F2] rounded-full" />}
               </button>
               <button 
                 onClick={() => setCandidateActiveTab('applications')} 
-                className={`relative py-5 px-1 cursor-pointer transition-colors ${candidateActiveTab === 'applications' ? 'text-[#FF5500]' : 'hover:text-slate-900'}`}
+                className={`relative py-5 px-1 cursor-pointer transition-colors ${candidateActiveTab === 'applications' ? 'text-[#1D61F2] font-black' : 'hover:text-slate-900'}`}
               >
                 My Applications
-                {candidateActiveTab === 'applications' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FF5500] rounded-full" />}
+                {candidateActiveTab === 'applications' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#1D61F2] rounded-full" />}
               </button>
               <button 
                 onClick={() => setCandidateActiveTab('saved')} 
-                className={`relative py-5 px-1 cursor-pointer transition-colors flex items-center gap-1.5 ${candidateActiveTab === 'saved' ? 'text-[#FF5500]' : 'hover:text-slate-900'}`}
+                className={`relative py-5 px-1 cursor-pointer transition-colors flex items-center gap-1.5 ${candidateActiveTab === 'saved' ? 'text-[#1D61F2] font-black' : 'hover:text-slate-900'}`}
               >
                 <Heart className="w-4 h-4" /> Saved Jobs
-                {candidateActiveTab === 'saved' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FF5500] rounded-full" />}
+                {candidateActiveTab === 'saved' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#1D61F2] rounded-full" />}
               </button>
               <button 
                 onClick={() => setCandidateActiveTab('overview')} 
-                className={`relative py-5 px-1 cursor-pointer transition-colors flex items-center gap-1.5 ${candidateActiveTab === 'overview' ? 'text-[#FF5500]' : 'hover:text-slate-900'}`}
+                className={`relative py-5 px-1 cursor-pointer transition-colors flex items-center gap-1.5 ${candidateActiveTab === 'overview' ? 'text-[#1D61F2] font-black' : 'hover:text-slate-900'}`}
               >
                 <User className="w-4 h-4" /> My Profile
-                {candidateActiveTab === 'overview' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FF5500] rounded-full" />}
+                {candidateActiveTab === 'overview' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#1D61F2] rounded-full" />}
               </button>
             </nav>
           ) : null}
@@ -352,8 +352,8 @@ export default function App() {
                   title="View Notifications"
                   id="header-notification-bell"
                 >
-                  <Bell className="w-5 h-5" />
-                  <span className="absolute top-1 right-1 w-4 h-4 bg-[#FF5500] text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-xs">
+                  <Bell className="w-5 h-5 text-slate-700" />
+                  <span className="absolute top-1 right-1 w-4 h-4 bg-[#1D61F2] text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-xs">
                     3
                   </span>
                 </button>

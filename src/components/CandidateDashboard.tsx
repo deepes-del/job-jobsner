@@ -880,62 +880,59 @@ export default function CandidateDashboard({
         )}
       </AnimatePresence>
 
-      {/* Welcome Banner (Matching Reference Image) */}
+      {/* Welcome Hero Banner (Matching Mobile App Design) */}
       <div
-        className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#FFF6F0] via-[#FFF3EB] to-[#FFEAE0] border border-orange-100 p-6 md:p-8 shadow-xs flex flex-col md:flex-row items-center justify-between gap-6"
+        className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#1D61F2] via-[#2B6DF6] to-[#3B82F6] text-white p-6 sm:p-8 md:p-10 shadow-lg flex flex-col md:flex-row items-center justify-between gap-6"
         id="dashboard-welcome-banner"
       >
-        {/* Left Section: Candidate Profile & Greeting */}
-        <div className="flex items-center gap-5 relative z-10 w-full md:w-auto">
-          <div className="w-20 h-20 rounded-full border-4 border-white shadow-md overflow-hidden bg-gradient-to-tr from-sky-400 to-blue-600 flex items-center justify-center text-white font-black text-2xl shrink-0">
-            {profile.profilePhoto ? (
-              <img src={profile.profilePhoto} alt={profile.fullName || candidate.fullName} className="w-full h-full object-cover" referrerpolicy="no-referrer" />
-            ) : (
-              <span className="text-2xl font-black">{profile.fullName?.[0]?.toUpperCase() || candidate.fullName?.[0]?.toUpperCase() || 'D'}</span>
-            )}
+        {/* Left Section: Hero Text & Call to Action */}
+        <div className="flex-1 space-y-4 relative z-10 w-full md:w-auto">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-md text-white text-xs font-bold border border-white/30">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Welcome back, {profile.fullName?.split(' ')[0] || candidate.fullName?.split(' ')[0] || 'Partner'}!</span>
           </div>
 
-          <div>
-            <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-              Welcome back, {profile.fullName?.toLowerCase() || candidate.fullName?.toLowerCase() || 'deepesh'}! 👋
-            </h1>
-            <p className="text-slate-600 text-xs sm:text-sm font-semibold mt-1">
-              Discover verified jobs and take the next step in your career
-            </p>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
+            Better Jobs<br /><span className="text-blue-100">Brighter Future</span>
+          </h1>
 
-            <div className="flex flex-wrap items-center gap-3 mt-3">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/90 text-slate-800 border border-orange-200/70 shadow-2xs">
-                <Briefcase className="w-3.5 h-3.5 text-[#FF5500]" />
-                Job Seeker
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/90 text-slate-800 border border-orange-200/70 shadow-2xs">
-                <MapPin className="w-3.5 h-3.5 text-[#FF5500]" />
-                {[profile.locality, profile.city, profile.state, profile.pincode ? `PIN: ${profile.pincode}` : ''].filter(Boolean).join(', ') || profile.location || 'Location Not Specified'}
-              </span>
-              <button
-                onClick={onLogout}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/70 shadow-2xs transition-colors cursor-pointer"
-                title="Log Out"
-                id="banner-candidate-logout-btn"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                Log Out
-              </button>
-            </div>
+          <p className="text-blue-100 text-sm sm:text-base font-medium max-w-lg leading-relaxed">
+            Explore thousands of verified delivery & logistics jobs across India.
+          </p>
+
+          <div className="pt-2 flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => {
+                const el = document.getElementById('jobs-search-input');
+                if (el) el.focus();
+              }}
+              className="bg-white text-[#1D61F2] hover:bg-blue-50 font-extrabold px-6 py-3 rounded-full text-xs sm:text-sm transition-all shadow-md flex items-center gap-2 cursor-pointer active:scale-95"
+            >
+              <Search className="w-4 h-4 text-[#1D61F2]" />
+              Start Your Search
+              <ChevronRight className="w-4 h-4 text-[#1D61F2]" />
+            </button>
+
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold bg-blue-900/30 text-blue-100 border border-white/10 backdrop-blur-sm">
+              <MapPin className="w-3.5 h-3.5 text-blue-200" />
+              {[profile.locality, profile.city].filter(Boolean).join(', ') || profile.location || 'India'}
+            </span>
+
+            <button
+              onClick={onLogout}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-all cursor-pointer"
+              title="Log Out"
+              id="banner-candidate-logout-btn"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              Log Out
+            </button>
           </div>
         </div>
 
-        {/* Center Quote (Matching Reference Image) */}
-        <div className="hidden lg:flex flex-col items-center text-center px-4 relative z-10">
-          <h3 className="text-lg font-black text-slate-900 tracking-tight italic">
-            “Better Jobs<br />Brighter Futures”
-          </h3>
-          <div className="w-12 h-1 bg-[#FF5500] rounded-full mt-2" />
-        </div>
-
-        {/* Right Section: Professional Hero Job-Seeker Cutout Graphic (Matching Reference Image) */}
+        {/* Right Section: Hero Illustration */}
         <div className="relative shrink-0 flex items-center justify-center">
-          <div className="relative w-36 h-36 md:w-44 md:h-44 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gradient-to-tr from-amber-400 via-orange-400 to-orange-500">
+          <div className="relative w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 rounded-full overflow-hidden border-4 border-white/30 shadow-2xl bg-gradient-to-tr from-blue-400 to-indigo-500 flex items-center justify-center">
             <img
               src="/job_seeker_hero.png"
               alt="Professional Job Seeker"
@@ -952,7 +949,7 @@ export default function CandidateDashboard({
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="p-4 bg-red-50 border border-red-150 rounded-xl text-xs font-bold text-red-700 flex items-start gap-2"
+            className="p-4 bg-red-50 border border-red-150 rounded-2xl text-xs font-bold text-red-700 flex items-start gap-2 shadow-xs"
             id="candidate-error-banner"
           >
             <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
@@ -964,7 +961,7 @@ export default function CandidateDashboard({
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="p-4 bg-emerald-50 border border-emerald-150 rounded-xl text-xs font-bold text-emerald-800 flex items-center gap-2"
+            className="p-4 bg-emerald-50 border border-emerald-150 rounded-2xl text-xs font-bold text-emerald-800 flex items-center gap-2 shadow-xs"
             id="candidate-success-banner"
           >
             <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -1009,13 +1006,84 @@ export default function CandidateDashboard({
           className="flex flex-col gap-6"
           id="tab-find-jobs-content"
         >
+          {/* Top 4 Quick Category Cards (Matching Mobile App Grid) */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            <button
+              onClick={() => setSelectedCategory(prev => prev === 'Delivery Jobs' ? 'All' : 'Delivery Jobs')}
+              className={`p-4 rounded-2xl border transition-all text-left flex flex-col items-center sm:items-start text-center sm:text-left cursor-pointer ${
+                selectedCategory === 'Delivery Jobs'
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-md scale-[1.02]'
+                  : 'bg-blue-50/70 hover:bg-blue-100/70 border-blue-100 text-slate-800'
+              }`}
+            >
+              <div className={`w-11 h-11 rounded-2xl flex items-center justify-center mb-3 ${selectedCategory === 'Delivery Jobs' ? 'bg-white/20 text-white' : 'bg-blue-500 text-white shadow-xs'}`}>
+                <Bike className="w-6 h-6" />
+              </div>
+              <span className="font-extrabold text-sm block">Delivery &amp; Logistics</span>
+              <span className={`text-[11px] font-bold mt-1 ${selectedCategory === 'Delivery Jobs' ? 'text-blue-100' : 'text-blue-600'}`}>
+                {activeJobs.filter(j => (j.category || '').toLowerCase().includes('delivery') || (j.title || '').toLowerCase().includes('delivery')).length} Openings
+              </span>
+            </button>
+
+            <button
+              onClick={() => setSelectedCategory(prev => prev === 'Warehouse / Picker&Packer' ? 'All' : 'Warehouse / Picker&Packer')}
+              className={`p-4 rounded-2xl border transition-all text-left flex flex-col items-center sm:items-start text-center sm:text-left cursor-pointer ${
+                selectedCategory === 'Warehouse / Picker&Packer'
+                  ? 'bg-amber-600 text-white border-amber-600 shadow-md scale-[1.02]'
+                  : 'bg-amber-50/70 hover:bg-amber-100/70 border-amber-100 text-slate-800'
+              }`}
+            >
+              <div className={`w-11 h-11 rounded-2xl flex items-center justify-center mb-3 ${selectedCategory === 'Warehouse / Picker&Packer' ? 'bg-white/20 text-white' : 'bg-amber-500 text-white shadow-xs'}`}>
+                <Package className="w-6 h-6" />
+              </div>
+              <span className="font-extrabold text-sm block">Warehouse &amp; Packing</span>
+              <span className={`text-[11px] font-bold mt-1 ${selectedCategory === 'Warehouse / Picker&Packer' ? 'text-amber-100' : 'text-amber-600'}`}>
+                {activeJobs.filter(j => (j.category || '').toLowerCase().includes('warehouse') || (j.title || '').toLowerCase().includes('picker')).length} Openings
+              </span>
+            </button>
+
+            <button
+              onClick={() => setSelectedCategory(prev => prev === 'Office & Admin' ? 'All' : 'Office & Admin')}
+              className={`p-4 rounded-2xl border transition-all text-left flex flex-col items-center sm:items-start text-center sm:text-left cursor-pointer ${
+                selectedCategory === 'Office & Admin'
+                  ? 'bg-purple-600 text-white border-purple-600 shadow-md scale-[1.02]'
+                  : 'bg-purple-50/70 hover:bg-purple-100/70 border-purple-100 text-slate-800'
+              }`}
+            >
+              <div className={`w-11 h-11 rounded-2xl flex items-center justify-center mb-3 ${selectedCategory === 'Office & Admin' ? 'bg-white/20 text-white' : 'bg-purple-500 text-white shadow-xs'}`}>
+                <Briefcase className="w-6 h-6" />
+              </div>
+              <span className="font-extrabold text-sm block">Office &amp; Admin</span>
+              <span className={`text-[11px] font-bold mt-1 ${selectedCategory === 'Office & Admin' ? 'text-purple-100' : 'text-purple-600'}`}>
+                {activeJobs.filter(j => (j.category || '').toLowerCase().includes('office') || (j.category || '').toLowerCase().includes('admin')).length} Openings
+              </span>
+            </button>
+
+            <button
+              onClick={() => setSelectedCategory(prev => prev === 'Other Jobs' ? 'All' : 'Other Jobs')}
+              className={`p-4 rounded-2xl border transition-all text-left flex flex-col items-center sm:items-start text-center sm:text-left cursor-pointer ${
+                selectedCategory === 'Other Jobs'
+                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-md scale-[1.02]'
+                  : 'bg-emerald-50/70 hover:bg-emerald-100/70 border-emerald-100 text-slate-800'
+              }`}
+            >
+              <div className={`w-11 h-11 rounded-2xl flex items-center justify-center mb-3 ${selectedCategory === 'Other Jobs' ? 'bg-white/20 text-white' : 'bg-emerald-500 text-white shadow-xs'}`}>
+                <Building className="w-6 h-6" />
+              </div>
+              <span className="font-extrabold text-sm block">Other Jobs</span>
+              <span className={`text-[11px] font-bold mt-1 ${selectedCategory === 'Other Jobs' ? 'text-emerald-100' : 'text-emerald-600'}`}>
+                {activeJobs.filter(j => !['delivery', 'warehouse', 'picker', 'office', 'admin'].some(k => (j.category || '').toLowerCase().includes(k))).length} Openings
+              </span>
+            </button>
+          </div>
+
           {/* Search Bar Container (Matching Reference Image) */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-2.5 shadow-xs flex flex-col md:flex-row items-center gap-3">
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-2.5 shadow-sm flex flex-col md:flex-row items-center gap-3">
             <div className="relative flex-1 w-full">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search jobs by title, company, skills, or location..."
+                placeholder="Search jobs, roles, companies..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-11 pr-4 py-3 bg-transparent text-slate-800 text-xs sm:text-sm font-bold focus:outline-none placeholder:text-slate-400"
@@ -1032,155 +1100,115 @@ export default function CandidateDashboard({
             </div>
 
             {/* Location selector & Search Button */}
-            <div className="flex flex-col sm:flex-row items-center gap-2 border-t md:border-t-0 md:border-l border-gray-200 pt-2.5 md:pt-0 pl-0 md:pl-3 w-full md:w-auto">
+            <div className="flex flex-col sm:flex-row items-center gap-2 border-t md:border-t-0 md:border-l border-slate-200 pt-2.5 md:pt-0 pl-0 md:pl-3 w-full md:w-auto">
               <div className="flex items-center gap-2 px-3 py-2.5 text-slate-700 font-bold text-xs sm:text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-colors w-full sm:w-auto justify-between sm:justify-start">
                 <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
-                  <span>Bengaluru, Karnataka</span>
+                  <MapPin className="w-4 h-4 text-[#1D61F2] shrink-0" />
+                  <span>All Cities</span>
                 </div>
                 <ChevronDown className="w-4 h-4 text-slate-400" />
               </div>
 
               <button
                 onClick={() => { }}
-                className="w-full sm:w-auto bg-[#FF5500] hover:bg-orange-600 text-white font-extrabold px-7 py-3 rounded-xl shadow-xs transition-all text-xs sm:text-sm cursor-pointer shrink-0"
+                className="w-full sm:w-auto bg-[#1D61F2] hover:bg-blue-700 text-white font-black px-7 py-3 rounded-xl shadow-xs transition-all text-xs sm:text-sm cursor-pointer shrink-0"
               >
                 Search Jobs
               </button>
             </div>
           </div>
 
-          {/* Category Quick Filter Pills & Advanced Filters */}
-          <div className="flex flex-col gap-4">
-            {/* Category Pills (Toggle selection / deselection supported) */}
-            <div className="flex items-center gap-2.5 overflow-x-auto pb-1 no-scrollbar">
-              <button
-                onClick={() => setSelectedCategory('All')}
-                className={`py-2.5 px-5 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 shadow-xs ${selectedCategory === 'All'
-                    ? 'bg-[#1E293B] text-white'
-                    : 'bg-white text-slate-700 border border-gray-200 hover:bg-gray-50'
-                  }`}
-              >
-                All Openings
-              </button>
-
-              <button
-                onClick={() => setSelectedCategory(prev => prev === 'Delivery Jobs' ? 'All' : 'Delivery Jobs')}
-                className={`py-2.5 px-4 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 border flex items-center gap-2 ${selectedCategory === 'Delivery Jobs'
-                    ? 'bg-[#FF5500] text-white border-[#FF5500] shadow-sm'
-                    : 'bg-white text-slate-700 border-gray-200 hover:bg-gray-50'
-                  }`}
-                title={selectedCategory === 'Delivery Jobs' ? 'Click to deselect & show all jobs' : 'Filter Delivery Jobs'}
-              >
-                <Bike className="w-4 h-4" /> Delivery Jobs
-                {selectedCategory === 'Delivery Jobs' && <X className="w-3.5 h-3.5 ml-1 opacity-80" />}
-              </button>
-
-              <button
-                onClick={() => setSelectedCategory(prev => prev === 'Warehouse / Picker&Packer' ? 'All' : 'Warehouse / Picker&Packer')}
-                className={`py-2.5 px-4 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 border flex items-center gap-2 ${selectedCategory === 'Warehouse / Picker&Packer'
-                    ? 'bg-[#FF5500] text-white border-[#FF5500] shadow-sm'
-                    : 'bg-white text-slate-700 border-gray-200 hover:bg-gray-50'
-                  }`}
-                title={selectedCategory === 'Warehouse / Picker&Packer' ? 'Click to deselect & show all jobs' : 'Filter Warehouse Jobs'}
-              >
-                <Package className="w-4 h-4" /> Warehouse / Picker & Packer
-                {selectedCategory === 'Warehouse / Picker&Packer' && <X className="w-3.5 h-3.5 ml-1 opacity-80" />}
-              </button>
+          {/* Filter Bar: Salary, Experience, Preferred Shift, Employment Type */}
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-3.5 shadow-sm flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-xs font-black text-slate-800 uppercase tracking-wider">
+              <SlidersHorizontal className="w-4 h-4 text-[#1D61F2]" />
+              <span>Filter Jobs:</span>
             </div>
 
-            {/* Filter Bar: Salary, Experience, Preferred Shift */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-3.5 shadow-xs flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-xs font-black text-slate-800 uppercase tracking-wider">
-                <SlidersHorizontal className="w-4 h-4 text-[#FF5500]" />
-                <span>Filter Jobs:</span>
+            <div className="flex flex-wrap items-center gap-2.5 flex-1">
+              {/* Salary Filter */}
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700">
+                <IndianRupee className="w-3.5 h-3.5 text-slate-400" />
+                <span>Salary:</span>
+                <select
+                  value={selectedSalary}
+                  onChange={(e) => setSelectedSalary(Number(e.target.value))}
+                  className="bg-transparent font-extrabold text-slate-900 focus:outline-none cursor-pointer text-xs"
+                >
+                  <option value={0}>All Salaries</option>
+                  <option value={15000}>₹15,000+ / mo</option>
+                  <option value={20000}>₹20,000+ / mo</option>
+                  <option value={25000}>₹25,000+ / mo</option>
+                  <option value={30000}>₹30,000+ / mo</option>
+                </select>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2.5 flex-1">
-                {/* Salary Filter */}
-                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-slate-700">
-                  <IndianRupee className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Salary:</span>
-                  <select
-                    value={selectedSalary}
-                    onChange={(e) => setSelectedSalary(Number(e.target.value))}
-                    className="bg-transparent font-extrabold text-slate-900 focus:outline-none cursor-pointer text-xs"
-                  >
-                    <option value={0}>All Salaries</option>
-                    <option value={15000}>₹15,000+ / mo</option>
-                    <option value={20000}>₹20,000+ / mo</option>
-                    <option value={25000}>₹25,000+ / mo</option>
-                    <option value={30000}>₹30,000+ / mo</option>
-                  </select>
-                </div>
-
-                {/* Experience Filter */}
-                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-slate-700">
-                  <Briefcase className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Experience:</span>
-                  <select
-                    value={selectedExperience}
-                    onChange={(e) => setSelectedExperience(e.target.value)}
-                    className="bg-transparent font-extrabold text-slate-900 focus:outline-none cursor-pointer text-xs"
-                  >
-                    <option value="All">All Experience</option>
-                    <option value="0">Freshers (0 Yrs)</option>
-                    <option value="1">Max 1 Year</option>
-                    <option value="2">Max 2 Years</option>
-                    <option value="3">3+ Years</option>
-                  </select>
-                </div>
-
-                {/* Preferred Shift Filter */}
-                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-slate-700">
-                  <Clock className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Shift:</span>
-                  <select
-                    value={selectedShift}
-                    onChange={(e) => setSelectedShift(e.target.value)}
-                    className="bg-transparent font-extrabold text-slate-900 focus:outline-none cursor-pointer text-xs"
-                  >
-                    <option value="All">All Shifts</option>
-                    <option value="Day Shift">Day Shift</option>
-                    <option value="Night Shift">Night Shift</option>
-                    <option value="Rotational Shift">Rotational Shift</option>
-                    <option value="Flexible">Flexible</option>
-                  </select>
-                </div>
-
-                {/* Employment Type Filter */}
-                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-slate-700">
-                  <Briefcase className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Employment:</span>
-                  <select
-                    value={selectedEmpType}
-                    onChange={(e) => setSelectedEmpType(e.target.value)}
-                    className="bg-transparent font-extrabold text-slate-900 focus:outline-none cursor-pointer text-xs"
-                  >
-                    <option value="All">All Types</option>
-                    <option value="Full Time">Full Time</option>
-                    <option value="Part Time">Part Time</option>
-                    <option value="Flexible">Flexible</option>
-                  </select>
-                </div>
-
-                {/* Reset Filters Button */}
-                {(selectedCategory !== 'All' || selectedSalary > 0 || selectedExperience !== 'All' || selectedShift !== 'All' || selectedEmpType !== 'All' || searchQuery) && (
-                  <button
-                    onClick={() => {
-                      setSelectedCategory('All');
-                      setSelectedSalary(0);
-                      setSelectedExperience('All');
-                      setSelectedShift('All');
-                      setSelectedEmpType('All');
-                      setSearchQuery('');
-                    }}
-                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-extrabold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors cursor-pointer"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" /> Reset Filters
-                  </button>
-                )}
+              {/* Experience Filter */}
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700">
+                <Briefcase className="w-3.5 h-3.5 text-slate-400" />
+                <span>Experience:</span>
+                <select
+                  value={selectedExperience}
+                  onChange={(e) => setSelectedExperience(e.target.value)}
+                  className="bg-transparent font-extrabold text-slate-900 focus:outline-none cursor-pointer text-xs"
+                >
+                  <option value="All">All Experience</option>
+                  <option value="0">Freshers (0 Yrs)</option>
+                  <option value="1">Max 1 Year</option>
+                  <option value="2">Max 2 Years</option>
+                  <option value="3">3+ Years</option>
+                </select>
               </div>
+
+              {/* Preferred Shift Filter */}
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700">
+                <Clock className="w-3.5 h-3.5 text-slate-400" />
+                <span>Shift:</span>
+                <select
+                  value={selectedShift}
+                  onChange={(e) => setSelectedShift(e.target.value)}
+                  className="bg-transparent font-extrabold text-slate-900 focus:outline-none cursor-pointer text-xs"
+                >
+                  <option value="All">All Shifts</option>
+                  <option value="Day Shift">Day Shift</option>
+                  <option value="Night Shift">Night Shift</option>
+                  <option value="Rotational Shift">Rotational Shift</option>
+                  <option value="Flexible">Flexible</option>
+                </select>
+              </div>
+
+              {/* Employment Type Filter */}
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700">
+                <Briefcase className="w-3.5 h-3.5 text-slate-400" />
+                <span>Employment:</span>
+                <select
+                  value={selectedEmpType}
+                  onChange={(e) => setSelectedEmpType(e.target.value)}
+                  className="bg-transparent font-extrabold text-slate-900 focus:outline-none cursor-pointer text-xs"
+                >
+                  <option value="All">All Types</option>
+                  <option value="Full Time">Full Time</option>
+                  <option value="Part Time">Part Time</option>
+                  <option value="Flexible">Flexible</option>
+                </select>
+              </div>
+
+              {/* Reset Filters Button */}
+              {(selectedCategory !== 'All' || selectedSalary > 0 || selectedExperience !== 'All' || selectedShift !== 'All' || selectedEmpType !== 'All' || searchQuery) && (
+                <button
+                  onClick={() => {
+                    setSelectedCategory('All');
+                    setSelectedSalary(0);
+                    setSelectedExperience('All');
+                    setSelectedShift('All');
+                    setSelectedEmpType('All');
+                    setSearchQuery('');
+                  }}
+                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-extrabold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" /> Reset Filters
+                </button>
+              )}
             </div>
           </div>
 
@@ -1189,15 +1217,15 @@ export default function CandidateDashboard({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
               <div>
                 <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                  Found <span className="text-[#FF5500]">{filteredJobsList.length}</span> matching jobs
+                  Recommended Jobs <span className="text-[#1D61F2]">({filteredJobsList.length})</span>
                 </h2>
                 <p className="text-xs font-semibold text-slate-500 mt-0.5">
-                  Jobs from verified companies across India
+                  Verified openings matching your criteria across India
                 </p>
               </div>
 
               <div className="flex items-center gap-2 self-start sm:self-auto">
-                <div className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-extrabold text-slate-700 shadow-xs">
+                <div className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-extrabold text-slate-700 shadow-xs">
                   <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
                   <span>Sort by</span>
                   <select
@@ -1213,29 +1241,33 @@ export default function CandidateDashboard({
             </div>
 
             {loadingJobs ? (
-              <div className="py-24 text-center bg-white rounded-2xl border border-gray-200 shadow-xs">
-                <RefreshCw className="w-8 h-8 text-[#FF5500] animate-spin mx-auto" />
-                <p className="text-xs font-bold text-slate-400 mt-3 uppercase tracking-wide">Syncing Logistics Dispatch Grid...</p>
+              <div className="py-24 text-center bg-white rounded-3xl border border-slate-200/80 shadow-xs">
+                <RefreshCw className="w-8 h-8 text-[#1D61F2] animate-spin mx-auto" />
+                <p className="text-xs font-bold text-slate-400 mt-3 uppercase tracking-wide">Syncing Jobsner Openings...</p>
               </div>
             ) : filteredJobsList.length === 0 ? (
-              <div className="py-20 text-center bg-white rounded-2xl border border-gray-200 shadow-xs" id="empty-jobs-view">
+              <div className="py-20 text-center bg-white rounded-3xl border border-slate-200/80 shadow-xs" id="empty-jobs-view">
                 <Briefcase className="w-12 h-12 text-slate-300 mx-auto mb-4" />
                 <h4 className="font-extrabold text-slate-800 text-sm uppercase">No matching jobs found</h4>
                 <p className="text-xs text-slate-400 max-w-sm mx-auto mt-2 leading-relaxed font-medium">
-                  Try adjusting your keywords or clearing your search term to see all available openings.
+                  Try adjusting your keywords or clearing your filters to see all available openings.
                 </p>
                 <button
                   onClick={() => {
                     setSearchQuery('');
                     setSelectedCategory('All');
+                    setSelectedSalary(0);
+                    setSelectedExperience('All');
+                    setSelectedShift('All');
+                    setSelectedEmpType('All');
                   }}
-                  className="mt-5 text-xs font-extrabold bg-[#FF5500] hover:bg-orange-600 text-white px-5 py-2.5 rounded-xl transition-all cursor-pointer shadow-xs"
+                  className="mt-5 text-xs font-black bg-[#1D61F2] hover:bg-blue-700 text-white px-6 py-3 rounded-full transition-all cursor-pointer shadow-md"
                 >
-                  Clear Search
+                  Clear All Filters
                 </button>
               </div>
             ) : (
-              /* 3-COLUMN DESKTOP JOB CARDS GRID (Matching Reference Image) */
+              /* 3-COLUMN DESKTOP JOB CARDS GRID (Matching Mobile App Reference) */
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredJobsList.map((job) => {
                   const alreadyApplied = myApplications.some(app => (String(app.jobId) === String(job.id) || String(app.job_id) === String(job.id)) && app.withdrawStatus !== 'Withdrawn');
@@ -1243,111 +1275,91 @@ export default function CandidateDashboard({
                   return (
                     <div
                       key={job.id}
-                      className="p-5 border border-gray-200/90 rounded-2xl bg-white hover:border-orange-300 transition-all shadow-xs hover:shadow-md flex flex-col justify-between"
+                      className="p-6 border border-slate-200/80 rounded-3xl bg-white hover:border-blue-400 transition-all shadow-xs hover:shadow-md flex flex-col justify-between"
                       id={`job-card-${job.id}`}
                     >
                       <div>
-                        {/* Company Logo, Company Name, Posted Date, Status Badge, Saved Heart */}
+                        {/* Company Logo, Company Name, Verified Badge, Saved Heart */}
                         <div className="flex items-start justify-between gap-3 mb-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center overflow-hidden shrink-0 shadow-xs">
+                            <div className="w-12 h-12 rounded-2xl bg-blue-50/60 border border-blue-100 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
                               {job.companyLogo ? (
                                 <img
                                   src={job.companyLogo}
                                   alt={job.companyName}
-                                  className="w-full h-full object-contain p-0.5"
+                                  className="w-full h-full object-contain p-1"
                                   referrerPolicy="no-referrer"
                                   onError={(e) => {
                                     (e.target as HTMLElement).style.display = 'none';
                                   }}
                                 />
                               ) : (
-                                <Building className="w-5 h-5 text-gray-400" />
+                                <Building className="w-6 h-6 text-[#1D61F2]" />
                               )}
                             </div>
                             <div>
-                              <span className="text-xs font-black uppercase text-[#FF5500] block leading-tight tracking-wide">{job.companyName}</span>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-xs font-black uppercase text-[#1D61F2] tracking-wide">{job.companyName}</span>
+                                <span className="inline-flex items-center gap-0.5 text-[10px] font-extrabold text-emerald-600 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-full">
+                                  <CheckCircle className="w-3 h-3 fill-emerald-500 text-white" /> Verified
+                                </span>
+                              </div>
                               <span className="text-[10px] font-semibold text-slate-400 block mt-0.5">
                                 Posted {job.createdAt ? new Date(job.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recently'}
                               </span>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-black uppercase py-1 px-2.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">
-                              Active
-                            </span>
-                            <button
-                              onClick={(e) => handleToggleSaveJob(job.id, e)}
-                              className="p-1.5 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
-                              title={savedJobIds.includes(job.id) ? "Saved" : "Save job"}
-                            >
-                              <Heart className={`w-4 h-4 transition-colors ${savedJobIds.includes(job.id) ? 'fill-[#FF5500] text-[#FF5500]' : 'text-slate-400 hover:text-[#FF5500]'}`} />
-                            </button>
-                          </div>
+                          <button
+                            onClick={(e) => handleToggleSaveJob(job.id, e)}
+                            className="p-2 rounded-full hover:bg-blue-50 transition-colors cursor-pointer"
+                            title={savedJobIds.includes(job.id) ? "Saved" : "Save job"}
+                          >
+                            <Heart className={`w-4.5 h-4.5 transition-colors ${savedJobIds.includes(job.id) ? 'fill-[#1D61F2] text-[#1D61F2]' : 'text-slate-300 hover:text-[#1D61F2]'}`} />
+                          </button>
                         </div>
 
                         {/* Job Title */}
-                        <h3 className="font-black text-slate-900 text-base leading-snug tracking-tight line-clamp-1">{job.title}</h3>
+                        <h3 className="font-black text-slate-900 text-lg leading-snug tracking-tight line-clamp-1">{job.title}</h3>
 
                         {/* Location */}
-                        <p className="text-xs font-bold text-slate-500 mt-1 flex items-center gap-1.5">
-                          <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <p className="text-xs font-bold text-slate-500 mt-1.5 flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-[#1D61F2] shrink-0" />
                           {job.area ? `${job.area}, ` : ''}{job.city}, {job.state}
                         </p>
 
-                        {/* 2x2 Specs Grid (Matching Reference Image) */}
-                        <div className="grid grid-cols-2 gap-2 mt-4 text-xs font-bold text-slate-800">
-                          <div className="p-2.5 bg-slate-50 rounded-xl flex flex-col">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase leading-none mb-1 flex items-center gap-1">
-                              <Briefcase className="w-3 h-3 text-slate-400" /> Employment Type
+                        {/* Attribute Badges (Matching Mobile App Pill Design) */}
+                        <div className="flex flex-wrap gap-1.5 mt-4">
+                          {job.category && (
+                            <span className="px-2.5 py-1 bg-blue-50 text-[#1D61F2] text-[11px] font-extrabold rounded-lg uppercase tracking-wider">
+                              {job.category}
                             </span>
-                            <span className="line-clamp-1">{job.employmentType || 'Full Time'}</span>
-                          </div>
-                          <div className="p-2.5 bg-slate-50 rounded-xl flex flex-col">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase leading-none mb-1 flex items-center gap-1">
-                              <Clock className="w-3 h-3 text-slate-400" /> Preferred Shift
-                            </span>
-                            <span className="line-clamp-1">{job.shift || 'Day'}</span>
-                          </div>
-                          <div className="p-2.5 bg-slate-50 rounded-xl flex flex-col">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase leading-none mb-1 flex items-center gap-1">
-                              <BarChart2 className="w-3 h-3 text-slate-400" /> Experience Required
-                            </span>
-                            <span>{job.experienceRequired === 0 || !job.experienceRequired ? 'Fresher Friendly' : `${job.experienceRequired}+ Yr Exp`}</span>
-                          </div>
-                          <div className="p-2.5 bg-slate-50 rounded-xl flex flex-col">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase leading-none mb-1 flex items-center gap-1">
-                              <Users className="w-3 h-3 text-slate-400" /> Open Positions
-                            </span>
-                            <span>{job.openings || '1'} Opening{job.openings > 1 ? 's' : ''}</span>
-                          </div>
+                          )}
+                          <span className="px-2.5 py-1 bg-slate-100 text-slate-700 text-[11px] font-bold rounded-lg">
+                            {job.employmentType || 'Full Time'}
+                          </span>
+                          <span className="px-2.5 py-1 bg-slate-100 text-slate-700 text-[11px] font-bold rounded-lg">
+                            {job.shift || 'Day Shift'}
+                          </span>
                         </div>
-
-                        {/* Description clip */}
-                        {job.description && (
-                          <p className="text-xs text-slate-500 mt-3 line-clamp-2 leading-relaxed font-medium">
-                            {job.description}
-                          </p>
-                        )}
                       </div>
 
-                      {/* Card Footer: Monthly Salary & Actions */}
-                      <div className="mt-5 pt-4 border-t border-gray-150 flex items-center justify-between gap-3">
+                      {/* Card Footer: Monthly Salary & Apply Action */}
+                      <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
                         <div>
-                          <span className="text-[9px] font-bold text-slate-400 block uppercase leading-none mb-1">Monthly Salary</span>
-                          <span className="text-sm font-black text-slate-900">
-                            ₹ {job.minSalary ? `${job.minSalary.toLocaleString()} - ${job.maxSalary.toLocaleString()}` : (job.salary || 'Best in Class')}
+                          <span className="text-[9px] font-extrabold text-slate-400 block uppercase leading-none mb-1">Monthly Salary</span>
+                          <span className="text-sm sm:text-base font-black text-slate-900">
+                            ₹ {job.minSalary ? `${job.minSalary.toLocaleString()} - ${job.maxSalary.toLocaleString()}` : (job.salary || 'Best in Class')} <span className="text-xs font-semibold text-slate-400">/ mo</span>
                           </span>
                         </div>
 
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleViewDetails(job)}
-                            className="py-2.5 px-3 bg-white hover:bg-gray-50 text-slate-700 text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center gap-1 border border-gray-200"
+                            className="py-2.5 px-3 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center gap-1 border border-slate-200"
                             id={`view-details-btn-${job.id}`}
                           >
-                            <ExternalLink className="w-3.5 h-3.5" /> Details
+                            <Info className="w-3.5 h-3.5 text-slate-500" />
                           </button>
 
                           {alreadyApplied ? (
@@ -1362,10 +1374,11 @@ export default function CandidateDashboard({
                             <button
                               onClick={() => handleApplyNow(job)}
                               disabled={applyingJobId === job.id}
-                              className="py-2.5 px-4 bg-[#FF5500] hover:bg-orange-600 disabled:bg-orange-300 text-white text-xs font-black rounded-xl transition-all cursor-pointer shadow-xs flex items-center gap-1"
+                              className="w-10 h-10 rounded-full bg-[#1D61F2] hover:bg-blue-700 disabled:bg-blue-300 text-white flex items-center justify-center transition-all shadow-sm hover:scale-105 active:scale-95 cursor-pointer shrink-0"
+                              title="Apply Now"
                               id={`apply-now-btn-${job.id}`}
                             >
-                              {applyingJobId === job.id ? 'Applying...' : 'Apply Now'}
+                              <ChevronRight className="w-5 h-5 stroke-[2.5]" />
                             </button>
                           )}
                         </div>
@@ -2394,7 +2407,7 @@ export default function CandidateDashboard({
                 <span className="text-[11px] font-bold text-slate-400">3 Unread Alerts</span>
                 <button
                   onClick={closeNotificationModal}
-                  className="py-2 px-5 bg-[#FF5500] hover:bg-orange-600 text-white font-extrabold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
+                  className="py-2 px-5 bg-[#1D61F2] hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
                 >
                   Close Notifications
                 </button>
@@ -2417,13 +2430,13 @@ export default function CandidateDashboard({
         <div className="max-w-md mx-auto grid grid-cols-4 gap-1">
           <button
             onClick={() => { setActiveTab('find_jobs'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-            className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all cursor-pointer ${activeTab === 'find_jobs' ? 'text-orange-600 font-extrabold' : 'text-gray-500 font-medium hover:text-slate-800'
+            className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all cursor-pointer ${activeTab === 'find_jobs' ? 'text-[#1D61F2] font-extrabold' : 'text-gray-500 font-medium hover:text-slate-800'
               }`}
           >
             <div className="relative">
               <Search className="w-5 h-5" />
               {activeJobs.length > 0 && (
-                <span className="absolute -top-1 -right-2 bg-orange-600 text-white text-[8px] font-black rounded-full px-1 py-0.2 leading-none">
+                <span className="absolute -top-1 -right-2 bg-[#1D61F2] text-white text-[8px] font-black rounded-full px-1 py-0.2 leading-none">
                   {activeJobs.length}
                 </span>
               )}
@@ -2433,13 +2446,13 @@ export default function CandidateDashboard({
 
           <button
             onClick={() => { setActiveTab('applications'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-            className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all cursor-pointer ${activeTab === 'applications' ? 'text-orange-600 font-extrabold' : 'text-gray-500 font-medium hover:text-slate-800'
+            className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all cursor-pointer ${activeTab === 'applications' ? 'text-[#1D61F2] font-extrabold' : 'text-gray-500 font-medium hover:text-slate-800'
               }`}
           >
             <div className="relative">
               <Briefcase className="w-5 h-5" />
               {myApplications.length > 0 && (
-                <span className="absolute -top-1 -right-2 bg-orange-600 text-white text-[8px] font-black rounded-full px-1 py-0.2 leading-none">
+                <span className="absolute -top-1 -right-2 bg-[#1D61F2] text-white text-[8px] font-black rounded-full px-1 py-0.2 leading-none">
                   {myApplications.length}
                 </span>
               )}
@@ -2449,13 +2462,13 @@ export default function CandidateDashboard({
 
           <button
             onClick={() => { setActiveTab('saved'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-            className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all cursor-pointer ${activeTab === 'saved' ? 'text-orange-600 font-extrabold' : 'text-gray-500 font-medium hover:text-slate-800'
+            className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all cursor-pointer ${activeTab === 'saved' ? 'text-[#1D61F2] font-extrabold' : 'text-gray-500 font-medium hover:text-slate-800'
               }`}
           >
             <div className="relative">
-              <Heart className={`w-5 h-5 ${activeTab === 'saved' ? 'fill-orange-600' : ''}`} />
+              <Heart className={`w-5 h-5 ${activeTab === 'saved' ? 'fill-[#1D61F2]' : ''}`} />
               {savedJobIds.length > 0 && (
-                <span className="absolute -top-1 -right-2 bg-orange-600 text-white text-[8px] font-black rounded-full px-1 py-0.2 leading-none">
+                <span className="absolute -top-1 -right-2 bg-[#1D61F2] text-white text-[8px] font-black rounded-full px-1 py-0.2 leading-none">
                   {savedJobIds.length}
                 </span>
               )}
@@ -2465,7 +2478,7 @@ export default function CandidateDashboard({
 
           <button
             onClick={() => { setActiveTab('overview'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-            className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all cursor-pointer ${activeTab === 'overview' ? 'text-teal-700 font-extrabold' : 'text-gray-500 font-medium hover:text-slate-800'
+            className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all cursor-pointer ${activeTab === 'overview' ? 'text-[#1D61F2] font-extrabold' : 'text-gray-500 font-medium hover:text-slate-800'
               }`}
           >
             <User className="w-5 h-5" />
