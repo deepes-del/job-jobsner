@@ -290,8 +290,8 @@ export default function App() {
   return (
     <div className={`${userRole === null ? 'h-screen max-h-screen overflow-hidden' : 'min-h-screen'} bg-slate-50 flex flex-col font-sans`} id="app-root-container">
       {/* Top Navbar Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-30 shrink-0 shadow-xs" id="global-navbar">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-30 shrink-0 shadow-xs py-1" id="global-navbar">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
           
           {/* Logo brand */}
           <div 
@@ -299,7 +299,7 @@ export default function App() {
             className="flex items-center gap-3 select-none cursor-pointer group active:scale-95 transition-all" 
             id="navbar-brand"
           >
-            <JobsnerLogo size="lg" className="h-11 sm:h-14" />
+            <JobsnerLogo size="xl" className="h-14 sm:h-16 md:h-18" />
             {userRole !== null && userRole !== 'candidate' && (
               <span className="text-[11px] font-bold text-[#1D61F2] uppercase bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-full tracking-wider shrink-0 hidden xs:inline-block ml-1">
                 {portal === 'candidate' ? 'Candidate Portal' : 'Recruiter Portal'}

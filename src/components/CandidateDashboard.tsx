@@ -930,13 +930,13 @@ export default function CandidateDashboard({
           </div>
         </div>
 
-        {/* Right Section: Hero Illustration */}
+        {/* Right Section: Hero Illustration - Delivery Rider on Scooter */}
         <div className="relative shrink-0 flex items-center justify-center">
-          <div className="relative w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 rounded-full overflow-hidden border-4 border-white/30 shadow-2xl bg-gradient-to-tr from-blue-400 to-indigo-500 flex items-center justify-center">
+          <div className="relative w-44 h-44 sm:w-52 sm:h-52 md:w-60 md:h-60 rounded-3xl overflow-hidden border-4 border-white/40 shadow-2xl bg-white flex items-center justify-center p-2">
             <img
-              src="/job_seeker_hero.png"
-              alt="Professional Job Seeker"
-              className="w-full h-full object-cover"
+              src="/delivery_rider_hero.png"
+              alt="Delivery Rider on Scooter"
+              className="w-full h-full object-contain filter drop-shadow-md"
             />
           </div>
         </div>
@@ -1077,7 +1077,7 @@ export default function CandidateDashboard({
             </button>
           </div>
 
-          {/* Search Bar Container (Matching Reference Image) */}
+          {/* Search Bar Container (With Dynamic City Selector showing Job Counts) */}
           <div className="bg-white border border-slate-200/80 rounded-2xl p-2.5 shadow-sm flex flex-col md:flex-row items-center gap-3">
             <div className="relative flex-1 w-full">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
@@ -1099,14 +1099,25 @@ export default function CandidateDashboard({
               )}
             </div>
 
-            {/* Location selector & Search Button */}
+            {/* City Selector Dropdown showing Locations & Job Counts */}
             <div className="flex flex-col sm:flex-row items-center gap-2 border-t md:border-t-0 md:border-l border-slate-200 pt-2.5 md:pt-0 pl-0 md:pl-3 w-full md:w-auto">
-              <div className="flex items-center gap-2 px-3 py-2.5 text-slate-700 font-bold text-xs sm:text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-colors w-full sm:w-auto justify-between sm:justify-start">
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-[#1D61F2] shrink-0" />
-                  <span>All Cities</span>
-                </div>
-                <ChevronDown className="w-4 h-4 text-slate-400" />
+              <div className="relative flex items-center gap-2 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 font-bold text-xs sm:text-sm cursor-pointer hover:bg-slate-100 transition-colors w-full sm:w-auto">
+                <MapPin className="w-4 h-4 text-[#1D61F2] shrink-0" />
+                <select
+                  value={selectedCity}
+                  onChange={(e) => setSelectedCity(e.target.value)}
+                  className="bg-transparent font-black text-slate-900 focus:outline-none cursor-pointer text-xs sm:text-sm pr-2"
+                >
+                  <option value="All">All Cities ({activeJobs.length} Jobs)</option>
+                  {Array.from(new Set(activeJobs.map(j => j.city).filter(Boolean))).map(cityName => {
+                    const count = activeJobs.filter(j => j.city === cityName).length;
+                    return (
+                      <option key={cityName} value={cityName}>
+                        {cityName} ({count} {count === 1 ? 'job' : 'jobs'})
+                      </option>
+                    );
+                  })}
+                </select>
               </div>
 
               <button
@@ -1194,7 +1205,7 @@ export default function CandidateDashboard({
               </div>
 
               {/* Reset Filters Button */}
-              {(selectedCategory !== 'All' || selectedSalary > 0 || selectedExperience !== 'All' || selectedShift !== 'All' || selectedEmpType !== 'All' || searchQuery) && (
+              {(selectedCategory !== 'All' || selectedSalary > 0 || selectedExperience !== 'All' || selectedShift !== 'All' || selectedEmpType !== 'All' || searchQuery || selectedCity !== 'All') && (
                 <button
                   onClick={() => {
                     setSelectedCategory('All');
@@ -1202,6 +1213,7 @@ export default function CandidateDashboard({
                     setSelectedExperience('All');
                     setSelectedShift('All');
                     setSelectedEmpType('All');
+                    setSelectedCity('All');
                     setSearchQuery('');
                   }}
                   className="flex items-center gap-1 px-3 py-1.5 text-xs font-extrabold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors cursor-pointer"
@@ -1260,6 +1272,7 @@ export default function CandidateDashboard({
                     setSelectedExperience('All');
                     setSelectedShift('All');
                     setSelectedEmpType('All');
+                    setSelectedCity('All');
                   }}
                   className="mt-5 text-xs font-black bg-[#1D61F2] hover:bg-blue-700 text-white px-6 py-3 rounded-full transition-all cursor-pointer shadow-md"
                 >
@@ -1279,26 +1292,26 @@ export default function CandidateDashboard({
                       id={`job-card-${job.id}`}
                     >
                       <div>
-                        {/* Company Logo, Company Name, Verified Badge, Saved Heart */}
+                        {/* Company Logo (BIG & CLEAR), Company Name, Verified Badge, Saved Heart */}
                         <div className="flex items-start justify-between gap-3 mb-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-2xl bg-blue-50/60 border border-blue-100 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
+                          <div className="flex items-center gap-3.5">
+                            <div className="w-16 h-16 rounded-2xl bg-white border-2 border-slate-100 flex items-center justify-center overflow-hidden shrink-0 shadow-sm p-1.5">
                               {job.companyLogo ? (
                                 <img
                                   src={job.companyLogo}
                                   alt={job.companyName}
-                                  className="w-full h-full object-contain p-1"
+                                  className="w-full h-full object-contain"
                                   referrerPolicy="no-referrer"
                                   onError={(e) => {
                                     (e.target as HTMLElement).style.display = 'none';
                                   }}
                                 />
                               ) : (
-                                <Building className="w-6 h-6 text-[#1D61F2]" />
+                                <Building className="w-8 h-8 text-[#1D61F2]" />
                               )}
                             </div>
                             <div>
-                              <div className="flex items-center gap-1.5">
+                              <div className="flex items-center gap-1.5 flex-wrap">
                                 <span className="text-xs font-black uppercase text-[#1D61F2] tracking-wide">{job.companyName}</span>
                                 <span className="inline-flex items-center gap-0.5 text-[10px] font-extrabold text-emerald-600 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-full">
                                   <CheckCircle className="w-3 h-3 fill-emerald-500 text-white" /> Verified
