@@ -13,7 +13,6 @@ import { Candidate, Profile } from '../types';
 import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
 import FlowerBlastAnimation from './FlowerBlastAnimation';
 import CandidateProfileEdit from './CandidateProfileEdit';
-import { AnimatedHeroRider } from './AnimatedHeroRider';
 import { playNotificationChime, showSystemNotification } from '../lib/webPush';
 
 interface CandidateDashboardProps {
@@ -931,8 +930,24 @@ export default function CandidateDashboard({
           </div>
         </div>
 
-        {/* Right Section: Animated Delivery Rider (Left-to-Right Entrance, Deceleration, Waving Gesture & Focal Glow) */}
-        <AnimatedHeroRider className="w-full md:w-auto shrink-0" />
+        {/* Right Section: Round Profile Circle Avatar with Human Image */}
+        <div className="relative shrink-0 flex items-center justify-center">
+          <div className="relative w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52 rounded-full border-4 border-white/80 shadow-2xl overflow-hidden bg-white/20 backdrop-blur-xs flex items-center justify-center group transition-transform hover:scale-105">
+            {profile.profilePhoto || candidate.profile?.profilePhoto ? (
+              <img
+                src={profile.profilePhoto || candidate.profile?.profilePhoto}
+                alt={profile.fullName || candidate.fullName || 'Candidate Profile'}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <img
+                src="/delivery_rider_hero.png"
+                alt="Candidate Profile"
+                className="w-full h-full object-cover"
+              />
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Error & Success Messages */}
