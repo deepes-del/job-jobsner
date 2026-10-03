@@ -13,6 +13,7 @@ import { Candidate, Profile } from '../types';
 import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
 import FlowerBlastAnimation from './FlowerBlastAnimation';
 import CandidateProfileEdit from './CandidateProfileEdit';
+import { AnimatedHeroRider } from './AnimatedHeroRider';
 import { playNotificationChime, showSystemNotification } from '../lib/webPush';
 
 interface CandidateDashboardProps {
@@ -930,14 +931,8 @@ export default function CandidateDashboard({
           </div>
         </div>
 
-        {/* Right Section: Seamless Hero Professional Person (Blue Tinted, Transparent) */}
-        <div className="relative shrink-0 flex items-center justify-center md:justify-end">
-          <img
-            src="/delivery_rider_hero.png"
-            alt="Professional JOBSner Candidate"
-            className="w-44 sm:w-56 md:w-64 lg:w-72 h-auto object-contain drop-shadow-xl transition-transform hover:scale-105 duration-300 pointer-events-none select-none"
-          />
-        </div>
+        {/* Right Section: Animated Delivery Rider (Left-to-Right Entrance, Deceleration, Waving Gesture & Focal Glow) */}
+        <AnimatedHeroRider className="w-full md:w-auto shrink-0" />
       </div>
 
       {/* Error & Success Messages */}
