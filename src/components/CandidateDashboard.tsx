@@ -930,12 +930,12 @@ export default function CandidateDashboard({
           </div>
         </div>
 
-        {/* Right Section: Seamless Hero Delivery Rider (Transparent, No Container/Border) */}
+        {/* Right Section: Seamless Hero Professional Person (Blue Tinted, Transparent) */}
         <div className="relative shrink-0 flex items-center justify-center md:justify-end">
           <img
             src="/delivery_rider_hero.png"
-            alt="Delivery Rider on Scooter"
-            className="w-48 sm:w-60 md:w-72 lg:w-80 h-auto object-contain drop-shadow-lg transition-transform hover:scale-105 duration-300 pointer-events-none select-none"
+            alt="Professional JOBSner Candidate"
+            className="w-44 sm:w-56 md:w-64 lg:w-72 h-auto object-contain drop-shadow-xl transition-transform hover:scale-105 duration-300 pointer-events-none select-none"
           />
         </div>
       </div>
