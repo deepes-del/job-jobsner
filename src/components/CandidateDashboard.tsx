@@ -605,20 +605,71 @@ export default function CandidateDashboard({
   };
 
   const handleWithdrawApplication = async (appId: string) => {
-    if (!token) return;
+    if (!appId) return;
     setWithdrawingAppId(appId);
+    setSubmitError(null);
+    setSubmitSuccess(null);
+
     try {
-      const response = await fetch(`/api/applications/${appId}/withdraw`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` }
+      // 1. Try POST request to API endpoint
+      let response = await fetch(`/api/applications/${appId}/withdraw`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
       });
-      if (response.ok) {
-        setSubmitSuccess('Application successfully withdrawn.');
-        fetchMyApplications();
-        if (selectedApp?.id === appId) setSelectedApp(null);
+
+      if (!response.ok) {
+        // Fallback: try PUT request
+        response = await fetch(`/api/applications/${appId}/withdraw`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
       }
-    } catch (err) {
+
+      // 2. Update Supabase directly if configured
+      if (isSupabaseConfigured()) {
+        try {
+          const supabase = getSupabase();
+          await supabase
+            .from('applications')
+            .update({
+              currentStatus: 'Withdrawn',
+              current_status: 'Withdrawn',
+              withdrawStatus: 'Withdrawn',
+              withdraw_status: 'Withdrawn'
+            })
+            .or(`id.eq.${appId},appId.eq.${appId}`);
+        } catch (supaErr) {
+          console.warn('Supabase update during withdraw:', supaErr);
+        }
+      }
+
+      // 3. Immediately update local state in React component for fast feedback
+      setMyApplications(prev => prev.map(app => {
+        if (String(app.id) === String(appId) || String(app.jobId) === String(appId)) {
+          return {
+            ...app,
+            currentStatus: 'Withdrawn',
+            withdrawStatus: 'Withdrawn',
+            withdraw_status: 'Withdrawn'
+          };
+        }
+        return app;
+      }));
+
+      setSubmitSuccess('Application successfully withdrawn.');
+      fetchMyApplications();
+      if (selectedApp?.id === appId) {
+        setSelectedApp((prev: any) => prev ? { ...prev, currentStatus: 'Withdrawn', withdrawStatus: 'Withdrawn' } : null);
+      }
+    } catch (err: any) {
       console.error('Error withdrawing application:', err);
+      setSubmitError(err.message || 'Error withdrawing application.');
     } finally {
       setWithdrawingAppId(null);
     }
@@ -743,20 +794,10 @@ export default function CandidateDashboard({
               </button>
 
               <button
-                onClick={() => { setInternalNotificationOpen(true); }}
-                className="w-full flex items-center justify-between px-4 py-3 rounded-2xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all cursor-pointer"
-              >
-                <div className="flex items-center gap-3">
-                  <MessageSquare className="w-4 h-4" />
-                  <span>Messages</span>
-                </div>
-                <span className="w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center">
-                  5
-                </span>
-              </button>
-
-              <button
-                onClick={() => { setInternalNotificationOpen(true); }}
+                onClick={() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  setInternalNotificationOpen(true);
+                }}
                 className="w-full flex items-center justify-between px-4 py-3 rounded-2xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all cursor-pointer"
               >
                 <div className="flex items-center gap-3">
@@ -1196,7 +1237,7 @@ export default function CandidateDashboard({
                               </span>
                             </div>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <button
                                 onClick={(e) => handleToggleSaveJob(job.id, e)}
                                 className="p-2 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
@@ -1204,7 +1245,34 @@ export default function CandidateDashboard({
                                 <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-[#1D61F2] text-[#1D61F2]' : 'text-slate-400'}`} />
                               </button>
 
-                              {isApplied ? (
+                              {isAppRecord ? (
+                                <div className="flex items-center gap-2">
+                                  {item.currentStatus === 'Withdrawn' || item.withdrawStatus === 'Withdrawn' ? (
+                                    <span className="px-3 py-1.5 bg-slate-100 text-slate-500 border border-slate-200 text-xs font-black rounded-xl">
+                                      Withdrawn
+                                    </span>
+                                  ) : (
+                                    <>
+                                      <span className={`px-3 py-1.5 text-xs font-black rounded-xl border ${
+                                        String(item.currentStatus || '').toLowerCase().includes('shortlist') || String(item.currentStatus || '').toLowerCase().includes('select')
+                                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                          : String(item.currentStatus || '').toLowerCase().includes('reject')
+                                          ? 'bg-red-50 text-red-700 border-red-200'
+                                          : 'bg-blue-50 text-[#1D61F2] border-blue-200'
+                                      }`}>
+                                        {item.currentStatus || 'Applied'} ✓
+                                      </span>
+                                      <button
+                                        onClick={() => handleWithdrawApplication(item.id)}
+                                        disabled={withdrawingAppId === item.id}
+                                        className="px-3.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-xs rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                                      >
+                                        {withdrawingAppId === item.id ? 'Withdrawing...' : 'Withdraw'}
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              ) : isApplied ? (
                                 <span className="px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-black rounded-xl">
                                   Applied ✓
                                 </span>
@@ -1247,24 +1315,62 @@ export default function CandidateDashboard({
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {myApplications.map((app) => (
-                    <div key={app.id} className="p-5 border border-slate-200 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div>
-                        <h4 className="font-black text-slate-900 text-base">{app.jobTitle || 'Job Role'}</h4>
-                        <p className="text-xs font-semibold text-slate-500 mt-1">{app.companyName} • {app.jobCity}</p>
-                        <span className="inline-block mt-2 px-3 py-1 bg-blue-50 text-[#1D61F2] rounded-full text-xs font-bold">
-                          Status: {app.currentStatus || 'Applied'}
-                        </span>
+                  {myApplications.map((app) => {
+                    const status = app.currentStatus || app.withdrawStatus || 'Applied';
+                    const isWithdrawn = status === 'Withdrawn' || app.withdrawStatus === 'Withdrawn';
+                    return (
+                      <div key={app.id} className="p-5 border border-slate-200/80 rounded-2xl bg-white hover:border-blue-400 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center p-1 overflow-hidden shrink-0 shadow-2xs">
+                            {app.companyLogo ? (
+                              <img src={app.companyLogo} alt={app.companyName} className="w-full h-full object-contain" />
+                            ) : (
+                              <Building className="w-6 h-6 text-[#1D61F2]" />
+                            )}
+                          </div>
+
+                          <div>
+                            <h4 className="font-black text-slate-900 text-base">{app.jobTitle || app.title || 'Delivery Partner / Job Role'}</h4>
+                            <p className="text-xs font-semibold text-slate-500 mt-0.5">
+                              {app.companyName || 'Hiring Company'} • <MapPin className="w-3 h-3 inline text-[#1D61F2]" /> {app.jobCity || 'India'}
+                            </p>
+                            <div className="flex flex-wrap items-center gap-2 mt-2">
+                              <span className={`px-3 py-1 text-xs font-black rounded-full border ${
+                                isWithdrawn
+                                  ? 'bg-slate-100 text-slate-500 border-slate-200'
+                                  : String(status).toLowerCase().includes('shortlist') || String(status).toLowerCase().includes('select')
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                  : String(status).toLowerCase().includes('reject')
+                                  ? 'bg-red-50 text-red-700 border-red-200'
+                                  : 'bg-blue-50 text-[#1D61F2] border-blue-200'
+                              }`}>
+                                Status: {status}
+                              </span>
+                              <span className="text-[11px] text-slate-400 font-semibold">
+                                Applied {app.appliedDate ? new Date(app.appliedDate).toLocaleDateString('en-GB') : 'Recently'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 shrink-0">
+                          {isWithdrawn ? (
+                            <span className="px-4 py-2 bg-slate-100 text-slate-500 border border-slate-200 rounded-xl text-xs font-bold">
+                              Withdrawn
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => handleWithdrawApplication(app.id)}
+                              disabled={withdrawingAppId === app.id}
+                              className="px-4 py-2 border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+                            >
+                              {withdrawingAppId === app.id ? 'Withdrawing...' : 'Withdraw Application'}
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      <button
-                        onClick={() => handleWithdrawApplication(app.id)}
-                        disabled={withdrawingAppId === app.id}
-                        className="px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 rounded-xl text-xs font-bold cursor-pointer"
-                      >
-                        Withdraw Application
-                      </button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

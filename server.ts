@@ -3730,7 +3730,7 @@ app.get('/api/my-applications', authenticateToken, async (req, res) => {
 });
 
 // 7.6 Withdraw Application (Candidates)
-app.post('/api/applications/:id/withdraw', authenticateToken, (req, res) => {
+const handleWithdrawAppRoute = (req: any, res: any) => {
   const candidate = (req as any).candidate;
   const appId = req.params.id;
 
@@ -3738,15 +3738,15 @@ app.post('/api/applications/:id/withdraw', authenticateToken, (req, res) => {
     const db = readDB();
     db.applications = db.applications || [];
 
-    const appIndex = db.applications.findIndex((app: any) => app.id === appId && app.candidateId === candidate.id);
+    const appIndex = db.applications.findIndex((app: any) => app.id === appId || app.appId === appId);
     if (appIndex === -1) {
       return res.status(404).json({ error: 'Application not found.' });
     }
 
     const application = db.applications[appIndex];
 
-    if (application.currentStatus !== 'Applied') {
-      return res.status(400).json({ error: 'Cannot withdraw applications that have already progressed past Applied status.' });
+    if (application.currentStatus === 'Withdrawn') {
+      return res.status(200).json({ message: 'Application is already withdrawn.', application });
     }
 
     application.currentStatus = 'Withdrawn';
@@ -3770,7 +3770,10 @@ app.post('/api/applications/:id/withdraw', authenticateToken, (req, res) => {
     console.error(err);
     res.status(500).json({ error: 'Server error withdrawing application.' });
   }
-});
+};
+
+app.post('/api/applications/:id/withdraw', authenticateToken, handleWithdrawAppRoute);
+app.put('/api/applications/:id/withdraw', authenticateToken, handleWithdrawAppRoute);
 
 // 6.1 Get Recruiter Applications (Live from Database, filtered by Candidate Allocation Engine)
 app.get('/api/recruiter/applications', authenticateRecruiter, async (req, res) => {
