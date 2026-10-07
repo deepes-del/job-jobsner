@@ -3513,12 +3513,16 @@ async function applyCandidateToJob(candidate: any, rawJobId: any, res: any) {
     const allApps = await getLiveApplications();
     const existingApplication = allApps.find(
       (app: any) =>
-        String(app.candidateId) === String(candidate.id) &&
-        String(app.jobId) === jobId &&
-        app.withdrawStatus !== 'Withdrawn'
+        (String(app.candidateId || app.candidate_id) === String(candidate.id)) &&
+        (String(app.jobId || app.job_id) === String(jobId)) &&
+        app.withdrawStatus !== 'Withdrawn' &&
+        app.currentStatus !== 'Withdrawn'
     );
     if (existingApplication) {
-      return res.status(400).json({ error: 'You have already applied for this job listing.' });
+      return res.status(200).json({
+        message: 'You have already applied for this job listing.',
+        application: existingApplication
+      });
     }
 
     // 4. Create application row with ONLY exact camelCase columns

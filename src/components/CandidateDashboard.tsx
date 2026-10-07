@@ -303,15 +303,16 @@ export default function CandidateDashboard({
           console.warn('[Supabase Direct Apps Fetch Warning]', supaErr);
         }
 
-        const seenAppKeys = new Set<string>();
-        const uniqueAppsList = appsList.filter((a) => {
-          const k = String(a.id || a.jobId || `${a.candidateId}_${a.jobId}`);
-          if (!k || seenAppKeys.has(k)) return false;
-          seenAppKeys.add(k);
+        const seenJobIds = new Set<string>();
+        const uniqueActiveAppsList = appsList.filter((a) => {
+          const jobIdKey = String(a.jobId || a.job_id || a.id);
+          const isWithdrawn = a.currentStatus === 'Withdrawn' || a.current_status === 'Withdrawn' || a.withdrawStatus === 'Withdrawn' || a.withdraw_status === 'Withdrawn';
+          if (!jobIdKey || isWithdrawn || seenJobIds.has(jobIdKey)) return false;
+          seenJobIds.add(jobIdKey);
           return true;
         });
 
-        setMyApplications(uniqueAppsList);
+        setMyApplications(uniqueActiveAppsList);
       })
       .catch(err => console.error('Error fetching applications:', err))
       .finally(() => setLoadingApps(false));
@@ -649,24 +650,14 @@ export default function CandidateDashboard({
         }
       }
 
-      // 3. Immediately update local state in React component for fast feedback
-      setMyApplications(prev => prev.map(app => {
-        if (String(app.id) === String(appId) || String(app.jobId) === String(appId)) {
-          return {
-            ...app,
-            currentStatus: 'Withdrawn',
-            withdrawStatus: 'Withdrawn',
-            withdraw_status: 'Withdrawn'
-          };
-        }
-        return app;
-      }));
+      // 3. Immediately remove application from state so it disappears from the list
+      setMyApplications(prev => prev.filter(app => 
+        String(app.id) !== String(appId) && 
+        String(app.jobId) !== String(appId)
+      ));
 
       setSubmitSuccess('Application successfully withdrawn.');
-      fetchMyApplications();
-      if (selectedApp?.id === appId) {
-        setSelectedApp((prev: any) => prev ? { ...prev, currentStatus: 'Withdrawn', withdrawStatus: 'Withdrawn' } : null);
-      }
+      if (selectedApp?.id === appId) setSelectedApp(null);
     } catch (err: any) {
       console.error('Error withdrawing application:', err);
       setSubmitError(err.message || 'Error withdrawing application.');
