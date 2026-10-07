@@ -440,7 +440,7 @@ export default function App() {
       </header>
 
       {/* Main Content Area */}
-      <main className={`${userRole === null ? 'flex-1 flex flex-col justify-center items-center max-w-6xl w-full mx-auto px-4 py-2 overflow-hidden' : 'flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10'}`} id="main-content-layout">
+      <main className={`${userRole === null ? 'flex-1 flex flex-col justify-center items-center max-w-6xl w-full mx-auto px-4 py-2 overflow-hidden' : 'flex-1 max-w-[1600px] w-full mx-auto px-3 sm:px-5 lg:px-6 py-6'}`} id="main-content-layout">
         <AnimatePresence mode="wait">
           
           {userRole === null ? (
