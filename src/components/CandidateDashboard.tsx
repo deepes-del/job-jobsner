@@ -784,31 +784,6 @@ export default function CandidateDashboard({
                 </div>
               </button>
 
-              <button
-                onClick={() => {
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                  setInternalNotificationOpen(true);
-                }}
-                className="w-full flex items-center justify-between px-4 py-3 rounded-2xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all cursor-pointer"
-              >
-                <div className="flex items-center gap-3">
-                  <Bell className="w-4 h-4" />
-                  <span>Notifications</span>
-                </div>
-                <span className="w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center">
-                  3
-                </span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('overview')}
-                className="w-full flex items-center justify-between px-4 py-3 rounded-2xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all cursor-pointer"
-              >
-                <div className="flex items-center gap-3">
-                  <Settings className="w-4 h-4" />
-                  <span>Settings</span>
-                </div>
-              </button>
             </nav>
           </div>
 
@@ -888,13 +863,20 @@ export default function CandidateDashboard({
             <React.Fragment>
               
               {/* TOP HERO BANNER */}
-              <div className="w-full bg-gradient-to-r from-[#1D61F2] via-[#2B6DF6] to-[#3B82F6] rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-6 min-h-[190px]">
-                <div className="relative z-10 max-w-lg space-y-2">
-                  <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">
+              <div className="w-full bg-gradient-to-r from-[#0A3BB6] via-[#1D61F2] to-[#4F46E5] rounded-3xl p-6 sm:p-8 lg:p-10 text-white shadow-xl relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-6 min-h-[220px] border border-blue-400/20">
+                {/* Ambient Background Glow Effects */}
+                <div className="absolute -left-12 -top-12 w-64 h-64 bg-blue-400/25 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute right-0 bottom-0 w-80 h-80 bg-indigo-500/30 rounded-full blur-3xl pointer-events-none" />
+
+                <div className="relative z-10 max-w-lg space-y-3">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-blue-100 text-[11px] font-extrabold border border-white/20">
+                    <Sparkles className="w-3.5 h-3.5 text-yellow-300" /> #1 Delivery Hiring Platform
+                  </div>
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight">
                     Better Jobs<br /><span className="text-blue-100">Brighter Future</span>
                   </h1>
-                  <p className="text-blue-100 text-xs sm:text-sm font-medium">
-                    Find the right talent, faster!
+                  <p className="text-blue-100 text-xs sm:text-sm font-medium leading-relaxed">
+                    Find top talent & verified job opportunities faster with Jobsner!
                   </p>
                   <div className="pt-2">
                     <button
@@ -902,19 +884,19 @@ export default function CandidateDashboard({
                         const el = document.getElementById('jobs-search-input');
                         if (el) el.focus();
                       }}
-                      className="bg-white text-[#1D61F2] hover:bg-blue-50 font-extrabold px-6 py-2.5 rounded-full text-xs sm:text-sm transition-all shadow-md inline-flex items-center gap-2 cursor-pointer active:scale-95"
+                      className="bg-white text-[#1D61F2] hover:bg-blue-50 font-extrabold px-7 py-3 rounded-full text-xs sm:text-sm transition-all shadow-lg inline-flex items-center gap-2 cursor-pointer active:scale-95 hover:scale-105"
                     >
                       Search Jobs →
                     </button>
                   </div>
                 </div>
 
-                {/* Right Graphic in Hero Banner */}
-                <div className="relative shrink-0 hidden sm:flex items-center justify-end pointer-events-none opacity-95">
+                {/* Right Graphic in Hero Banner - Significantly Bigger Rider Graphic */}
+                <div className="relative z-10 shrink-0 hidden sm:flex items-center justify-end pointer-events-none opacity-100 pr-2">
                   <img
                     src="/delivery_rider_hero.png"
-                    alt="Hero Graphic"
-                    className="h-44 sm:h-48 w-auto object-contain filter drop-shadow-xl"
+                    alt="Hero Delivery Rider"
+                    className="h-56 sm:h-64 lg:h-72 w-auto object-contain filter drop-shadow-2xl scale-110 sm:scale-125 transition-transform duration-300"
                   />
                 </div>
               </div>
