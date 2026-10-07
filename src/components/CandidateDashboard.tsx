@@ -807,7 +807,7 @@ export default function CandidateDashboard({
                 </div>
               </div>
               <button
-                onClick={() => { alert('Jobsner Support: support@jobsner.com | Call 1800-JOBSNER'); }}
+                onClick={() => { alert('Jobsner Support: Email us at support@jobsner.com'); }}
                 className="text-[10px] font-bold text-blue-400 hover:underline cursor-pointer"
               >
                 Contact
@@ -855,89 +855,87 @@ export default function CandidateDashboard({
           {activeTab === 'find_jobs' && (
             <React.Fragment>
               
-              {/* TOP ROW: HERO BANNER + 3 STAT CARDS */}
-              <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-stretch">
-                
-                {/* Hero Banner (Left ~58% width) */}
-                <div className="xl:col-span-7 bg-gradient-to-r from-[#1D61F2] via-[#2B6DF6] to-[#3B82F6] rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden flex flex-col justify-between min-h-[200px]">
-                  <div className="relative z-10 max-w-md space-y-2">
-                    <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">
-                      Better Jobs<br /><span className="text-blue-100">Brighter Future</span>
-                    </h1>
-                    <p className="text-blue-100 text-xs sm:text-sm font-medium">
-                      Find the right talent, faster!
-                    </p>
-                    <div className="pt-3">
-                      <button
-                        onClick={() => {
-                          const el = document.getElementById('jobs-search-input');
-                          if (el) el.focus();
-                        }}
-                        className="bg-white text-[#1D61F2] hover:bg-blue-50 font-extrabold px-5 py-2.5 rounded-full text-xs transition-all shadow-md inline-flex items-center gap-2 cursor-pointer active:scale-95"
-                      >
-                        Search Jobs →
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Right Graphic in Hero Banner */}
-                  <div className="absolute right-4 bottom-0 top-0 hidden sm:flex items-center justify-end pointer-events-none opacity-90">
-                    <img
-                      src="/delivery_rider_hero.png"
-                      alt="Hero Graphic"
-                      className="h-44 sm:h-52 w-auto object-contain drop-shadow-xl"
-                    />
+              {/* TOP HERO BANNER */}
+              <div className="w-full bg-gradient-to-r from-[#1D61F2] via-[#2B6DF6] to-[#3B82F6] rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-6 min-h-[190px]">
+                <div className="relative z-10 max-w-lg space-y-2">
+                  <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">
+                    Better Jobs<br /><span className="text-blue-100">Brighter Future</span>
+                  </h1>
+                  <p className="text-blue-100 text-xs sm:text-sm font-medium">
+                    Find the right talent, faster!
+                  </p>
+                  <div className="pt-2">
+                    <button
+                      onClick={() => {
+                        const el = document.getElementById('jobs-search-input');
+                        if (el) el.focus();
+                      }}
+                      className="bg-white text-[#1D61F2] hover:bg-blue-50 font-extrabold px-6 py-2.5 rounded-full text-xs sm:text-sm transition-all shadow-md inline-flex items-center gap-2 cursor-pointer active:scale-95"
+                    >
+                      Search Jobs →
+                    </button>
                   </div>
                 </div>
 
-                {/* 3 Dashboard Stat Cards (Right ~42% width) */}
-                <div className="xl:col-span-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {/* Stat 1: Total Applications */}
-                  <div className="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-xs flex flex-col justify-between hover:shadow-md transition-all">
-                    <div className="w-10 h-10 rounded-2xl bg-blue-50 text-[#1D61F2] flex items-center justify-center mb-3">
-                      <Briefcase className="w-5 h-5" />
+                {/* Right Graphic in Hero Banner */}
+                <div className="relative shrink-0 hidden sm:flex items-center justify-end pointer-events-none opacity-95">
+                  <img
+                    src="/delivery_rider_hero.png"
+                    alt="Hero Graphic"
+                    className="h-44 sm:h-48 w-auto object-contain filter drop-shadow-xl"
+                  />
+                </div>
+              </div>
+
+              {/* 3 DASHBOARD STAT CARDS ROW (CRYSTAL CLEAR, ZERO OVERLAPPING) */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 w-full">
+                {/* Stat 1: Total Applications */}
+                <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs flex items-center justify-between hover:shadow-md transition-all">
+                  <div className="space-y-1">
+                    <span className="text-xs font-extrabold text-slate-500 uppercase tracking-wider block">Total Applications</span>
+                    <div className="flex items-baseline gap-2 pt-1">
+                      <span className="text-3xl sm:text-4xl font-black text-slate-900 leading-none">{totalApplicationsCount}</span>
+                      <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">↑ 20%</span>
                     </div>
-                    <div>
-                      <span className="text-xs font-bold text-slate-500 block">Total Applications</span>
-                      <div className="flex items-baseline gap-2 mt-1">
-                        <span className="text-2xl font-black text-slate-900">{totalApplicationsCount}</span>
-                        <span className="text-[10px] font-extrabold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">↑ 20%</span>
-                      </div>
-                      <span className="text-[9px] font-semibold text-slate-400 block mt-1">vs last 7 days</span>
-                    </div>
+                    <span className="text-[10px] font-semibold text-slate-400 block pt-1">vs last 7 days</span>
                   </div>
 
-                  {/* Stat 2: Profile Views */}
-                  <div className="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-xs flex flex-col justify-between hover:shadow-md transition-all">
-                    <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mb-3">
-                      <Eye className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <span className="text-xs font-bold text-slate-500 block">Profile Views</span>
-                      <div className="flex items-baseline gap-2 mt-1">
-                        <span className="text-2xl font-black text-slate-900">{profileViewsCount}</span>
-                        <span className="text-[10px] font-extrabold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">↑ 16%</span>
-                      </div>
-                      <span className="text-[9px] font-semibold text-slate-400 block mt-1">vs last 7 days</span>
-                    </div>
-                  </div>
-
-                  {/* Stat 3: Shortlisted */}
-                  <div className="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-xs flex flex-col justify-between hover:shadow-md transition-all">
-                    <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3">
-                      <Star className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <span className="text-xs font-bold text-slate-500 block">Shortlisted</span>
-                      <div className="flex items-baseline gap-2 mt-1">
-                        <span className="text-2xl font-black text-slate-900">{shortlistedCount}</span>
-                        <span className="text-[10px] font-extrabold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">↑ 25%</span>
-                      </div>
-                      <span className="text-[9px] font-semibold text-slate-400 block mt-1">vs last 7 days</span>
-                    </div>
+                  <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#1D61F2] flex items-center justify-center shrink-0 shadow-2xs">
+                    <Briefcase className="w-6 h-6" />
                   </div>
                 </div>
 
+                {/* Stat 2: Profile Views */}
+                <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs flex items-center justify-between hover:shadow-md transition-all">
+                  <div className="space-y-1">
+                    <span className="text-xs font-extrabold text-slate-500 uppercase tracking-wider block">Profile Views</span>
+                    <div className="flex items-baseline gap-2 pt-1">
+                      <span className="text-3xl sm:text-4xl font-black text-slate-900 leading-none">{profileViewsCount}</span>
+                      <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">↑ 16%</span>
+                    </div>
+                    <span className="text-[10px] font-semibold text-slate-400 block pt-1">vs last 7 days</span>
+                  </div>
+
+                  <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 shadow-2xs">
+                    <Eye className="w-6 h-6" />
+                  </div>
+                </div>
+
+                {/* Stat 3: Shortlisted */}
+                <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs flex items-center justify-between hover:shadow-md transition-all">
+                  <div className="space-y-1">
+                    <span className="text-xs font-extrabold text-slate-500 uppercase tracking-wider block">Shortlisted</span>
+                    <div className="flex items-baseline gap-2 pt-1">
+                      <span className="text-3xl sm:text-4xl font-black text-slate-900 leading-none">{shortlistedCount}</span>
+                      <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">↑ 25%</span>
+                    </div>
+                    <span className="text-[10px] font-semibold text-slate-400 block pt-1">vs last 7 days</span>
+                  </div>
+
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 shadow-2xs">
+                    <Star className="w-6 h-6" />
+                  </div>
+                </div>
               </div>
 
               {/* RECOMMENDED JOBS SECTION */}
@@ -1330,7 +1328,7 @@ export default function CandidateDashboard({
           <div className="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-xs">
             <h3 className="font-black text-slate-900 text-sm mb-4">Quick Actions</h3>
             
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-2.5">
               {/* Action 1: Search Jobs */}
               <button
                 onClick={() => {
@@ -1338,45 +1336,34 @@ export default function CandidateDashboard({
                   const el = document.getElementById('jobs-search-input');
                   if (el) el.focus();
                 }}
-                className="p-4 rounded-2xl bg-blue-50/70 hover:bg-blue-100/70 border border-blue-100 transition-all flex flex-col items-center text-center cursor-pointer group"
+                className="p-3 rounded-2xl bg-blue-50/70 hover:bg-blue-100/70 border border-blue-100 transition-all flex flex-col items-center text-center cursor-pointer group"
               >
-                <div className="w-10 h-10 rounded-xl bg-blue-500 text-white flex items-center justify-center mb-2 shadow-xs group-hover:scale-110 transition-transform">
-                  <Search className="w-5 h-5" />
+                <div className="w-9 h-9 rounded-xl bg-blue-500 text-white flex items-center justify-center mb-1.5 shadow-xs group-hover:scale-110 transition-transform">
+                  <Search className="w-4 h-4" />
                 </div>
-                <span className="text-xs font-black text-slate-800">Search Jobs</span>
+                <span className="text-[11px] font-extrabold text-slate-800 leading-tight">Search Jobs</span>
               </button>
 
               {/* Action 2: Saved Jobs */}
               <button
                 onClick={() => setActiveTab('saved')}
-                className="p-4 rounded-2xl bg-purple-50/70 hover:bg-purple-100/70 border border-purple-100 transition-all flex flex-col items-center text-center cursor-pointer group"
+                className="p-3 rounded-2xl bg-purple-50/70 hover:bg-purple-100/70 border border-purple-100 transition-all flex flex-col items-center text-center cursor-pointer group"
               >
-                <div className="w-10 h-10 rounded-xl bg-purple-500 text-white flex items-center justify-center mb-2 shadow-xs group-hover:scale-110 transition-transform">
-                  <Bookmark className="w-5 h-5" />
+                <div className="w-9 h-9 rounded-xl bg-purple-500 text-white flex items-center justify-center mb-1.5 shadow-xs group-hover:scale-110 transition-transform">
+                  <Bookmark className="w-4 h-4" />
                 </div>
-                <span className="text-xs font-black text-slate-800">Saved Jobs</span>
+                <span className="text-[11px] font-extrabold text-slate-800 leading-tight">Saved Jobs</span>
               </button>
 
               {/* Action 3: Update Profile */}
               <button
                 onClick={() => setActiveTab('overview')}
-                className="p-4 rounded-2xl bg-emerald-50/70 hover:bg-emerald-100/70 border border-emerald-100 transition-all flex flex-col items-center text-center cursor-pointer group"
+                className="p-3 rounded-2xl bg-emerald-50/70 hover:bg-emerald-100/70 border border-emerald-100 transition-all flex flex-col items-center text-center cursor-pointer group"
               >
-                <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center mb-2 shadow-xs group-hover:scale-110 transition-transform">
-                  <User className="w-5 h-5" />
+                <div className="w-9 h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center mb-1.5 shadow-xs group-hover:scale-110 transition-transform">
+                  <User className="w-4 h-4" />
                 </div>
-                <span className="text-xs font-black text-slate-800">Update Profile</span>
-              </button>
-
-              {/* Action 4: View Documents */}
-              <button
-                onClick={onManageDocuments}
-                className="p-4 rounded-2xl bg-amber-50/70 hover:bg-amber-100/70 border border-amber-100 transition-all flex flex-col items-center text-center cursor-pointer group"
-              >
-                <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center mb-2 shadow-xs group-hover:scale-110 transition-transform">
-                  <FileText className="w-5 h-5" />
-                </div>
-                <span className="text-xs font-black text-slate-800">View Documents</span>
+                <span className="text-[11px] font-extrabold text-slate-800 leading-tight">Update Profile</span>
               </button>
             </div>
           </div>
@@ -1503,6 +1490,81 @@ export default function CandidateDashboard({
                 {instantLoading ? 'Submitting Application...' : 'Save & Submit Application'}
               </button>
             </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* NOTIFICATIONS MODAL DIALOG */}
+      {isNotificationOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 relative overflow-hidden"
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#1D61F2] flex items-center justify-center">
+                  <Bell className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-black text-base text-slate-900">Notifications</h3>
+                  <span className="text-[10px] text-slate-400 font-semibold block">Real-time alerts & job updates</span>
+                </div>
+              </div>
+              <button
+                onClick={closeNotificationModal}
+                className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+              {/* Notification 1 */}
+              <div className="p-3.5 bg-blue-50/60 border border-blue-100 rounded-2xl flex items-start gap-3">
+                <div className="w-8 h-8 rounded-xl bg-blue-500 text-white flex items-center justify-center shrink-0 mt-0.5">
+                  <Briefcase className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-xs text-slate-900">New Job Match: Delivery Partner</h4>
+                  <p className="text-[11px] text-slate-600 font-medium mt-0.5">Zomato posted a new role in your preferred location with up to ₹35,000/month.</p>
+                  <span className="text-[9px] text-slate-400 font-bold block mt-1">10 minutes ago</span>
+                </div>
+              </div>
+
+              {/* Notification 2 */}
+              <div className="p-3.5 bg-emerald-50/60 border border-emerald-100 rounded-2xl flex items-start gap-3">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 mt-0.5">
+                  <CheckCircle className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-xs text-slate-900">Application Under Review</h4>
+                  <p className="text-[11px] text-slate-600 font-medium mt-0.5">Your application for Blinkit Delivery Executive was reviewed by the recruiter.</p>
+                  <span className="text-[9px] text-slate-400 font-bold block mt-1">2 hours ago</span>
+                </div>
+              </div>
+
+              {/* Notification 3 */}
+              <div className="p-3.5 bg-purple-50/60 border border-purple-100 rounded-2xl flex items-start gap-3">
+                <div className="w-8 h-8 rounded-xl bg-purple-500 text-white flex items-center justify-center shrink-0 mt-0.5">
+                  <Star className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-xs text-slate-900">Profile Viewed by Hiring Team</h4>
+                  <p className="text-[11px] text-slate-600 font-medium mt-0.5">Jio Mart recruiting team viewed your profile and license verification documents.</p>
+                  <span className="text-[9px] text-slate-400 font-bold block mt-1">Yesterday</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={closeNotificationModal}
+              className="w-full py-2.5 bg-[#1D61F2] hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer"
+            >
+              Close Notifications
+            </button>
           </motion.div>
         </div>
       )}
