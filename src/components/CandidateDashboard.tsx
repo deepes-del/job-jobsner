@@ -13,6 +13,7 @@ import { Candidate, Profile } from '../types';
 import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
 import FlowerBlastAnimation from './FlowerBlastAnimation';
 import CandidateProfileEdit from './CandidateProfileEdit';
+import AnimatedHeroRider from './AnimatedHeroRider';
 import { playNotificationChime, showSystemNotification } from '../lib/webPush';
 
 interface CandidateDashboardProps {
@@ -1051,13 +1052,9 @@ export default function CandidateDashboard({
                   </div>
                 </div>
 
-                {/* Right Graphic in Hero Banner - Significantly Bigger Rider Graphic */}
-                <div className="relative z-10 shrink-0 hidden sm:flex items-center justify-end pointer-events-none opacity-100 pr-2">
-                  <img
-                    src="/delivery_rider_hero.png"
-                    alt="Hero Delivery Rider"
-                    className="h-56 sm:h-64 lg:h-72 w-auto object-contain filter drop-shadow-2xl scale-110 sm:scale-125 transition-transform duration-300"
-                  />
+                {/* Right Graphic in Hero Banner - Animated Rider Moving on Road */}
+                <div className="relative z-10 shrink-0 hidden sm:flex items-center justify-end pointer-events-none opacity-100 pr-2 min-w-[260px] sm:min-w-[320px]">
+                  <AnimatedHeroRider className="w-full max-w-[280px] sm:max-w-[340px] lg:max-w-[400px]" />
                 </div>
               </div>
 
