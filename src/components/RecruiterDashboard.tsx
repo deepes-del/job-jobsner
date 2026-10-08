@@ -308,6 +308,45 @@ export default function RecruiterDashboard({
     return combined.slice(0, 5);
   }, [applications, urgentCandidates, recruiter?.city]);
 
+  // --- JOB NAVIGATION HANDLERS ---
+  const handleOpenJobsList = () => {
+    setShowJobForm(false);
+    setEditingJob(null);
+    setActiveTab('jobs');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleOpenNewJobForm = () => {
+    setEditingJob(null);
+    setJobTitle('');
+    setJobCategory('Last-Mile Delivery');
+    setJobOpenings('1');
+    setJobEmploymentType('Full Time');
+    setJobState(recruiter?.state || '');
+    setJobCity(recruiter?.city || '');
+    setJobArea('');
+    setJobWorkLocation('');
+    setJobMinSalary('');
+    setJobMaxSalary('');
+    setJobSalaryType('Monthly');
+    setJobShift('Day');
+    setJobExperience('0');
+    setJobEducation('10th Pass');
+    setJobGenderPreference('Any');
+    setJobAgeLimitMin('18');
+    setJobAgeLimitMax('45');
+    setJobBikeRequired('No');
+    setJobDrivingLicense('No');
+    setJobImmediateJoining('No');
+    setJobDescription('');
+    setJobResponsibilities('');
+    setJobBenefits('');
+    setJobCompanyLogo('');
+    setActiveTab('jobs');
+    setShowJobForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const fetchUrgentCandidates = async () => {
     setLoadingUrgent(true);
     try {
@@ -1375,24 +1414,27 @@ export default function RecruiterDashboard({
             {/* Navigation link array */}
             <nav className="space-y-1">
               {[
-                { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, type: 'nav' },
-                { id: 'post-job', label: 'Post a Job', icon: Plus, type: 'action', action: () => setShowJobForm(true) },
-                { id: 'jobs', label: 'Jobs', icon: Briefcase, type: 'nav', badge: jobs.length ? String(jobs.length) : undefined },
-                { id: 'urgent-candidates', label: 'Candidates', icon: Users, type: 'nav', badge: urgentCandidates.length ? String(urgentCandidates.length) : undefined },
-                { id: 'applications', label: 'Applications', icon: FileText, type: 'nav', badge: applications.length ? String(applications.length) : undefined },
-                { id: 'profile', label: 'My Company', icon: Building2, type: 'nav' },
-                { id: 'notifications', label: 'Notifications', icon: Bell, type: 'action', badge: unreadNotifCount > 0 ? String(unreadNotifCount) : (notifications.length ? String(notifications.length) : undefined), action: () => setShowNotifDrawer(true) },
+                { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, action: () => { setActiveTab('dashboard'); setShowJobForm(false); } },
+                { id: 'post-job', label: 'Post a Job', icon: Plus, action: handleOpenNewJobForm },
+                { id: 'jobs', label: 'Jobs', icon: Briefcase, badge: jobs.length ? String(jobs.length) : undefined, action: handleOpenJobsList },
+                { id: 'urgent-candidates', label: 'Candidates', icon: Users, badge: urgentCandidates.length ? String(urgentCandidates.length) : undefined, action: () => { setActiveTab('urgent-candidates'); setShowJobForm(false); } },
+                { id: 'applications', label: 'Applications', icon: FileText, badge: applications.length ? String(applications.length) : undefined, action: () => { setActiveTab('applications'); setShowJobForm(false); } },
+                { id: 'profile', label: 'My Company', icon: Building2, action: () => { setActiveTab('profile'); setShowJobForm(false); } },
+                { id: 'notifications', label: 'Notifications', icon: Bell, badge: unreadNotifCount > 0 ? String(unreadNotifCount) : (notifications.length ? String(notifications.length) : undefined), action: () => setShowNotifDrawer(true) },
               ].map((item) => {
                 const IconComp = item.icon;
-                const active = item.type === 'nav' && activeTab === item.id;
+                const active = item.id === 'jobs' 
+                  ? (activeTab === 'jobs' && !showJobForm)
+                  : item.id === 'post-job'
+                    ? (activeTab === 'jobs' && showJobForm)
+                    : (activeTab === item.id);
+
                 return (
                   <button
                     key={item.id}
                     onClick={() => {
                       if (item.action) {
                         item.action();
-                      } else if (item.type === 'nav') {
-                        setActiveTab(item.id as TabType);
                       }
                     }}
                     className={`w-full py-2.5 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-between cursor-pointer ${
@@ -1425,7 +1467,7 @@ export default function RecruiterDashboard({
               <p className="text-xs font-bold text-gray-900 leading-tight">Find the right talent, Faster!</p>
               <p className="text-[10px] text-gray-500 leading-relaxed">Post jobs, manage candidates and grow your team with JOBSner.</p>
               <button
-                onClick={() => setShowJobForm(true)}
+                onClick={handleOpenNewJobForm}
                 className="w-full py-1.5 px-3 bg-[#1D61F2] hover:bg-blue-700 text-white text-[11px] font-bold rounded-lg transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <span>Post a Job</span>
@@ -1556,7 +1598,7 @@ export default function RecruiterDashboard({
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4" id="recruiter-kpi-cards">
                 {/* Total Jobs Posted */}
                 <div 
-                  onClick={() => setActiveTab('jobs')}
+                  onClick={handleOpenJobsList}
                   className="bg-white border border-gray-150 rounded-2xl p-4 shadow-xs hover:border-[#1D61F2] hover:shadow-md transition-all cursor-pointer flex items-center justify-between"
                 >
                   <div>
@@ -1677,7 +1719,7 @@ export default function RecruiterDashboard({
                     <h3 className="font-bold text-gray-900 text-sm mb-3">Quick Actions</h3>
                     <div className="grid grid-cols-2 gap-2.5">
                       <button
-                        onClick={() => setShowJobForm(true)}
+                        onClick={handleOpenNewJobForm}
                         className="p-3 rounded-xl border border-gray-150 hover:border-[#1D61F2] hover:bg-blue-50/50 transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer text-center group"
                       >
                         <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#1D61F2] flex items-center justify-center group-hover:bg-[#1D61F2] group-hover:text-white transition-colors">
@@ -1795,7 +1837,7 @@ export default function RecruiterDashboard({
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="font-bold text-gray-900 text-sm">Active Jobs</h3>
                       <button 
-                        onClick={() => setActiveTab('jobs')}
+                        onClick={handleOpenJobsList}
                         className="text-[11px] font-semibold text-[#1D61F2] hover:underline cursor-pointer"
                       >
                         View All
@@ -1807,7 +1849,7 @@ export default function RecruiterDashboard({
                         <Briefcase className="w-6 h-6 text-gray-300 mx-auto mb-1.5" />
                         <p className="text-xs font-semibold text-gray-600">No active job listings found</p>
                         <button
-                          onClick={() => setShowJobForm(true)}
+                          onClick={handleOpenNewJobForm}
                           className="mt-2 text-xs font-bold text-[#1D61F2] hover:underline cursor-pointer"
                         >
                           + Post a new job

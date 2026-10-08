@@ -13,9 +13,13 @@
         "languagesKnown": [
           "Hindi",
           "English"
-        ]
+        ],
+        "profilePhoto": ""
       },
-      "createdAt": "2026-09-14T16:05:08.802Z"
+      "createdAt": "2026-09-14T16:05:08.802Z",
+      "email": "",
+      "nickname": null,
+      "recent_category": null
     },
     {
       "id": "1558a02c-b2e4-439c-97d8-1ee2504ed06a",
@@ -142,10 +146,23 @@
       "hash": "58a9a1ba71cc8ed880d1d849afde7f5974796a30cdfca617a78109eb78824c9e",
       "profile": {
         "fullName": "Sathya",
-        "profilePhoto": ""
+        "profilePhoto": "",
+        "city": "",
+        "state": "",
+        "experience": 0,
+        "name": "Sathya",
+        "email": "multifixcarrier12@gmail.com",
+        "hasDl": false,
+        "mobile": "7892939485",
+        "hasBike": false,
+        "nickname": "Sathya-G ",
+        "full_name": "Sathya",
+        "photoFile": "https://lh3.googleusercontent.com/a/ACg8ocJCagiy-jPw-VZaKudytoVjUQPG7KoanNSFBMyoz4-4pYsa9A=s96-c",
+        "recentCategory": "Last-Mile Delivery",
+        "recent_category": "Last-Mile Delivery"
       },
       "nickname": "Sathya-G ",
-      "recent_category": null
+      "recent_category": "Last-Mile Delivery"
     },
     {
       "id": "6851e5ec-0e8c-4e77-8bcc-1f4dc9e124b0",
@@ -200,8 +217,8 @@
       "mobile": "7337850344",
       "fullName": "uygh",
       "email": "deepesh.manjljnu2003@email.com",
-      "salt": "6b0c092a668c8a1b93a3fec83cc3572b",
-      "hash": "1eb016f675af42ece5aa2a47b5a290f5f087771d1be41ee99fc078f64912c9bf",
+      "salt": "bafaf58c7bcad3964f4d149065dc00be",
+      "hash": "343f94593313f90d32605ac3049489149af0e260c419e06184e61ad72db7340a",
       "profile": {
         "age": 45,
         "gender": "Male",
@@ -210,10 +227,23 @@
         "profilePhoto": "",
         "bikeAvailable": "No",
         "languagesKnown": [],
-        "drivingLicenseAvailable": "No"
+        "drivingLicenseAvailable": "No",
+        "city": "",
+        "state": "",
+        "experience": 3,
+        "name": "uygh",
+        "email": "deepesh.manjljnu2003@email.com",
+        "hasDl": false,
+        "mobile": "7337850344",
+        "hasBike": false,
+        "nickname": "deepu",
+        "full_name": "uygh",
+        "photoFile": "",
+        "recentCategory": "Last-Mile Delivery",
+        "recent_category": "Last-Mile Delivery"
       },
       "nickname": "deepu",
-      "recent_category": null
+      "recent_category": "Last-Mile Delivery"
     },
     {
       "id": "775f5d90-8235-4de9-b899-8a030ada2970",
@@ -253,11 +283,20 @@
         "profilePhoto": "https://lh3.googleusercontent.com/a/ACg8ocJPT4AxYTdi7emZ5KzbaUM4RjOC0EMSmqMsmZ4WDR2-PCCXrxRKuA=s96-c",
         "bikeAvailable": "No",
         "languagesKnown": [],
-        "recentCategory": "Warehouse / Picker&Packer",
-        "drivingLicenseAvailable": "No"
+        "recentCategory": "Last-Mile Delivery",
+        "drivingLicenseAvailable": "No",
+        "name": "deepesh",
+        "email": "deepesh.manju2003@gmail.com",
+        "hasDl": true,
+        "mobile": "8152097827",
+        "hasBike": true,
+        "nickname": "deepu",
+        "full_name": "deepesh",
+        "photoFile": "https://lh3.googleusercontent.com/a/ACg8ocJPT4AxYTdi7emZ5KzbaUM4RjOC0EMSmqMsmZ4WDR2-PCCXrxRKuA=s96-c",
+        "recent_category": "Last-Mile Delivery"
       },
       "nickname": "deepu",
-      "recent_category": "Warehouse / Picker&Packer"
+      "recent_category": "Last-Mile Delivery"
     },
     {
       "id": "745c94da-746d-4852-81c5-0cf5fdb25aef",
@@ -348,10 +387,11 @@
         "profilePhoto": "https://jjzzauslbtfgpllxhagm.supabase.co/storage/v1/object/public/avatars/cand_1f750885-792-photo-1789138649535.jpg",
         "bikeAvailable": "No",
         "languagesKnown": [],
-        "drivingLicenseAvailable": "No"
+        "drivingLicenseAvailable": "No",
+        "recentCategory": "Warehouse / Picker&Packer"
       },
       "nickname": "bindu",
-      "recent_category": "Delivery Jobs"
+      "recent_category": "Warehouse / Picker&Packer"
     },
     {
       "id": "8182a5ee-2273-4e52-840c-46a8a146bdbd",
@@ -389,7 +429,7 @@
         "drivingLicenseAvailable": "No"
       },
       "nickname": null,
-      "recent_category": "Last-Mile Delivery"
+      "recent_category": "Warehouse / Picker&Packer"
     },
     {
       "id": "33402022-43b8-48ea-be87-35719c52c0a7",
@@ -446,16 +486,23 @@
     {
       "id": "cand_68f25cc2-5b7",
       "mobile": "8431088118",
-      "fullName": "Mohan",
+      "fullName": "deepesh",
       "email": "mohanprsd156@gmail.com",
       "salt": "2caba8ab55dc61e1fdeb097bbb5b216b",
       "hash": "af328941af6dd46dffbf07c6d981d36c0e8413a1193b9bf2175eb2ecf73fb9b1",
       "profile": {
-        "fullName": "Mohan",
-        "profilePhoto": ""
+        "fullName": "deepesh",
+        "profilePhoto": "",
+        "age": 56,
+        "gender": "Male",
+        "pincode": "345533",
+        "bikeAvailable": "No",
+        "drivingLicenseAvailable": "No",
+        "languagesKnown": [],
+        "recentCategory": "Delivery Jobs"
       },
       "nickname": "Mony",
-      "recent_category": null
+      "recent_category": "Last-Mile Delivery"
     },
     {
       "id": "a7c4c9ab-68d8-481d-a207-be5017ecd676",
@@ -522,6 +569,143 @@
         "bikeAvailable": "No",
         "languagesKnown": [],
         "drivingLicenseAvailable": "No"
+      },
+      "nickname": null,
+      "recent_category": null
+    },
+    {
+      "id": "cand_c0e6c191-2f6",
+      "mobile": "9632576968",
+      "fullName": "Sreekanth",
+      "email": "psrikanth3377@gmail.com",
+      "salt": "c048ca7cafa2e7fad730a507c89e5196",
+      "hash": "71e87133522fcd3e88365db8b042ef5e3214206073f657fac6fc7966b8ef1a3b",
+      "profile": {
+        "city": "",
+        "name": "Sreekanth",
+        "email": "psrikanth3377@gmail.com",
+        "hasDl": false,
+        "state": "",
+        "mobile": "9632576968",
+        "hasBike": false,
+        "fullName": "Sreekanth",
+        "nickname": "Sree",
+        "full_name": "Sreekanth",
+        "experience": 3,
+        "profilePhoto": "",
+        "recentCategory": "",
+        "recent_category": ""
+      },
+      "nickname": "Sree",
+      "recent_category": null
+    },
+    {
+      "id": "cand_373a283f-4dd",
+      "mobile": "7760556554",
+      "fullName": "Basawasagar ",
+      "email": "basawasagardhannure80@gmail.com",
+      "salt": "49ebe60ec8f8ea88239574715aa19e87",
+      "hash": "1120887bba31e3eca603283a1f7b03bdc07f4057586229871920b4c805dc9a37",
+      "profile": {
+        "city": "",
+        "name": "Basawasagar ",
+        "email": "basawasagardhannure80@gmail.com",
+        "hasDl": false,
+        "state": "",
+        "mobile": "7760556554",
+        "hasBike": false,
+        "fullName": "Basawasagar ",
+        "nickname": "basawasagar ",
+        "full_name": "Basawasagar ",
+        "experience": 0,
+        "profilePhoto": "",
+        "recentCategory": "Last-Mile Delivery",
+        "recent_category": "Last-Mile Delivery"
+      },
+      "nickname": "basawasagar ",
+      "recent_category": "Last-Mile Delivery"
+    },
+    {
+      "id": "cand_32719341-dff",
+      "mobile": "8892942897",
+      "fullName": "Yogesh H",
+      "email": "yogeshgowda323@gmail.com",
+      "salt": "9c248ec5fc947be997296b9e4b48ab17",
+      "hash": "39da39e78acb6143bb7e4c446db11e80574ead63b0e7ce330bb23a419248b231",
+      "profile": {
+        "fullName": "Yogesh H",
+        "profilePhoto": ""
+      },
+      "nickname": "yogi",
+      "recent_category": null
+    },
+    {
+      "id": "c0506287-18fb-47d5-92df-37e0546332d1",
+      "mobile": "8095460806",
+      "fullName": "qasd",
+      "email": "q871574883@gmail.com",
+      "salt": "01f75ff0a24f24135d6706bed360464d",
+      "hash": "0fd9f9116d47e1b6e01ea219ef39f4a085fb9f1a55f003fc7e4b6d7dba48842a59a56cc2a936607234ba8a3789a3493cbdb8717eeeada8bde50bf43331ad9982",
+      "profile": {
+        "fullName": "qasd",
+        "profilePhoto": "",
+        "bikeAvailable": "No",
+        "languagesKnown": [],
+        "drivingLicenseAvailable": "No"
+      },
+      "nickname": null,
+      "recent_category": null
+    },
+    {
+      "id": "cand_b72584a1-a27",
+      "mobile": "9986539491",
+      "fullName": "sunil K",
+      "email": "kambalisunil0@gmail.com",
+      "salt": "86a7b99efb473e5764acf19ae71c6d55",
+      "hash": "2d7f4bf3ee9546ce1c4b71b4be6f906564b4606c8fbadc23c5ff9542fbd41f12",
+      "profile": {
+        "fullName": "sunil K",
+        "profilePhoto": ""
+      },
+      "nickname": "sunil",
+      "recent_category": null
+    },
+    {
+      "id": "cand_51a09217-4f5",
+      "mobile": "8095469805",
+      "fullName": "deepesh",
+      "email": "traderday200000003@gmail.com",
+      "salt": "8a55c3f394ab9af9d2938c3e5243ec51",
+      "hash": "bba34cbd1d931559da648211332124785c940a35bace1f8eb266f6ca50c370c6",
+      "profile": {
+        "age": 34,
+        "gender": "Male",
+        "pincode": "334323",
+        "fullName": "deepesh",
+        "profilePhoto": "",
+        "bikeAvailable": "No",
+        "languagesKnown": [],
+        "drivingLicenseAvailable": "No"
+      },
+      "nickname": "hello",
+      "recent_category": "Last-Mile Delivery"
+    },
+    {
+      "id": "f177cf06-4cb4-4f11-b3ea-d1cc67c48d98",
+      "mobile": "7337856921",
+      "fullName": "gff",
+      "email": "",
+      "salt": "646d00f9d89e80bf7f9b11ebc3ad1f49",
+      "hash": "bea01c37005fc7e3c0f7d60182ac83cb725d8f12a65d786529f3874a2e27f5d3410c8cf81eb1f47fae9fb7738a6100c462b9306fa7840c78e5c8a0b11ae66922",
+      "profile": {
+        "city": "chnnasandra",
+        "fullName": "gff",
+        "education": "Graduate",
+        "profilePhoto": "",
+        "languagesKnown": [
+          "Hindi",
+          "English"
+        ]
       },
       "nickname": null,
       "recent_category": null
@@ -653,6 +837,15 @@
       "fileUrl": "https://jjzzauslbtfgpllxhagm.supabase.co/storage/v1/object/public/avatars/cand_1f750885-792-photo-1789138649535.jpg",
       "fileName": "WhatsApp Image 2026-09-01 at 5.39.54 PM.jpg",
       "uploadDate": "2026-09-11T14:57:30.088Z",
+      "verificationStatus": "Pending"
+    },
+    {
+      "id": "c5f84867-5805-4c36-ac3c-49dea6e6f42f",
+      "candidateId": "JWBLagfTAbcFPV7igsRtd5x5Md82",
+      "documentType": "resume",
+      "fileUrl": "https://jjzzauslbtfgpllxhagm.supabase.co/storage/v1/object/public/documents/JWBLagfTAbcFPV7igsRtd5x5Md82-resume-1791359141284.pdf",
+      "fileName": "AccountStatement.pdf",
+      "uploadDate": "2026-10-07T07:45:42.673Z",
       "verificationStatus": "Pending"
     }
   ],
@@ -1076,6 +1269,46 @@
       "createdAt": "2026-09-14T16:15:18.225Z",
       "updatedAt": "2026-09-14T16:15:18.225Z",
       "nickname": null
+    },
+    {
+      "id": "9042b7cd-3e37-45d3-ab41-6f84f752e764",
+      "companyName": "Multifix Carrier",
+      "companyLogo": "",
+      "companyWebsite": "",
+      "recruiterName": "Mohan P",
+      "designation": "HR Manager",
+      "mobile": "6360007084",
+      "email": "mohan@multifixcarrier.com",
+      "salt": "fa10d22cd5ec0c4a2bac71f9943929f9",
+      "hash": "9540b5bcfa48701867f6a6f541e6f25c9d4ff1236a5a048165ab8a7c13808ccd7f7adcc98a7af6583dd8c77981a740f5d73d4c158d0f3068d3d6531308d3bef3",
+      "address": "29, BTM Layout, Bangalore",
+      "city": "Bangalore",
+      "state": "Karnataka",
+      "pincode": "560029",
+      "status": "Approved",
+      "createdAt": "2026-09-22T09:50:10.256Z",
+      "updatedAt": "2026-09-22T09:50:10.256Z",
+      "nickname": null
+    },
+    {
+      "id": "b080caae-958d-4d16-bde1-1004c7314a60",
+      "companyName": "Acme Logistics",
+      "companyLogo": "",
+      "companyWebsite": "",
+      "recruiterName": "Jane Doe",
+      "designation": "HR Manager",
+      "mobile": "9876543210",
+      "email": "jane@acmelogistics.com",
+      "salt": "8507049e98ff1e615913ab722feaade4",
+      "hash": "91d9551b14ffb1a601e1395d0f92a2c4efbfd3528826dc2cb3832f718b856ad9df5b7ccd4fb6e39c6396c9ee1ff687b1b289d869b56428876e223f46a1d66020",
+      "address": "123 Transport Nagar",
+      "city": "Mumbai",
+      "state": "Maharashtra",
+      "pincode": "400001",
+      "status": "Approved",
+      "createdAt": "2026-10-08T10:09:01.767Z",
+      "updatedAt": "2026-10-08T10:09:01.767Z",
+      "nickname": null
     }
   ],
   "recruiterTokens": {
@@ -1112,7 +1345,8 @@
     "3e27176fa9d362b9c1e66d21a00e6c34837919b65515963d0dacec6443300f0b": "rec_cb9cc8ee-4dd",
     "26628a1374844d85cfd05d4ee50b25f737aed89281bb409f6e72ac5242cb964c": "60b9293f-2fcc-4efa-8c14-5d136f79f7dc",
     "06909dfa015dd73302425875bd4c80c1e98af2979b1a303d5868bb2c305c612b": "60b9293f-2fcc-4efa-8c14-5d136f79f7dc",
-    "d6bec14c22f8bb4f507c80a9c948f40c4a35a0191a772c14352973d7cec639a7": "60b9293f-2fcc-4efa-8c14-5d136f79f7dc"
+    "d6bec14c22f8bb4f507c80a9c948f40c4a35a0191a772c14352973d7cec639a7": "60b9293f-2fcc-4efa-8c14-5d136f79f7dc",
+    "cdecf01a541a663aff2f711ddf26c50a787d277815fa2316e9bd1002d31547f1": "b080caae-958d-4d16-bde1-1004c7314a60"
   },
   "jobs": [
     {
@@ -2341,10 +2575,10 @@
       "responsibilities": "On-time delivery",
       "benefits": "PF, Insurance",
       "status": "Published",
-      "applicationsCount": 0,
+      "applicationsCount": 2,
       "viewsCount": 0,
       "createdAt": "2026-09-05T12:32:45.528Z",
-      "updatedAt": "2026-09-05T12:32:45.528Z",
+      "updatedAt": "2026-09-22T17:21:31.999Z",
       "open_positions": 5,
       "vacancies": 5,
       "jobId": "aab8e97a-cd22-45cc-8718-4c02087aa333",
@@ -2370,10 +2604,10 @@
       "driving_license_required": "Yes",
       "immediate_joining": "Yes",
       "job_description": "Deliver parcels safely.",
-      "applications_count": 0,
+      "applications_count": 2,
       "views_count": 0,
       "created_at": "2026-09-05T12:32:45.528Z",
-      "updated_at": "2026-09-05T12:32:45.528Z"
+      "updated_at": "2026-09-22T17:21:31.999Z"
     },
     {
       "id": "d03929c4-7ad5-4b27-91e4-c2e357668ecd",
@@ -5335,6 +5569,132 @@
       "views_count": 0,
       "created_at": "2026-09-14T16:16:16.666Z",
       "updated_at": "2026-09-14T16:16:16.666Z"
+    },
+    {
+      "id": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "companyName": "multi",
+      "companyLogo": "https://jjzzauslbtfgpllxhagm.supabase.co/storage/v1/object/public/avatars/job-rec_cb9cc8ee-4dd-1789582566099.jpg",
+      "title": "blinkit",
+      "category": "Last-Mile Delivery",
+      "openings": 1,
+      "employmentType": "Full Time",
+      "state": "karnataka",
+      "city": "bengaluru",
+      "area": "channasndra",
+      "workLocation": "near mayura bekary , channasandra circle, main road,",
+      "minSalary": 30000,
+      "maxSalary": 34987,
+      "salaryType": "Monthly",
+      "shift": "Rotational",
+      "experienceRequired": 0,
+      "educationRequired": "12th Pass",
+      "genderPreference": "Male",
+      "ageLimitMin": 18,
+      "ageLimitMax": 45,
+      "bikeRequired": "Yes",
+      "drivingLicenseRequired": "Yes",
+      "immediateJoining": "Yes",
+      "description": "need the blinkit delivery person to handle the orders and pick the orders from the store.",
+      "responsibilities": "need the blinkit delivery person to handle the orders and pick the orders from the store.",
+      "benefits": "need the blinkit delivery person to handle the orders and pick the orders from the store.",
+      "status": "Published",
+      "applicationsCount": 2,
+      "viewsCount": 0,
+      "createdAt": "2026-09-16T18:14:44.347Z",
+      "updatedAt": "2026-09-30T06:57:38.059Z",
+      "open_positions": 1,
+      "vacancies": 1,
+      "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "job_id": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiter_id": "rec_cb9cc8ee-4dd",
+      "company_name": "multi",
+      "company_logo": "https://jjzzauslbtfgpllxhagm.supabase.co/storage/v1/object/public/avatars/job-rec_cb9cc8ee-4dd-1789582566099.jpg",
+      "job_title": "blinkit",
+      "jobTitle": "blinkit",
+      "job_category": "Last-Mile Delivery",
+      "no_of_openings": 1,
+      "employment_type": "Full Time",
+      "work_location": "near mayura bekary , channasandra circle, main road,",
+      "min_salary": 30000,
+      "max_salary": 34987,
+      "salary_type": "Monthly",
+      "experience_required": 0,
+      "education_required": "12th Pass",
+      "gender_preference": "Male",
+      "age_limit_min": 18,
+      "age_limit_max": 45,
+      "bike_required": "Yes",
+      "driving_license_required": "Yes",
+      "immediate_joining": "Yes",
+      "job_description": "need the blinkit delivery person to handle the orders and pick the orders from the store.",
+      "applications_count": 2,
+      "views_count": 0,
+      "created_at": "2026-09-16T18:14:44.347Z",
+      "updated_at": "2026-09-30T06:57:38.059Z"
+    },
+    {
+      "id": "e95257be-89cb-40ea-af0b-a881d8bf886f",
+      "recruiterId": "9042b7cd-3e37-45d3-ab41-6f84f752e764",
+      "companyName": "Multifix Carrier",
+      "companyLogo": "https://jjzzauslbtfgpllxhagm.supabase.co/storage/v1/object/public/avatars/job-9042b7cd-3e37-45d3-ab41-6f84f752e764-1790072597396.jpg",
+      "title": "Delivery Partner",
+      "category": "Last-Mile Delivery",
+      "openings": 30,
+      "employmentType": "Full Time",
+      "state": "Karnataka",
+      "city": "Bangalore",
+      "area": "BTM Layout",
+      "workLocation": "BTM Layout",
+      "minSalary": 35000,
+      "maxSalary": 55000,
+      "salaryType": "Monthly",
+      "shift": "Day",
+      "experienceRequired": 0,
+      "educationRequired": "10th Pass",
+      "genderPreference": "Any",
+      "ageLimitMin": 18,
+      "ageLimitMax": 60,
+      "bikeRequired": "No",
+      "drivingLicenseRequired": "No",
+      "immediateJoining": "No",
+      "description": "Delivery Partners required in Bangalore for last-mile delivery operations. The role involves picking up and delivering customer orders safely and on time. This is a flexible job where delivery partners can choose their working hours based on their availability.",
+      "responsibilities": "Pick up customer orders from designated locations/hubs.\nDeliver orders safely and on time to customers.\nHandle packages carefully and maintain delivery quality.\nFollow assigned delivery routes and company guidelines.\nUpdate delivery status through the mobile application.\nMaintain professional communication with customers.\nComplete daily deliveries as per availability and assigned requirements.\nOwn/arrange a suitable two-wheeler and carry a valid driving licence and required documents.",
+      "benefits": "Monthly earning potential: ₹35,000–₹50,000, depending on deliveries and working hours.\nFlexible working hours — work according to your availability.\nJoining bonus as per company terms and eligibility.\nPF benefits as applicable.\nHealth insurance benefits as per company policy.\nPerformance/delivery-based incentives may be applicable.\nOpportunity for regular and flexible earning.\nShort headline for the job post:\n🚴 Delivery Partners Hiring – Bangalore | Flexible Work | ₹35,000–₹50,000 Monthly Earning | PF + Health Insurance + Joining Bonus",
+      "status": "Draft",
+      "applicationsCount": 0,
+      "viewsCount": 0,
+      "createdAt": "2026-09-22T10:23:18.166Z",
+      "updatedAt": "2026-09-22T10:25:11.722Z",
+      "open_positions": 30,
+      "vacancies": 30,
+      "jobId": "e95257be-89cb-40ea-af0b-a881d8bf886f",
+      "job_id": "e95257be-89cb-40ea-af0b-a881d8bf886f",
+      "recruiter_id": "9042b7cd-3e37-45d3-ab41-6f84f752e764",
+      "company_name": "Multifix Carrier",
+      "company_logo": "https://jjzzauslbtfgpllxhagm.supabase.co/storage/v1/object/public/avatars/job-9042b7cd-3e37-45d3-ab41-6f84f752e764-1790072597396.jpg",
+      "job_title": "Delivery Partner",
+      "jobTitle": "Delivery Partner",
+      "job_category": "Last-Mile Delivery",
+      "no_of_openings": 30,
+      "employment_type": "Full Time",
+      "work_location": "BTM Layout",
+      "min_salary": 35000,
+      "max_salary": 55000,
+      "salary_type": "Monthly",
+      "experience_required": 0,
+      "education_required": "10th Pass",
+      "gender_preference": "Any",
+      "age_limit_min": 18,
+      "age_limit_max": 60,
+      "bike_required": "No",
+      "driving_license_required": "No",
+      "immediate_joining": "No",
+      "job_description": "Delivery Partners required in Bangalore for last-mile delivery operations. The role involves picking up and delivering customer orders safely and on time. This is a flexible job where delivery partners can choose their working hours based on their availability.",
+      "applications_count": 0,
+      "views_count": 0,
+      "created_at": "2026-09-22T10:23:18.166Z",
+      "updated_at": "2026-09-22T10:25:11.722Z"
     }
   ],
   "applications": [
@@ -5897,6 +6257,156 @@
       "currentStatus": "Applied",
       "withdrawStatus": "Active",
       "lastUpdated": "2026-09-09T06:55:04.989Z"
+    },
+    {
+      "id": "app_addee6b8-772",
+      "candidateId": "cand_25cb91b6-6b7",
+      "jobId": "e95257be-89cb-40ea-af0b-a881d8bf886f",
+      "recruiterId": "9042b7cd-3e37-45d3-ab41-6f84f752e764",
+      "appliedDate": "2026-10-04T08:29:18.037Z",
+      "currentStatus": "Applied",
+      "withdrawStatus": "Active",
+      "lastUpdated": "2026-10-04T08:29:18.037Z"
+    },
+    {
+      "id": "d6fc23f2-7662-4be7-a76c-146088eb36ad",
+      "candidateId": "cand_68f25cc2-5b7",
+      "jobId": "aab8e97a-cd22-45cc-8718-4c02087aa333",
+      "recruiterId": "f9f524b6-15e6-4204-bffc-ff8d54dd9f36",
+      "appliedDate": "2026-09-22T17:21:31.999Z",
+      "currentStatus": "Applied",
+      "withdrawStatus": "Active",
+      "lastUpdated": "2026-09-22T17:21:31.999Z"
+    },
+    {
+      "id": "29c2abb5-697c-4e1e-8a7e-cca7c4d23691",
+      "candidateId": "cand_c4b2a1d1-71b",
+      "jobId": "aab8e97a-cd22-45cc-8718-4c02087aa333",
+      "recruiterId": "f9f524b6-15e6-4204-bffc-ff8d54dd9f36",
+      "appliedDate": "2026-09-16T10:42:36.506Z",
+      "currentStatus": "Applied",
+      "withdrawStatus": "Active",
+      "lastUpdated": "2026-09-16T10:42:36.506Z"
+    },
+    {
+      "id": "d9802576-fdac-47de-9a71-7314671ffd3b",
+      "candidateId": "cand_68f25cc2-5b7",
+      "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "appliedDate": "2026-09-22T17:16:27.287Z",
+      "currentStatus": "Applied",
+      "withdrawStatus": "Active",
+      "lastUpdated": "2026-09-22T17:16:27.287Z"
+    },
+    {
+      "id": "app_8f534461-729",
+      "candidateId": "cand_373a283f-4dd",
+      "jobId": "e95257be-89cb-40ea-af0b-a881d8bf886f",
+      "recruiterId": "9042b7cd-3e37-45d3-ab41-6f84f752e764",
+      "appliedDate": "2026-10-02T05:54:51.751Z",
+      "currentStatus": "Applied",
+      "withdrawStatus": "Active",
+      "lastUpdated": "2026-10-02T05:54:51.751Z"
+    },
+    {
+      "id": "app_6714525a-955",
+      "candidateId": "cand_c4b2a1d1-71b",
+      "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "appliedDate": "2026-10-03T06:14:22.976Z",
+      "currentStatus": "Applied",
+      "withdrawStatus": "Active",
+      "lastUpdated": "2026-10-03T06:14:22.976Z"
+    },
+    {
+      "id": "app_7147b287-b51",
+      "candidateId": "9a23749c-a4ae-4669-bc19-bc60f1d99b95",
+      "jobId": "e95257be-89cb-40ea-af0b-a881d8bf886f",
+      "recruiterId": "9042b7cd-3e37-45d3-ab41-6f84f752e764",
+      "appliedDate": "2026-09-22T17:34:56.384Z",
+      "currentStatus": "Applied",
+      "withdrawStatus": "Active",
+      "lastUpdated": "2026-09-22T17:34:56.384Z"
+    },
+    {
+      "id": "app_458b50c8-862",
+      "candidateId": "9a23749c-a4ae-4669-bc19-bc60f1d99b95",
+      "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "appliedDate": "2026-09-26T15:25:46.138Z",
+      "currentStatus": "Applied",
+      "withdrawStatus": "Active",
+      "lastUpdated": "2026-09-26T15:25:46.138Z"
+    },
+    {
+      "id": "app_8b102a26-3fe",
+      "candidateId": "cand_c4b2a1d1-71b",
+      "jobId": "e95257be-89cb-40ea-af0b-a881d8bf886f",
+      "recruiterId": "9042b7cd-3e37-45d3-ab41-6f84f752e764",
+      "appliedDate": "2026-09-28T16:21:39.920Z",
+      "currentStatus": "Applied",
+      "withdrawStatus": "Active",
+      "lastUpdated": "2026-09-28T16:21:39.920Z"
+    },
+    {
+      "id": "42caae71-7495-4e08-8f20-a887571f581e",
+      "candidateId": "33402022-43b8-48ea-be87-35719c52c0a7",
+      "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "appliedDate": "2026-09-30T06:57:38.059Z",
+      "currentStatus": "Applied",
+      "withdrawStatus": "Active",
+      "lastUpdated": "2026-09-30T06:57:38.059Z"
+    },
+    {
+      "id": "aff738cd-44b2-4438-aea3-91ed9cd075f4",
+      "candidateId": "JWBLagfTAbcFPV7igsRtd5x5Md82",
+      "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "appliedDate": "2026-10-07T09:19:04.028Z",
+      "currentStatus": "Withdrawn",
+      "withdrawStatus": "Withdrawn",
+      "lastUpdated": "2026-10-07T10:24:36.065Z"
+    },
+    {
+      "id": "1d5b0ae1-6ac6-453b-baa4-e44cacd3557b",
+      "candidateId": "JWBLagfTAbcFPV7igsRtd5x5Md82",
+      "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "appliedDate": "2026-10-07T09:19:03.438Z",
+      "currentStatus": "Withdrawn",
+      "withdrawStatus": "Withdrawn",
+      "lastUpdated": "2026-10-07T11:01:13.677Z"
+    },
+    {
+      "id": "aabcae03-c024-4ae7-ac00-6d20c7310d67",
+      "candidateId": "JWBLagfTAbcFPV7igsRtd5x5Md82",
+      "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "appliedDate": "2026-10-07T09:19:03.849Z",
+      "currentStatus": "Withdrawn",
+      "withdrawStatus": "Withdrawn",
+      "lastUpdated": "2026-10-07T09:20:07.153Z"
+    },
+    {
+      "id": "911249ab-0a0f-4296-9269-fbc64ad1728a",
+      "candidateId": "JWBLagfTAbcFPV7igsRtd5x5Md82",
+      "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "appliedDate": "2026-10-07T06:05:07.540Z",
+      "currentStatus": "Withdrawn",
+      "withdrawStatus": "Withdrawn",
+      "lastUpdated": "2026-10-07T08:39:58.939Z"
+    },
+    {
+      "id": "edaa4a0f-66b1-43b0-a2c2-d810b443b85d",
+      "candidateId": "JWBLagfTAbcFPV7igsRtd5x5Md82",
+      "jobId": "aab8e97a-cd22-45cc-8718-4c02087aa333",
+      "recruiterId": "f9f524b6-15e6-4204-bffc-ff8d54dd9f36",
+      "appliedDate": "2026-10-07T09:19:36.280Z",
+      "currentStatus": "Withdrawn",
+      "withdrawStatus": "Withdrawn",
+      "lastUpdated": "2026-10-07T11:01:13.946Z"
     }
   ],
   "applicationHistory": [
@@ -8433,9 +8943,9 @@
       "contact": "7332859432",
       "location": "brngu",
       "education": "Graduate",
-      "source": "manual",
-      "createdAt": "2026-09-14T16:05:08.802Z",
-      "updatedAt": "2026-09-14T16:05:08.802Z"
+      "source": "platform",
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
     },
     {
       "id": "1558a02c-b2e4-439c-97d8-1ee2504ed06a",
@@ -8443,9 +8953,9 @@
       "contact": "9876572077",
       "location": "Bangalore North",
       "education": "Diploma in Logistics",
-      "source": "manual",
-      "createdAt": "2026-09-12T18:29:44.183Z",
-      "updatedAt": "2026-09-12T18:29:45.823Z"
+      "source": "platform",
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
     },
     {
       "id": "723cea9a-beca-4917-bb35-550b2bc95474",
@@ -8453,9 +8963,9 @@
       "contact": "9876592333",
       "location": "Bangalore North",
       "education": "Diploma in Logistics",
-      "source": "manual",
-      "createdAt": "2026-09-12T18:28:41.352Z",
-      "updatedAt": "2026-09-12T18:28:42.356Z"
+      "source": "platform",
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
     },
     {
       "id": "a7c4c9ab-68d8-481d-a207-be5017ecd676",
@@ -8463,9 +8973,9 @@
       "contact": "9876569091",
       "location": "Bangalore North",
       "education": "Diploma in Logistics",
-      "source": "manual",
-      "createdAt": "2026-09-12T18:27:04.596Z",
-      "updatedAt": "2026-09-12T18:27:05.955Z"
+      "source": "platform",
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
     },
     {
       "id": "a413f6a4-4d2f-40b0-8abc-c4efd87853ad",
@@ -8473,9 +8983,9 @@
       "contact": "9876539780",
       "location": "Bangalore South",
       "education": "Diploma in Logistics",
-      "source": "manual",
-      "createdAt": "2026-09-12T18:18:59.534Z",
-      "updatedAt": "2026-09-12T18:18:59.534Z"
+      "source": "platform",
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
     },
     {
       "id": "169311a3-9f73-4d00-bf61-00354f3a2748",
@@ -8483,9 +8993,9 @@
       "contact": "9876546216",
       "location": "Bangalore South",
       "education": "Diploma in Logistics",
-      "source": "manual",
-      "createdAt": "2026-09-12T18:17:48.775Z",
-      "updatedAt": "2026-09-12T18:17:48.775Z"
+      "source": "platform",
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
     },
     {
       "id": "8890aa40-811d-446f-b95d-b43071d1fdd5",
@@ -8494,8 +9004,8 @@
       "location": "Bengaluru",
       "education": "Graduate",
       "source": "platform",
-      "createdAt": "2026-09-12T18:11:45.954Z",
-      "updatedAt": "2026-09-12T18:11:45.954Z"
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
     },
     {
       "id": "9a23749c-a4ae-4669-bc19-bc60f1d99b95",
@@ -8504,8 +9014,8 @@
       "location": "Bengaluru",
       "education": "Graduate",
       "source": "platform",
-      "createdAt": "2026-09-12T18:11:45.954Z",
-      "updatedAt": "2026-09-12T18:11:45.954Z"
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
     },
     {
       "id": "8d8f4a06-5b36-45f4-84b6-1ac8509a53ea",
@@ -8514,8 +9024,8 @@
       "location": "Bengaluru",
       "education": "Graduate",
       "source": "platform",
-      "createdAt": "2026-09-12T18:11:45.954Z",
-      "updatedAt": "2026-09-12T18:11:45.954Z"
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
     },
     {
       "id": "2380b844-3bc9-4707-b73a-971ed6cf5347",
@@ -8524,8 +9034,8 @@
       "location": "Bengaluru",
       "education": "Graduate",
       "source": "platform",
-      "createdAt": "2026-09-12T18:11:45.954Z",
-      "updatedAt": "2026-09-12T18:11:45.954Z"
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
     },
     {
       "id": "cand_25cb91b6-6b7",
@@ -8534,8 +9044,8 @@
       "location": "Bengaluru",
       "education": "Graduate",
       "source": "platform",
-      "createdAt": "2026-09-12T18:11:45.954Z",
-      "updatedAt": "2026-09-12T18:11:45.954Z"
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
     },
     {
       "id": "6851e5ec-0e8c-4e77-8bcc-1f4dc9e124b0",
@@ -8544,8 +9054,8 @@
       "location": "Bengaluru",
       "education": "Graduate",
       "source": "platform",
-      "createdAt": "2026-09-12T18:11:45.954Z",
-      "updatedAt": "2026-09-12T18:11:45.954Z"
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
     },
     {
       "id": "81db6e9f-011a-411b-b19b-1748fd6f7ab8",
@@ -8554,8 +9064,8 @@
       "location": "Bengaluru",
       "education": "Graduate",
       "source": "platform",
-      "createdAt": "2026-09-12T18:11:45.954Z",
-      "updatedAt": "2026-09-12T18:11:45.954Z"
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
     },
     {
       "id": "cand_1f750885-792",
@@ -8564,8 +9074,8 @@
       "location": "Bengaluru",
       "education": "Graduate",
       "source": "platform",
-      "createdAt": "2026-09-12T18:11:45.954Z",
-      "updatedAt": "2026-09-12T18:11:45.954Z"
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
     },
     {
       "id": "8182a5ee-2273-4e52-840c-46a8a146bdbd",
@@ -8574,8 +9084,8 @@
       "location": "Bengaluru",
       "education": "Graduate",
       "source": "platform",
-      "createdAt": "2026-09-12T18:11:45.954Z",
-      "updatedAt": "2026-09-12T18:11:45.954Z"
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
     },
     {
       "id": "cand_68f25cc2-5b7",
@@ -8584,8 +9094,8 @@
       "location": "Bengaluru",
       "education": "Graduate",
       "source": "platform",
-      "createdAt": "2026-09-12T18:11:45.954Z",
-      "updatedAt": "2026-09-12T18:11:45.954Z"
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
     },
     {
       "id": "cand_2901dba8-e71",
@@ -8594,8 +9104,8 @@
       "location": "Bengaluru",
       "education": "Graduate",
       "source": "platform",
-      "createdAt": "2026-09-12T18:11:45.954Z",
-      "updatedAt": "2026-09-12T18:11:45.954Z"
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
     },
     {
       "id": "775f5d90-8235-4de9-b899-8a030ada2970",
@@ -8604,8 +9114,8 @@
       "location": "Bengaluru",
       "education": "Graduate",
       "source": "platform",
-      "createdAt": "2026-09-12T18:11:45.954Z",
-      "updatedAt": "2026-09-12T18:11:45.954Z"
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
     },
     {
       "id": "cand_c4b2a1d1-71b",
@@ -8614,8 +9124,8 @@
       "location": "Bengal ",
       "education": "Graduate",
       "source": "platform",
-      "createdAt": "2026-09-12T18:11:45.954Z",
-      "updatedAt": "2026-09-12T18:11:45.954Z"
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
     },
     {
       "id": "745c94da-746d-4852-81c5-0cf5fdb25aef",
@@ -8624,8 +9134,8 @@
       "location": "Bengaluru",
       "education": "Graduate",
       "source": "platform",
-      "createdAt": "2026-09-12T18:11:45.954Z",
-      "updatedAt": "2026-09-12T18:11:45.954Z"
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
     },
     {
       "id": "cand_5690a706-9a2",
@@ -8634,8 +9144,8 @@
       "location": "Bengaluru",
       "education": "Graduate",
       "source": "platform",
-      "createdAt": "2026-09-12T18:11:45.954Z",
-      "updatedAt": "2026-09-12T18:11:45.954Z"
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
     },
     {
       "id": "361b3ea1-8d00-45ed-8e62-7f58f39476ea",
@@ -8644,8 +9154,8 @@
       "location": "Bengaluru",
       "education": "Graduate",
       "source": "platform",
-      "createdAt": "2026-09-12T18:11:45.954Z",
-      "updatedAt": "2026-09-12T18:11:45.954Z"
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
     },
     {
       "id": "b97949b9-d279-4a7f-a544-31243e991f5c",
@@ -8654,8 +9164,8 @@
       "location": "Bengaluru",
       "education": "Graduate",
       "source": "platform",
-      "createdAt": "2026-09-12T18:11:45.954Z",
-      "updatedAt": "2026-09-12T18:11:45.954Z"
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
     },
     {
       "id": "2a2edb04-ccd4-49af-bf9f-0ee5a02cbd83",
@@ -8664,8 +9174,8 @@
       "location": "Bengaluru",
       "education": "Graduate",
       "source": "platform",
-      "createdAt": "2026-09-12T18:11:45.954Z",
-      "updatedAt": "2026-09-12T18:11:45.954Z"
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
     },
     {
       "id": "cb67fde6-0622-4429-9343-52860c50b35b",
@@ -8674,8 +9184,8 @@
       "location": "Bengaluru",
       "education": "Graduate",
       "source": "platform",
-      "createdAt": "2026-09-12T18:11:45.954Z",
-      "updatedAt": "2026-09-12T18:11:45.954Z"
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
     },
     {
       "id": "7696d38f-7dc0-41ce-a0f3-d315b189a9f0",
@@ -8684,8 +9194,8 @@
       "location": "Bengaluru",
       "education": "Graduate",
       "source": "platform",
-      "createdAt": "2026-09-12T18:11:45.954Z",
-      "updatedAt": "2026-09-12T18:11:45.954Z"
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
     },
     {
       "id": "JWBLagfTAbcFPV7igsRtd5x5Md82",
@@ -8694,8 +9204,8 @@
       "location": "Bengaluru",
       "education": "Graduate",
       "source": "platform",
-      "createdAt": "2026-09-12T18:11:45.954Z",
-      "updatedAt": "2026-09-12T18:11:45.954Z"
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
     },
     {
       "id": "33402022-43b8-48ea-be87-35719c52c0a7",
@@ -8704,8 +9214,38 @@
       "location": "Bengaluru",
       "education": "Graduate",
       "source": "platform",
-      "createdAt": "2026-09-12T18:11:45.954Z",
-      "updatedAt": "2026-09-12T18:11:45.954Z"
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
+    },
+    {
+      "id": "f177cf06-4cb4-4f11-b3ea-d1cc67c48d98",
+      "name": "gff",
+      "contact": "7337856921",
+      "location": "chnnasandra",
+      "education": "Graduate",
+      "source": "platform",
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
+    },
+    {
+      "id": "cand_51a09217-4f5",
+      "name": "new testing ",
+      "contact": "8095469805",
+      "location": "Bengaluru",
+      "education": "Graduate",
+      "source": "platform",
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
+    },
+    {
+      "id": "c0506287-18fb-47d5-92df-37e0546332d1",
+      "name": "qasd",
+      "contact": "8095460806",
+      "location": "Bengaluru",
+      "education": "Graduate",
+      "source": "platform",
+      "createdAt": "2026-09-14T18:09:37.185+00:00",
+      "updatedAt": "2026-09-14T18:09:37.185+00:00"
     }
   ],
   "urgentAssignments": [
@@ -8747,7 +9287,7 @@
       "candidateLocation": "Bangalore North",
       "candidateEducation": "Diploma in Logistics",
       "status": "Pending",
-      "assignedAt": "2026-09-14T16:33:05.403Z",
+      "assignedAt": "2026-09-14T16:33:05.403+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -8761,7 +9301,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T16:33:05.403Z",
+      "assignedAt": "2026-09-14T16:33:05.403+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -8845,7 +9385,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T16:33:05.403Z",
+      "assignedAt": "2026-09-14T16:33:05.403+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -8929,7 +9469,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T16:33:05.403Z",
+      "assignedAt": "2026-09-14T16:33:05.403+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -8985,7 +9525,7 @@
       "candidateLocation": "Bangalore North",
       "candidateEducation": "Diploma in Logistics",
       "status": "Pending",
-      "assignedAt": "2026-09-14T16:33:05.403Z",
+      "assignedAt": "2026-09-14T16:33:05.403+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -8998,10 +9538,11 @@
       "candidateContact": "9875954389",
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
-      "status": "Pending",
-      "assignedAt": "2026-09-14T15:34:52.199Z",
+      "status": "Hired",
+      "assignedAt": "2026-09-14T15:34:52.199+00:00",
       "assignedBy": "admin",
-      "notes": ""
+      "notes": "",
+      "updatedAt": "2026-10-08T14:22:27.374Z"
     },
     {
       "id": "urg_29cb1a95-3d97-4a90-b5ec-e01df25f8fac",
@@ -9013,7 +9554,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:34:52.199Z",
+      "assignedAt": "2026-09-14T15:34:52.199+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9027,7 +9568,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:34:52.199Z",
+      "assignedAt": "2026-09-14T15:34:52.199+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9041,7 +9582,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:34:52.199Z",
+      "assignedAt": "2026-09-14T15:34:52.199+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9055,7 +9596,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:34:52.199Z",
+      "assignedAt": "2026-09-14T15:34:52.199+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9069,7 +9610,7 @@
       "candidateLocation": "Bangalore North",
       "candidateEducation": "Diploma in Logistics",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:34:52.199Z",
+      "assignedAt": "2026-09-14T15:34:52.199+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9083,7 +9624,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:34:52.199Z",
+      "assignedAt": "2026-09-14T15:34:52.199+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9097,7 +9638,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:34:52.199Z",
+      "assignedAt": "2026-09-14T15:34:52.199+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9111,7 +9652,7 @@
       "candidateLocation": "Bangalore South",
       "candidateEducation": "Diploma in Logistics",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:34:52.199Z",
+      "assignedAt": "2026-09-14T15:34:52.199+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9125,7 +9666,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:34:52.199Z",
+      "assignedAt": "2026-09-14T15:34:52.199+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9139,7 +9680,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:34:52.199Z",
+      "assignedAt": "2026-09-14T15:34:52.199+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9153,7 +9694,7 @@
       "candidateLocation": "Bengal ",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:34:52.199Z",
+      "assignedAt": "2026-09-14T15:34:52.199+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9167,7 +9708,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:34:52.199Z",
+      "assignedAt": "2026-09-14T15:34:52.199+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9181,7 +9722,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:34:52.199Z",
+      "assignedAt": "2026-09-14T15:34:52.199+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9195,7 +9736,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:34:52.199Z",
+      "assignedAt": "2026-09-14T15:34:52.199+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9209,7 +9750,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:34:52.199Z",
+      "assignedAt": "2026-09-14T15:34:52.199+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9223,7 +9764,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:34:52.199Z",
+      "assignedAt": "2026-09-14T15:34:52.199+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9237,7 +9778,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:34:52.199Z",
+      "assignedAt": "2026-09-14T15:34:52.199+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9251,7 +9792,7 @@
       "candidateLocation": "Bangalore North",
       "candidateEducation": "Diploma in Logistics",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:34:52.199Z",
+      "assignedAt": "2026-09-14T15:34:52.199+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9265,7 +9806,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:34:52.199Z",
+      "assignedAt": "2026-09-14T15:34:52.199+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9279,7 +9820,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:34:52.199Z",
+      "assignedAt": "2026-09-14T15:34:52.199+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9293,7 +9834,7 @@
       "candidateLocation": "Bangalore North",
       "candidateEducation": "Diploma in Logistics",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:34:52.199Z",
+      "assignedAt": "2026-09-14T15:34:52.199+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9307,7 +9848,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:34:52.199Z",
+      "assignedAt": "2026-09-14T15:34:52.199+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9321,7 +9862,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:34:52.199Z",
+      "assignedAt": "2026-09-14T15:34:52.199+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9335,7 +9876,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:34:52.199Z",
+      "assignedAt": "2026-09-14T15:34:52.199+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9349,7 +9890,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:34:52.199Z",
+      "assignedAt": "2026-09-14T15:34:52.199+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9363,7 +9904,7 @@
       "candidateLocation": "Bangalore South",
       "candidateEducation": "Diploma in Logistics",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:34:52.199Z",
+      "assignedAt": "2026-09-14T15:34:52.199+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9377,7 +9918,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:32:43.327Z",
+      "assignedAt": "2026-09-14T15:32:43.327+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9391,7 +9932,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:32:43.327Z",
+      "assignedAt": "2026-09-14T15:32:43.327+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9405,7 +9946,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:32:43.327Z",
+      "assignedAt": "2026-09-14T15:32:43.327+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9419,7 +9960,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:32:43.327Z",
+      "assignedAt": "2026-09-14T15:32:43.327+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9433,7 +9974,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:32:43.327Z",
+      "assignedAt": "2026-09-14T15:32:43.327+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9447,7 +9988,7 @@
       "candidateLocation": "Bangalore North",
       "candidateEducation": "Diploma in Logistics",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:32:43.327Z",
+      "assignedAt": "2026-09-14T15:32:43.327+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9461,7 +10002,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:32:43.327Z",
+      "assignedAt": "2026-09-14T15:32:43.327+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9475,7 +10016,7 @@
       "candidateLocation": "Bangalore South",
       "candidateEducation": "Diploma in Logistics",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:32:43.327Z",
+      "assignedAt": "2026-09-14T15:32:43.327+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9489,7 +10030,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:32:43.327Z",
+      "assignedAt": "2026-09-14T15:32:43.327+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9503,7 +10044,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:32:43.327Z",
+      "assignedAt": "2026-09-14T15:32:43.327+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9517,7 +10058,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:32:43.327Z",
+      "assignedAt": "2026-09-14T15:32:43.327+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9531,7 +10072,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:32:43.327Z",
+      "assignedAt": "2026-09-14T15:32:43.327+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9545,7 +10086,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:32:43.327Z",
+      "assignedAt": "2026-09-14T15:32:43.327+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9559,7 +10100,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:32:43.327Z",
+      "assignedAt": "2026-09-14T15:32:43.327+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9573,7 +10114,7 @@
       "candidateLocation": "Bangalore South",
       "candidateEducation": "Diploma in Logistics",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:32:43.327Z",
+      "assignedAt": "2026-09-14T15:32:43.327+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9587,7 +10128,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:32:43.327Z",
+      "assignedAt": "2026-09-14T15:32:43.327+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9601,7 +10142,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:32:43.327Z",
+      "assignedAt": "2026-09-14T15:32:43.327+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9615,7 +10156,7 @@
       "candidateLocation": "Bangalore North",
       "candidateEducation": "Diploma in Logistics",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:32:43.327Z",
+      "assignedAt": "2026-09-14T15:32:43.327+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9629,7 +10170,7 @@
       "candidateLocation": "Bangalore North",
       "candidateEducation": "Diploma in Logistics",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:32:43.327Z",
+      "assignedAt": "2026-09-14T15:32:43.327+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9643,7 +10184,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:32:43.327Z",
+      "assignedAt": "2026-09-14T15:32:43.327+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9657,7 +10198,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:32:43.327Z",
+      "assignedAt": "2026-09-14T15:32:43.327+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9671,7 +10212,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:32:43.327Z",
+      "assignedAt": "2026-09-14T15:32:43.327+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9685,7 +10226,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:32:43.327Z",
+      "assignedAt": "2026-09-14T15:32:43.327+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9699,7 +10240,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:32:43.327Z",
+      "assignedAt": "2026-09-14T15:32:43.327+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9713,7 +10254,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:32:43.327Z",
+      "assignedAt": "2026-09-14T15:32:43.327+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9727,7 +10268,7 @@
       "candidateLocation": "Bengal ",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:32:43.327Z",
+      "assignedAt": "2026-09-14T15:32:43.327+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9741,7 +10282,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-14T15:32:43.327Z",
+      "assignedAt": "2026-09-14T15:32:43.327+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9755,10 +10296,9 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Shortlisted",
-      "assignedAt": "2026-09-12T18:29:51.093Z",
+      "assignedAt": "2026-09-12T18:29:51.093+00:00",
       "assignedBy": "admin",
-      "notes": "",
-      "updatedAt": "2026-09-12T18:29:58.710Z"
+      "notes": ""
     },
     {
       "id": "urg_ca29b497-c154-4cd6-9dc8-8cfde4bbf603",
@@ -9770,7 +10310,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-12T18:29:51.093Z",
+      "assignedAt": "2026-09-12T18:29:51.093+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9784,7 +10324,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-12T18:29:51.093Z",
+      "assignedAt": "2026-09-12T18:29:51.093+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9798,7 +10338,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-12T18:28:46.960Z",
+      "assignedAt": "2026-09-12T18:28:46.96+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9812,7 +10352,7 @@
       "candidateLocation": "Bangalore North",
       "candidateEducation": "Diploma in Logistics",
       "status": "Pending",
-      "assignedAt": "2026-09-12T18:28:46.960Z",
+      "assignedAt": "2026-09-12T18:28:46.96+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9826,7 +10366,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-12T18:28:46.960Z",
+      "assignedAt": "2026-09-12T18:28:46.96+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9840,7 +10380,7 @@
       "candidateLocation": "Bangalore South",
       "candidateEducation": "Diploma in Logistics",
       "status": "Pending",
-      "assignedAt": "2026-09-12T18:27:09.635Z",
+      "assignedAt": "2026-09-12T18:27:09.635+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9854,7 +10394,7 @@
       "candidateLocation": "Bengal ",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-12T18:27:09.635Z",
+      "assignedAt": "2026-09-12T18:27:09.635+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9868,7 +10408,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-12T18:27:09.635Z",
+      "assignedAt": "2026-09-12T18:27:09.635+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9882,7 +10422,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-12T18:19:05.786Z",
+      "assignedAt": "2026-09-12T18:19:05.786+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9896,7 +10436,7 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-12T18:19:05.786Z",
+      "assignedAt": "2026-09-12T18:19:05.786+00:00",
       "assignedBy": "admin",
       "notes": ""
     },
@@ -9910,7 +10450,833 @@
       "candidateLocation": "Bengaluru",
       "candidateEducation": "Graduate",
       "status": "Pending",
-      "assignedAt": "2026-09-12T18:19:05.786Z",
+      "assignedAt": "2026-09-12T18:19:05.786+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_9d2feb3e-e5cb-4a39-ad0e-d6d08932e5bd",
+      "candidateId": "33402022-43b8-48ea-be87-35719c52c0a7",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "Deepesh Manju",
+      "candidateContact": "9877124052",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-14T18:09:51.596+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_96e83e84-ad87-4cdb-ae3f-8cb3f6e1348a",
+      "candidateId": "cand_68f25cc2-5b7",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "Mohan",
+      "candidateContact": "8431088118",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-14T18:09:51.596+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_163d3436-7a4e-4812-93fa-c0aa74ea755e",
+      "candidateId": "745c94da-746d-4852-81c5-0cf5fdb25aef",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "xverfd",
+      "candidateContact": "7337850324",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-14T18:09:51.596+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_44aff96a-c2a2-4866-8078-cecf8ff4be79",
+      "candidateId": "cand_25cb91b6-6b7",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "Sathya",
+      "candidateContact": "7892939485",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-14T18:09:51.596+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_9b1d2f7f-3205-4cde-b342-e34bdd68fbcc",
+      "candidateId": "9a23749c-a4ae-4669-bc19-bc60f1d99b95",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "uygh",
+      "candidateContact": "7337850344",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-14T18:09:51.596+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_6ee9d2bd-4f70-4e52-b447-67e7ae41eca2",
+      "candidateId": "cand_51a09217-4f5",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "new testing ",
+      "candidateContact": "8095469805",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-14T18:09:51.596+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_4d457172-20a7-4e8d-bbe4-fb0a8697f5df",
+      "candidateId": "c0506287-18fb-47d5-92df-37e0546332d1",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "qasd",
+      "candidateContact": "8095460806",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-14T18:09:51.596+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_89b803e6-56a2-481c-92a5-79fa17fe979e",
+      "candidateId": "cand_c4b2a1d1-71b",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "deepesh",
+      "candidateContact": "8152097827",
+      "candidateLocation": "Bengal ",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-14T18:09:51.596+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_2d50b0c1-ccec-4ae7-9140-21b9619fa5df",
+      "candidateId": "cand_5690a706-9a2",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "lichtai deepu",
+      "candidateContact": "7204509152",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-14T18:09:51.596+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_527820d7-6598-446e-9c7f-45d097d7e192",
+      "candidateId": "81db6e9f-011a-411b-b19b-1748fd6f7ab8",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "Deepesh Manju",
+      "candidateContact": "9875525758",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-14T18:09:51.596+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_e8865953-f098-425d-a5e0-25a3796e634b",
+      "candidateId": "7696d38f-7dc0-41ce-a0f3-d315b189a9f0",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "Test Candidate",
+      "candidateContact": "9832245089",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-14T18:09:51.596+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_8f614733-7ec8-4dde-8c16-edf56af9525d",
+      "candidateId": "b97949b9-d279-4a7f-a544-31243e991f5c",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "Deepesh Manju",
+      "candidateContact": "9875075967",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-14T18:09:51.596+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_51ff44a3-edb0-4e7b-92e2-c578d1704cb9",
+      "candidateId": "775f5d90-8235-4de9-b899-8a030ada2970",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "Deepesh Manju",
+      "candidateContact": "9873689632",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-14T18:09:51.596+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_85cf00c2-e834-4e16-89eb-7be4cc5936d1",
+      "candidateId": "8890aa40-811d-446f-b95d-b43071d1fdd5",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "Angesh",
+      "candidateContact": "5582728282",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-14T18:09:51.596+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_c31e0e18-6a45-4a84-961e-8d9fb359b433",
+      "candidateId": "a413f6a4-4d2f-40b0-8abc-c4efd87853ad",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "Vikram Logistics Pilot",
+      "candidateContact": "9876539780",
+      "candidateLocation": "Bangalore South",
+      "candidateEducation": "Diploma in Logistics",
+      "status": "Pending",
+      "assignedAt": "2026-09-14T18:09:51.596+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_51dc16bc-d75a-4ea2-9e5d-70bc34eb85a8",
+      "candidateId": "cand_1f750885-792",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "bindu",
+      "candidateContact": "8095469806",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-14T18:09:51.596+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_6a4e3fcf-ee17-4343-87f1-f34a02c88c1f",
+      "candidateId": "1558a02c-b2e4-439c-97d8-1ee2504ed06a",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "Vikram Lead Pilot",
+      "candidateContact": "9876572077",
+      "candidateLocation": "Bangalore North",
+      "candidateEducation": "Diploma in Logistics",
+      "status": "Pending",
+      "assignedAt": "2026-09-14T18:09:51.596+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_871691e1-703f-40f4-8537-754bfd117c7a",
+      "candidateId": "723cea9a-beca-4917-bb35-550b2bc95474",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "Vikram Lead Pilot",
+      "candidateContact": "9876592333",
+      "candidateLocation": "Bangalore North",
+      "candidateEducation": "Diploma in Logistics",
+      "status": "Pending",
+      "assignedAt": "2026-09-14T18:09:51.596+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_832aabe7-d608-4e34-9982-bbb77dd4e6ab",
+      "candidateId": "2a2edb04-ccd4-49af-bf9f-0ee5a02cbd83",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "Deepesh Manju",
+      "candidateContact": "9873531386",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-14T18:09:51.596+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_786210b4-6bb7-448a-8719-1322fd7061c2",
+      "candidateId": "6851e5ec-0e8c-4e77-8bcc-1f4dc9e124b0",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "Deepesh Manju",
+      "candidateContact": "9876035446",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T07:54:02.815+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_42938d6e-4c1b-4c71-8a84-4a67715ca76c",
+      "candidateId": "361b3ea1-8d00-45ed-8e62-7f58f39476ea",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "Deepesh Manju",
+      "candidateContact": "9877525187",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T07:54:02.815+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_d8e53ecc-556a-482e-9e1c-04d4094150b6",
+      "candidateId": "cand_2901dba8-e71",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "Roopa ",
+      "candidateContact": "9739542938",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T07:54:02.815+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_b8a8887b-18c9-4e8f-a9f6-21dd337c208b",
+      "candidateId": "cand_68f25cc2-5b7",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "Mohan",
+      "candidateContact": "8431088118",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T07:54:02.815+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_d279eab4-88ae-46ff-bb2b-4cda8da656ed",
+      "candidateId": "775f5d90-8235-4de9-b899-8a030ada2970",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "Deepesh Manju",
+      "candidateContact": "9873689632",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T07:54:02.815+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_5a275434-9558-4e04-b2bd-b0952b15a358",
+      "candidateId": "cand_c4b2a1d1-71b",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "deepesh",
+      "candidateContact": "8152097827",
+      "candidateLocation": "Bengal ",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T07:54:02.815+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_62c0e320-c6e9-4f95-80cb-56e1f0b8e269",
+      "candidateId": "8182a5ee-2273-4e52-840c-46a8a146bdbd",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "Deepesh Manju",
+      "candidateContact": "9875193897",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T07:54:02.815+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_707aba64-9cc0-4b42-aa8e-a02ee2378d82",
+      "candidateId": "cand_25cb91b6-6b7",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "Sathya",
+      "candidateContact": "7892939485",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T07:54:02.815+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_60c06fa4-d42f-4699-a1aa-05a1faacca57",
+      "candidateId": "JWBLagfTAbcFPV7igsRtd5x5Md82",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "criminaldepartment",
+      "candidateContact": "0000000000",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T07:54:02.815+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_a2a50d09-4c78-4273-a030-674cc546e512",
+      "candidateId": "1558a02c-b2e4-439c-97d8-1ee2504ed06a",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "Vikram Lead Pilot",
+      "candidateContact": "9876572077",
+      "candidateLocation": "Bangalore North",
+      "candidateEducation": "Diploma in Logistics",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T07:54:02.815+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_ae76a399-c873-4f93-89e9-5fc9bfc854fc",
+      "candidateId": "2a2edb04-ccd4-49af-bf9f-0ee5a02cbd83",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "Deepesh Manju",
+      "candidateContact": "9873531386",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T07:54:02.815+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_763bcdec-0638-45df-8b7a-7e2d00bff3e9",
+      "candidateId": "9a23749c-a4ae-4669-bc19-bc60f1d99b95",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "uygh",
+      "candidateContact": "7337850344",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T07:54:02.815+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_f4495d4b-6f4f-4e70-9fc3-f9d5d6ab5046",
+      "candidateId": "71241266-9744-4406-9166-7636cc511acd",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "rejhfd",
+      "candidateContact": "7332859432",
+      "candidateLocation": "brngu",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T07:54:02.815+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_9911dc17-0e91-471b-8129-d84a32535734",
+      "candidateId": "cand_1f750885-792",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "bindu",
+      "candidateContact": "8095469806",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T07:54:02.815+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_f9352cf3-9871-400d-a8f0-35f0a43a9091",
+      "candidateId": "a413f6a4-4d2f-40b0-8abc-c4efd87853ad",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "Vikram Logistics Pilot",
+      "candidateContact": "9876539780",
+      "candidateLocation": "Bangalore South",
+      "candidateEducation": "Diploma in Logistics",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T07:54:02.815+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_59791cb7-f23b-4987-ae2b-2f76c78422c7",
+      "candidateId": "b97949b9-d279-4a7f-a544-31243e991f5c",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "Deepesh Manju",
+      "candidateContact": "9875075967",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T07:54:02.815+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_a5595b92-1adf-4d9c-90bc-633e9c038f55",
+      "candidateId": "169311a3-9f73-4d00-bf61-00354f3a2748",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "Vikram Logistics Pilot",
+      "candidateContact": "9876546216",
+      "candidateLocation": "Bangalore South",
+      "candidateEducation": "Diploma in Logistics",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T07:54:02.815+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_4ff4a53d-27ea-4eca-9ec1-59ee238e8eba",
+      "candidateId": "2a2edb04-ccd4-49af-bf9f-0ee5a02cbd83",
+      "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "candidateName": "Deepesh Manju",
+      "candidateContact": "9873531386",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T18:22:50.581+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_ada93ad6-a06b-4a15-97be-855775eea2c6",
+      "candidateId": "745c94da-746d-4852-81c5-0cf5fdb25aef",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "xverfd",
+      "candidateContact": "7337850324",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T07:54:02.815+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_b5bbb67b-20f8-43b0-ab58-9fcdb6dbc56c",
+      "candidateId": "cb67fde6-0622-4429-9343-52860c50b35b",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "Raj Anagawadi",
+      "candidateContact": "6362876662",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T07:54:02.815+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_20d346e0-16de-4c8b-ae49-3c852eaf451b",
+      "candidateId": "2380b844-3bc9-4707-b73a-971ed6cf5347",
+      "jobId": "e13634f4-3de7-4364-8dc6-ea80d49250b0",
+      "recruiterId": "febbc306-13d7-41ce-99d0-f04ff2355dac",
+      "candidateName": "Deepesh Manju",
+      "candidateContact": "9875954389",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T07:54:02.815+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_cc1c5d20-e1a9-48f2-a077-a238b5e90abd",
+      "candidateId": "a413f6a4-4d2f-40b0-8abc-c4efd87853ad",
+      "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "candidateName": "Vikram Logistics Pilot",
+      "candidateContact": "9876539780",
+      "candidateLocation": "Bangalore South",
+      "candidateEducation": "Diploma in Logistics",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T18:22:50.581+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_094846ec-e845-43e0-a6fc-a0f89d79d436",
+      "candidateId": "81db6e9f-011a-411b-b19b-1748fd6f7ab8",
+      "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "candidateName": "Deepesh Manju",
+      "candidateContact": "9875525758",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T18:22:50.581+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_744c0abb-a1a7-4a4d-94f5-05880c35eec9",
+      "candidateId": "c0506287-18fb-47d5-92df-37e0546332d1",
+      "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "candidateName": "qasd",
+      "candidateContact": "8095460806",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T18:22:50.581+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_bc367254-8197-475f-9abe-225f4125764d",
+      "candidateId": "JWBLagfTAbcFPV7igsRtd5x5Md82",
+      "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "candidateName": "criminaldepartment",
+      "candidateContact": "0000000000",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T18:22:50.581+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_7f186c85-7589-41ac-b9d5-c59197d0c5e8",
+      "candidateId": "1558a02c-b2e4-439c-97d8-1ee2504ed06a",
+      "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "candidateName": "Vikram Lead Pilot",
+      "candidateContact": "9876572077",
+      "candidateLocation": "Bangalore North",
+      "candidateEducation": "Diploma in Logistics",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T18:22:50.581+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_3cbfdb20-bb98-4104-ac11-125b9302367b",
+      "candidateId": "cand_25cb91b6-6b7",
+      "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "candidateName": "Sathya",
+      "candidateContact": "7892939485",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T18:22:50.581+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_f90e7e90-f843-4aa2-98bc-f08e2b5381be",
+      "candidateId": "33402022-43b8-48ea-be87-35719c52c0a7",
+      "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "candidateName": "Deepesh Manju",
+      "candidateContact": "9877124052",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T18:22:50.581+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_153a4ba8-665a-4380-86e6-873e96833431",
+      "candidateId": "cand_51a09217-4f5",
+      "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "candidateName": "new testing ",
+      "candidateContact": "8095469805",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T18:22:50.581+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_1bec6b9f-3c9b-49a8-85fe-81ec2fcfa861",
+      "candidateId": "71241266-9744-4406-9166-7636cc511acd",
+      "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "candidateName": "rejhfd",
+      "candidateContact": "7332859432",
+      "candidateLocation": "brngu",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T18:22:50.581+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_52cb5ed1-7be2-4934-a4e1-4ae80ab6aeb1",
+      "candidateId": "745c94da-746d-4852-81c5-0cf5fdb25aef",
+      "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "candidateName": "xverfd",
+      "candidateContact": "7337850324",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T18:22:50.581+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_25e7c464-aef0-43c5-bc71-58547a052531",
+      "candidateId": "8182a5ee-2273-4e52-840c-46a8a146bdbd",
+      "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "candidateName": "Deepesh Manju",
+      "candidateContact": "9875193897",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T18:22:50.581+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_e82e0f69-d6e8-4d06-bb3d-d1aa077ea6f1",
+      "candidateId": "cand_1f750885-792",
+      "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "candidateName": "bindu",
+      "candidateContact": "8095469806",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T18:22:50.581+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_a828dceb-cd9c-4f33-b004-b0adcae02a9c",
+      "candidateId": "8890aa40-811d-446f-b95d-b43071d1fdd5",
+      "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "candidateName": "Angesh",
+      "candidateContact": "5582728282",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T18:22:50.581+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_aaa7d722-0e8e-4cf3-a65e-6cbcc41bcb5e",
+      "candidateId": "cand_2901dba8-e71",
+      "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "candidateName": "Roopa ",
+      "candidateContact": "9739542938",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T18:22:50.581+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_89d1d37e-8aec-4226-8f31-c3a230736b1c",
+      "candidateId": "9a23749c-a4ae-4669-bc19-bc60f1d99b95",
+      "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "candidateName": "uygh",
+      "candidateContact": "7337850344",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T18:22:50.581+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_b04c40c5-30bc-40e9-b969-dd6eb8119fd8",
+      "candidateId": "7696d38f-7dc0-41ce-a0f3-d315b189a9f0",
+      "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "candidateName": "Test Candidate",
+      "candidateContact": "9832245089",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T18:22:50.581+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_d23a4709-3f00-4575-b2e7-33b710427721",
+      "candidateId": "2380b844-3bc9-4707-b73a-971ed6cf5347",
+      "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "candidateName": "Deepesh Manju",
+      "candidateContact": "9875954389",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T18:22:50.581+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_77dd456d-8488-42ac-a63b-9f2817c2be70",
+      "candidateId": "cand_5690a706-9a2",
+      "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "candidateName": "lichtai deepu",
+      "candidateContact": "7204509152",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T18:22:50.581+00:00",
+      "assignedBy": "admin",
+      "notes": ""
+    },
+    {
+      "id": "urg_a211c2d3-9289-4b63-bf0c-8704f5dfbdfc",
+      "candidateId": "6851e5ec-0e8c-4e77-8bcc-1f4dc9e124b0",
+      "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "candidateName": "Deepesh Manju",
+      "candidateContact": "9876035446",
+      "candidateLocation": "Bengaluru",
+      "candidateEducation": "Graduate",
+      "status": "Pending",
+      "assignedAt": "2026-09-16T18:22:50.581+00:00",
       "assignedBy": "admin",
       "notes": ""
     }
