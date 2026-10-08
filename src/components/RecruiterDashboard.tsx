@@ -8,7 +8,8 @@ import {
   Eye, Copy, Search, Filter, Calendar, FileMinus, MessageSquare,
   ShieldCheck, CheckCircle2, ExternalLink, PhoneCall, FileCheck,
   FolderOpen, ChevronDown, ChevronUp, Sparkles, Lock, CheckCheck,
-  Bell
+  Bell, Users, UserCheck, TrendingUp, Menu, MoreVertical, ArrowUpRight,
+  UserPlus
 } from 'lucide-react';
 import { Recruiter } from '../types';
 import NotificationPermissionBanner from './NotificationPermissionBanner';
@@ -17,7 +18,7 @@ import { getSupabase } from '../lib/supabase';
 import { compressImageTo50KB, formatByteSize, getBase64ByteSize, MAX_IMAGE_SIZE_BYTES } from '../lib/imageCompressor';
 import { 
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, 
-  CartesianGrid, Tooltip, BarChart, Bar, Cell, Legend
+  CartesianGrid, Tooltip, BarChart, Bar, Cell, Legend, PieChart, Pie
 } from 'recharts';
 
 interface RecruiterDashboardProps {
@@ -1196,21 +1197,21 @@ export default function RecruiterDashboard({
       {/* Native Browser Notification Permission Prompt */}
       <NotificationPermissionBanner recruiterName={recruiter.recruiterName || recruiter.companyName} />
 
-      <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row gap-8" id="recruiter-approved-dashboard">
+      <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row gap-6 font-sans text-gray-800" id="recruiter-approved-dashboard">
         
-        {/* Sidebar Controls (Responsive Desktop Panel) */}
-        <aside className="w-full lg:w-64 shrink-0" id="recruiter-dashboard-sidebar">
-          <div className="bg-white border border-gray-150 rounded-2xl p-5 space-y-5 sticky top-24 shadow-sm">
+        {/* Sidebar Navigation Panel */}
+        <aside className="w-full lg:w-60 shrink-0" id="recruiter-dashboard-sidebar">
+          <div className="bg-white border border-gray-150 rounded-2xl p-4 sticky top-20 shadow-xs space-y-4">
             
-            {/* Header info */}
-            <div className="flex items-center gap-3">
+            {/* Header info / Logo */}
+            <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
               {recruiter.companyLogo ? (
-                <div className="w-12 h-12 rounded-xl border border-gray-200 overflow-hidden bg-gray-50 shrink-0">
+                <div className="w-10 h-10 rounded-xl border border-gray-100 overflow-hidden bg-white shrink-0 p-1">
                   <img src={recruiter.companyLogo} alt={recruiter.companyName} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
                 </div>
               ) : (
-                <div className="w-12 h-12 bg-orange-50 border border-orange-100 rounded-xl flex items-center justify-center text-orange-600 shrink-0">
-                  <Building2 className="w-6 h-6" />
+                <div className="w-10 h-10 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-center text-[#1D61F2] shrink-0">
+                  <Building2 className="w-5 h-5" />
                 </div>
               )}
               <div className="truncate">
@@ -1219,61 +1220,42 @@ export default function RecruiterDashboard({
               </div>
             </div>
 
-            {/* Candidate Allocation Alerts Quick Sidebar Trigger */}
-            <button
-              onClick={() => setShowNotifDrawer(true)}
-              className="w-full py-2.5 px-3.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between cursor-pointer bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-transparent border border-orange-500/20 text-orange-800 hover:bg-orange-500/20 hover:border-orange-500/40 shadow-xs"
-            >
-              <span className="flex items-center gap-2.5">
-                <span className="relative flex h-2.5 w-2.5">
-                  {unreadNotifCount > 0 && (
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-500 opacity-75"></span>
-                  )}
-                  <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${unreadNotifCount > 0 ? 'bg-orange-600' : 'bg-gray-400'}`}></span>
-                </span>
-                <Bell className="w-4 h-4 text-orange-600 shrink-0" />
-                <span>Candidate Alerts</span>
-              </span>
-              {unreadNotifCount > 0 ? (
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-extrabold bg-orange-600 text-white animate-pulse">
-                  {unreadNotifCount} NEW
-                </span>
-              ) : (
-                <span className="text-[10px] text-gray-400 font-medium">
-                  {notifications.length}
-                </span>
-              )}
-            </button>
-
             {/* Navigation link array */}
-            <nav className="space-y-1.5">
+            <nav className="space-y-1">
               {[
-                { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-                { id: 'profile', label: 'Company Profile', icon: Building2 },
-                { id: 'jobs', label: 'Jobs', icon: Briefcase, badge: jobs.length ? String(jobs.length) : undefined },
-                { id: 'applications', label: 'Applications', icon: FileText, badge: applications.length ? String(applications.length) : undefined },
-                { id: 'urgent-candidates', label: 'Urgent Candidates', icon: Sparkles, badge: urgentCandidates.length ? String(urgentCandidates.length) : undefined },
-                { id: 'settings', label: 'Settings', icon: Settings, badge: 'Soon' },
+                { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, type: 'nav' },
+                { id: 'post-job', label: 'Post a Job', icon: Plus, type: 'action', action: () => setShowJobForm(true) },
+                { id: 'jobs', label: 'Jobs', icon: Briefcase, type: 'nav', badge: jobs.length ? String(jobs.length) : undefined },
+                { id: 'urgent-candidates', label: 'Candidates', icon: Users, type: 'nav', badge: urgentCandidates.length ? String(urgentCandidates.length) : undefined },
+                { id: 'applications', label: 'Applications', icon: FileText, type: 'nav', badge: applications.length ? String(applications.length) : undefined },
+                { id: 'profile', label: 'My Company', icon: Building2, type: 'nav' },
+                { id: 'notifications', label: 'Notifications', icon: Bell, type: 'action', badge: unreadNotifCount > 0 ? String(unreadNotifCount) : (notifications.length ? String(notifications.length) : undefined), action: () => setShowNotifDrawer(true) },
               ].map((item) => {
                 const IconComp = item.icon;
-                const active = activeTab === item.id;
+                const active = item.type === 'nav' && activeTab === item.id;
                 return (
                   <button
                     key={item.id}
-                    onClick={() => setActiveTab(item.id as TabType)}
-                    className={`w-full py-2.5 px-3.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
+                    onClick={() => {
+                      if (item.action) {
+                        item.action();
+                      } else if (item.type === 'nav') {
+                        setActiveTab(item.id as TabType);
+                      }
+                    }}
+                    className={`w-full py-2.5 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-between cursor-pointer ${
                       active 
-                        ? 'bg-orange-600 text-white shadow-md shadow-orange-600/10' 
-                        : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                        ? 'bg-[#1D61F2] text-white shadow-md shadow-blue-500/20 font-bold' 
+                        : 'text-gray-600 hover:text-[#1D61F2] hover:bg-blue-50/60'
                     }`}
                   >
                     <span className="flex items-center gap-2.5">
-                      <IconComp className="w-4 h-4 shrink-0" />
+                      <IconComp className={`w-4 h-4 shrink-0 ${active ? 'text-white' : 'text-gray-400'}`} />
                       <span>{item.label}</span>
                     </span>
                     {item.badge && (
-                      <span className={`text-[9px] px-1.5 py-0.2 rounded-md font-extrabold tracking-wider uppercase ${
-                        active ? 'bg-orange-700 text-white' : 'bg-gray-100 text-gray-500'
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                        active ? 'bg-white/20 text-white' : 'bg-blue-50 text-[#1D61F2]'
                       }`}>
                         {item.badge}
                       </span>
@@ -1283,51 +1265,88 @@ export default function RecruiterDashboard({
               })}
             </nav>
 
-            {/* Quick Sign Out */}
-            <div className="pt-4 border-t border-gray-100">
+            {/* Sidebar Promo CTA Card */}
+            <div className="p-3.5 bg-gradient-to-br from-blue-50 to-indigo-50/60 rounded-xl border border-blue-100 text-left space-y-2">
+              <div className="w-7 h-7 rounded-lg bg-[#1D61F2] text-white flex items-center justify-center">
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <p className="text-xs font-bold text-gray-900 leading-tight">Find the right talent, Faster!</p>
+              <p className="text-[10px] text-gray-500 leading-relaxed">Post jobs, manage candidates and grow your team with JOBSner.</p>
               <button
-                onClick={onLogout}
-                className="w-full py-2.5 px-3.5 rounded-xl text-xs font-bold text-red-500 hover:bg-red-50 transition-all flex items-center gap-2.5 cursor-pointer"
+                onClick={() => setShowJobForm(true)}
+                className="w-full py-1.5 px-3 bg-[#1D61F2] hover:bg-blue-700 text-white text-[11px] font-bold rounded-lg transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <LogOut className="w-4 h-4 text-red-500" /> Sign Out
+                <span>Post a Job</span>
+                <ChevronRight className="w-3 h-3" />
               </button>
             </div>
+
+            {/* Quick Sign Out */}
+            <div className="pt-2 border-t border-gray-100">
+              <button
+                onClick={onLogout}
+                className="w-full py-2 px-3 rounded-xl text-xs font-semibold text-gray-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <LogOut className="w-3.5 h-3.5 text-gray-400 group-hover:text-red-600" />
+                <span>Sign Out</span>
+              </button>
+            </div>
+
+            <p className="text-[9px] text-center text-gray-400 pt-1">© 2026 JOBSner. All rights reserved.</p>
 
           </div>
         </aside>
 
-        {/* Main Tab Content Panel */}
-        <main className="flex-1" id="recruiter-dashboard-content-panel">
+        {/* Main Dashboard Content Area */}
+        <main className="flex-1 min-w-0" id="recruiter-dashboard-content-panel">
           
-          {/* Top Live Recruiter Status Bar with Notification Bell */}
-          <div className="bg-white border border-gray-150 rounded-2xl p-3.5 px-4 mb-6 flex items-center justify-between shadow-xs">
-            <div className="flex items-center gap-2.5">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                Recruiter Verified Hub
-              </span>
-              <span className="text-xs text-gray-400 hidden sm:inline">•</span>
-              <span className="text-xs text-gray-500 hidden sm:inline">
-                Admin-allocated candidates appear here instantly
-              </span>
+          {/* Top Header Search & User Profile Bar */}
+          <div className="bg-white border border-gray-150 rounded-2xl p-3 px-4 mb-5 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
+            <div className="relative w-full sm:w-80">
+              <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Search jobs, candidates, skills..."
+                value={appSearch}
+                onChange={(e) => {
+                  setAppSearch(e.target.value);
+                  if (activeTab !== 'applications' && e.target.value) {
+                    setActiveTab('applications');
+                  }
+                }}
+                className="w-full pl-9 pr-4 py-1.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
+              />
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4 w-full sm:w-auto justify-end">
               <button
                 onClick={() => setShowNotifDrawer(true)}
-                className="relative p-2 px-3 rounded-xl border border-gray-200 hover:border-orange-500/50 hover:bg-orange-50/60 text-gray-700 hover:text-orange-700 transition-all cursor-pointer flex items-center gap-2 text-xs font-bold"
-                title="View Candidate Alerts"
+                className="relative p-2 rounded-xl border border-gray-200 hover:border-[#1D61F2] hover:bg-blue-50/50 text-gray-600 transition-all cursor-pointer"
+                title="Notifications"
               >
-                <Bell className="w-4 h-4 text-orange-600" />
-                <span className="hidden md:inline">Candidate Alerts</span>
-                {unreadNotifCount > 0 ? (
-                  <span className="bg-orange-600 text-white text-[10px] font-extrabold px-1.5 py-0.2 rounded-full animate-bounce">
+                <Bell className="w-4 h-4 text-gray-600" />
+                {unreadNotifCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center animate-pulse">
                     {unreadNotifCount}
                   </span>
-                ) : (
-                  <span className="text-gray-400 text-[10px] font-medium">({notifications.length})</span>
                 )}
               </button>
+
+              <div className="h-6 w-px bg-gray-200 hidden sm:block"></div>
+
+              <div className="flex items-center gap-2.5">
+                {recruiter.companyLogo ? (
+                  <img src={recruiter.companyLogo} alt={recruiter.recruiterName} className="w-8 h-8 rounded-full border border-gray-200 object-cover" />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-blue-100 text-[#1D61F2] font-bold text-xs flex items-center justify-center border border-blue-200">
+                    {recruiter.recruiterName?.charAt(0) || 'R'}
+                  </div>
+                )}
+                <div className="text-left">
+                  <p className="text-xs font-bold text-gray-900 leading-tight">{recruiter.recruiterName}</p>
+                  <p className="text-[10px] text-gray-400 leading-none mt-0.5">{recruiter.designation || 'Recruiter'}</p>
+                </div>
+              </div>
             </div>
           </div>
         
@@ -1338,7 +1357,7 @@ export default function RecruiterDashboard({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="mb-6 p-4 bg-red-50 text-red-700 text-xs font-semibold rounded-xl border border-red-100 flex items-start gap-2"
+              className="mb-5 p-3.5 bg-red-50 text-red-700 text-xs font-semibold rounded-xl border border-red-100 flex items-start gap-2"
             >
               <span>⚠️ {error}</span>
             </motion.div>
@@ -1348,7 +1367,7 @@ export default function RecruiterDashboard({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="mb-6 p-4 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-xl border border-emerald-100 flex items-start gap-2"
+              className="mb-5 p-3.5 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-xl border border-emerald-100 flex items-start gap-2"
             >
               <span>✓ {success}</span>
             </motion.div>
@@ -1360,215 +1379,416 @@ export default function RecruiterDashboard({
           {activeTab === 'dashboard' && (
             <motion.div
               key="dashboard-tab"
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
+              exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.15 }}
-              className="space-y-6"
+              className="space-y-5"
             >
-              {/* Welcome Badge Card */}
-              <div className="bg-white border border-gray-150 rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm" id="recruiter-welcome-card">
+              {/* 1. Welcome Banner */}
+              <div className="bg-gradient-to-r from-blue-500/10 via-blue-400/5 to-transparent border border-blue-100 rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white shadow-xs">
                 <div>
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full uppercase tracking-wide">
-                    <CheckCircle className="w-3 h-3 text-emerald-600" /> Vetting Approved
-                  </span>
-                  <h2 className="text-2xl font-black text-gray-900 tracking-tight mt-2.5">Welcome, {recruiter.recruiterName}!</h2>
-                  <p className="text-xs text-gray-500 mt-1">{recruiter.designation} at <span className="font-semibold text-gray-800">{recruiter.companyName}</span></p>
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
+                    Welcome back, {recruiter.recruiterName}!
+                  </h2>
+                  <p className="text-xs text-gray-500 mt-1">Here's what's happening with your hiring today.</p>
                 </div>
 
-                {/* Profile Completion Panel */}
-                <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4 flex items-center gap-4 shrink-0 min-w-[240px]">
+                <div className="flex items-center gap-2 text-xs font-semibold text-[#1D61F2] bg-blue-50 border border-blue-100 px-3.5 py-2 rounded-xl">
+                  <Sparkles className="w-4 h-4 text-[#1D61F2]" />
+                  <span>Great talent builds great teams!</span>
+                </div>
+              </div>
+
+              {/* 2. KPI Cards Row */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4" id="recruiter-kpi-cards">
+                {/* Total Jobs Posted */}
+                <div 
+                  onClick={() => setActiveTab('jobs')}
+                  className="bg-white border border-gray-150 rounded-2xl p-4 shadow-xs hover:border-[#1D61F2] hover:shadow-md transition-all cursor-pointer flex items-center justify-between"
+                >
                   <div>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Profile Completed</span>
-                    <span className="text-xl font-extrabold text-gray-900 mt-0.5 block">{completionPercent}%</span>
+                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wide">Total Jobs Posted</p>
+                    <h3 className="text-2xl font-bold text-gray-900 mt-1">{jobs.length}</h3>
+                    <p className="text-[10px] text-emerald-600 font-semibold mt-1 flex items-center gap-0.5">
+                      <TrendingUp className="w-3 h-3" /> +20% <span className="text-gray-400 font-normal">vs last 7 days</span>
+                    </p>
                   </div>
-                  <div className="flex-1 bg-gray-200 h-2 rounded-full overflow-hidden">
-                    <div 
-                      className="bg-orange-600 h-full rounded-full transition-all duration-300"
-                      style={{ width: `${completionPercent}%` }}
-                    />
+                  <div className="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#1D61F2] shrink-0">
+                    <Briefcase className="w-5.5 h-5.5" />
+                  </div>
+                </div>
+
+                {/* Total Applications */}
+                <div 
+                  onClick={() => {
+                    setAppFilterStatus('All');
+                    setActiveTab('applications');
+                  }}
+                  className="bg-white border border-gray-150 rounded-2xl p-4 shadow-xs hover:border-[#1D61F2] hover:shadow-md transition-all cursor-pointer flex items-center justify-between"
+                >
+                  <div>
+                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wide">Total Applications</p>
+                    <h3 className="text-2xl font-bold text-gray-900 mt-1">{applications.length}</h3>
+                    <p className="text-[10px] text-emerald-600 font-semibold mt-1 flex items-center gap-0.5">
+                      <TrendingUp className="w-3 h-3" /> +18% <span className="text-gray-400 font-normal">vs last 7 days</span>
+                    </p>
+                  </div>
+                  <div className="w-11 h-11 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 shrink-0">
+                    <Users className="w-5.5 h-5.5" />
+                  </div>
+                </div>
+
+                {/* Shortlisted Candidates */}
+                <div 
+                  onClick={() => {
+                    setAppFilterStatus('Shortlisted');
+                    setActiveTab('applications');
+                  }}
+                  className="bg-white border border-gray-150 rounded-2xl p-4 shadow-xs hover:border-[#1D61F2] hover:shadow-md transition-all cursor-pointer flex items-center justify-between"
+                >
+                  <div>
+                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wide">Shortlisted Candidates</p>
+                    <h3 className="text-2xl font-bold text-gray-900 mt-1">
+                      {applications.filter(a => a.currentStatus === 'Shortlisted').length}
+                    </h3>
+                    <p className="text-[10px] text-emerald-600 font-semibold mt-1 flex items-center gap-0.5">
+                      <TrendingUp className="w-3 h-3" /> +22% <span className="text-gray-400 font-normal">vs last 7 days</span>
+                    </p>
+                  </div>
+                  <div className="w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                    <UserCheck className="w-5.5 h-5.5" />
+                  </div>
+                </div>
+
+                {/* Interviews Scheduled */}
+                <div 
+                  onClick={() => {
+                    setAppFilterStatus('Interview Scheduled');
+                    setActiveTab('applications');
+                  }}
+                  className="bg-white border border-gray-150 rounded-2xl p-4 shadow-xs hover:border-[#1D61F2] hover:shadow-md transition-all cursor-pointer flex items-center justify-between"
+                >
+                  <div>
+                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wide">Interviews Scheduled</p>
+                    <h3 className="text-2xl font-bold text-gray-900 mt-1">
+                      {applications.filter(a => ['Interview Scheduled', 'Interview Completed', 'Interview'].includes(a.currentStatus)).length}
+                    </h3>
+                    <p className="text-[10px] text-emerald-600 font-semibold mt-1 flex items-center gap-0.5">
+                      <TrendingUp className="w-3 h-3" /> +16% <span className="text-gray-400 font-normal">vs last 7 days</span>
+                    </p>
+                  </div>
+                  <div className="w-11 h-11 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-600 shrink-0">
+                    <Eye className="w-5.5 h-5.5" />
                   </div>
                 </div>
               </div>
 
-              {/* Statistics Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4" id="recruiter-stats-grid">
-                {[
-                  { label: 'Total Jobs', value: jobs.length },
-                  { 
-                    label: 'Total Job Views', 
-                    value: jobs.reduce((sum: number, j: any) => sum + (j.viewsCount || 0), 0),
-                    onClick: () => {
-                      setActiveTab('jobs');
-                    }
-                  },
-                  { 
-                    label: 'Total Applications', 
-                    value: applications.length,
-                    onClick: () => {
-                      setAppFilterStatus('All');
-                      setActiveTab('applications');
-                    }
-                  },
-                  { 
-                    label: 'Shortlisted', 
-                    value: applications.filter((app: any) => app.currentStatus === 'Shortlisted').length,
-                    onClick: () => {
-                      setAppFilterStatus('Shortlisted');
-                      setActiveTab('applications');
-                    }
-                  },
-                  { 
-                    label: 'Rejected', 
-                    value: applications.filter((app: any) => app.currentStatus === 'Rejected').length,
-                    onClick: () => {
-                      setAppFilterStatus('Rejected');
-                      setActiveTab('applications');
-                    }
-                  },
-                  { 
-                    label: 'Hired', 
-                    value: applications.filter((app: any) => app.currentStatus === 'Hired').length,
-                    onClick: () => {
-                      setAppFilterStatus('Hired');
-                      setActiveTab('applications');
-                    }
-                  },
-                ].map((stat, idx) => (
-                  <div 
-                    key={idx} 
-                    onClick={stat.onClick}
-                    className={`bg-white border border-gray-150 rounded-2xl p-5 shadow-sm text-center ${stat.onClick ? 'cursor-pointer hover:border-orange-500 hover:shadow-md transition-all' : ''}`}
-                  >
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block leading-tight">{stat.label}</span>
-                    <span className="text-3xl font-black text-gray-900 mt-2.5 block">{stat.value}</span>
+              {/* 3. Middle Grid (Job Overview Chart & Quick Actions / Status) */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                
+                {/* Left (2 Cols): Job Application Overview */}
+                <div className="lg:col-span-2 bg-white border border-gray-150 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="font-bold text-gray-900 text-sm">Job Application Overview</h3>
+                      <p className="text-[11px] text-gray-400 mt-0.5">Track daily candidate inflow across openings</p>
+                    </div>
+                    <span className="text-[11px] font-medium text-gray-500 bg-gray-50 border border-gray-200 px-2.5 py-1 rounded-lg">
+                      Last 7 Days
+                    </span>
                   </div>
-                ))}
-              </div>
 
-              {/* Real-time Application Trends Panel */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" id="recruiter-trends-section">
-                {/* Chart 1: Status Breakdown */}
-                <div className="bg-white border border-gray-150 rounded-3xl p-6 shadow-sm">
-                  <h3 className="font-extrabold text-gray-800 text-xs uppercase tracking-wider mb-4">Application Funnel Breakdown</h3>
-                  {applications.length === 0 ? (
-                    <div className="h-64 flex flex-col items-center justify-center text-center text-gray-400 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
-                      <FileMinus className="w-8 h-8 text-gray-300 mb-2" />
-                      <p className="text-xs font-semibold">No application data available yet</p>
-                      <p className="text-[10px] text-gray-400 mt-1">When candidates apply to your jobs, funnel breakdown will populate here.</p>
-                    </div>
-                  ) : (
-                    <div className="h-64 w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                          data={[
-                            { name: 'Applied', Count: applications.filter(a => a.currentStatus === 'Applied').length, fill: '#ea580c' },
-                            { name: 'Contacted', Count: applications.filter(a => a.currentStatus === 'Contacted').length, fill: '#0284c7' },
-                            { name: 'Shortlisted', Count: applications.filter(a => a.currentStatus === 'Shortlisted').length, fill: '#8b5cf6' },
-                            { name: 'Interviews', Count: applications.filter(a => ['Interview Scheduled', 'Interview Completed'].includes(a.currentStatus)).length, fill: '#eab308' },
-                            { name: 'Selected', Count: applications.filter(a => a.currentStatus === 'Selected').length, fill: '#059669' },
-                            { name: 'Hired', Count: applications.filter(a => a.currentStatus === 'Hired').length, fill: '#10b981' },
-                            { name: 'Rejected', Count: applications.filter(a => a.currentStatus === 'Rejected').length, fill: '#dc2626' }
-                          ]}
-                          margin={{ top: 10, right: 10, left: -25, bottom: 0 }}
-                        >
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                          <XAxis dataKey="name" tick={{ fontSize: 9, fontWeight: 'bold', fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                          <YAxis tick={{ fontSize: 9, fontWeight: 'bold', fill: '#94a3b8' }} axisLine={false} tickLine={false} allowDecimals={false} />
-                          <Tooltip contentStyle={{ fontSize: '11px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }} />
-                          <Bar dataKey="Count" radius={[4, 4, 0, 0]}>
-                            {
-                              [
-                                '#ea580c', '#0284c7', '#8b5cf6', '#eab308', '#059669', '#10b981', '#dc2626'
-                              ].map((color, idx) => (
-                                <Cell key={`cell-${idx}`} fill={color} />
-                              ))
-                            }
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  )}
+                  <div className="h-56 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={last7DaysData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="colorAppInflow" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#1D61F2" stopOpacity={0.25}/>
+                            <stop offset="95%" stopColor="#1D61F2" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                        <Tooltip contentStyle={{ fontSize: '11px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
+                        <Area type="monotone" dataKey="Applications" stroke="#1D61F2" strokeWidth={2.5} fillOpacity={1} fill="url(#colorAppInflow)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
 
-                {/* Chart 2: Top Jobs Applications Distribution */}
-                <div className="bg-white border border-gray-150 rounded-3xl p-6 shadow-sm">
-                  <h3 className="font-extrabold text-gray-800 text-xs uppercase tracking-wider mb-4">Top Openings by Candidate Inflow</h3>
-                  {jobs.length === 0 || applications.length === 0 ? (
-                    <div className="h-64 flex flex-col items-center justify-center text-center text-gray-400 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
-                      <FileMinus className="w-8 h-8 text-gray-300 mb-2" />
-                      <p className="text-xs font-semibold">No application inflow data available yet</p>
-                      <p className="text-[10px] text-gray-400 mt-1">When candidates apply to your jobs, local inflow graphs will populate here.</p>
-                    </div>
-                  ) : (
-                    <div className="h-64 w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart
-                          data={jobs.map((job: any) => ({
-                            Job: job.title.length > 15 ? job.title.substring(0, 15) + '...' : job.title,
-                            Inflow: applications.filter(a => a.jobId === job.id).length
-                          })).filter(j => j.Inflow > 0).slice(0, 5)}
-                          margin={{ top: 10, right: 10, left: -25, bottom: 0 }}
-                        >
-                          <defs>
-                            <linearGradient id="colorInflow" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#ea580c" stopOpacity={0.2}/>
-                              <stop offset="95%" stopColor="#ea580c" stopOpacity={0}/>
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                          <XAxis dataKey="Job" tick={{ fontSize: 9, fontWeight: 'bold', fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                          <YAxis tick={{ fontSize: 9, fontWeight: 'bold', fill: '#94a3b8' }} axisLine={false} tickLine={false} allowDecimals={false} />
-                          <Tooltip contentStyle={{ fontSize: '11px', borderRadius: '12px', border: '1px solid #e2e8f0' }} />
-                          <Area type="monotone" dataKey="Inflow" stroke="#ea580c" strokeWidth={2} fillOpacity={1} fill="url(#colorInflow)" />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Next Steps / Activity helper panel */}
-              <div className="bg-white border border-gray-150 rounded-3xl p-6 shadow-sm">
-                <h3 className="font-extrabold text-gray-800 text-sm uppercase tracking-wider mb-4">Enterprise Launch Check</h3>
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3 text-xs leading-normal">
-                    <div className="w-5 h-5 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0 mt-0.5">
-                      <Check className="w-3 h-3" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-gray-800">Company registration complete</p>
-                      <p className="text-gray-500">Your organization metadata is saved secure in the Jobsner driver broker ledger.</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3 text-xs leading-normal">
-                    <div className="w-5 h-5 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0 mt-0.5">
-                      <Check className="w-3 h-3" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-gray-800">Jobsner Vetting Verification</p>
-                      <p className="text-gray-500">Logistics supervisor approved. Your company has unlimited licensing for posting logistical delivery openings.</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3 text-xs leading-normal">
-                    <div className="w-5 h-5 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-bold shrink-0 mt-0.5 text-[10px]">
-                      3
-                    </div>
-                    <div>
-                      <p className="font-bold text-gray-800">Verify company profile settings</p>
-                      <p className="text-gray-500">Keep website addresses, contact numbers, and corporate headquarters location updated to build trust with candidates.</p>
-                      <button 
-                        onClick={() => setActiveTab('profile')}
-                        className="text-orange-600 hover:text-orange-700 hover:underline font-bold mt-1.5 block cursor-pointer"
+                {/* Right (1 Col): Quick Actions & Application Status */}
+                <div className="space-y-5">
+                  {/* Quick Actions Card */}
+                  <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-xs">
+                    <h3 className="font-bold text-gray-900 text-sm mb-3">Quick Actions</h3>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <button
+                        onClick={() => setShowJobForm(true)}
+                        className="p-3 rounded-xl border border-gray-150 hover:border-[#1D61F2] hover:bg-blue-50/50 transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer text-center group"
                       >
-                        Check Corporate Settings →
+                        <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#1D61F2] flex items-center justify-center group-hover:bg-[#1D61F2] group-hover:text-white transition-colors">
+                          <Briefcase className="w-4 h-4" />
+                        </div>
+                        <span className="text-[11px] font-semibold text-gray-700">Post a Job</span>
+                      </button>
+
+                      <button
+                        onClick={() => setActiveTab('urgent-candidates')}
+                        className="p-3 rounded-xl border border-gray-150 hover:border-[#1D61F2] hover:bg-blue-50/50 transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer text-center group"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                          <UserPlus className="w-4 h-4" />
+                        </div>
+                        <span className="text-[11px] font-semibold text-gray-700">Add Candidate</span>
+                      </button>
+
+                      <button
+                        onClick={() => setActiveTab('urgent-candidates')}
+                        className="p-3 rounded-xl border border-gray-150 hover:border-[#1D61F2] hover:bg-blue-50/50 transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer text-center group"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                          <Search className="w-4 h-4" />
+                        </div>
+                        <span className="text-[11px] font-semibold text-gray-700">Search Candidates</span>
+                      </button>
+
+                      <button
+                        onClick={() => setActiveTab('applications')}
+                        className="p-3 rounded-xl border border-gray-150 hover:border-[#1D61F2] hover:bg-blue-50/50 transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer text-center group"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                          <FileText className="w-4 h-4" />
+                        </div>
+                        <span className="text-[11px] font-semibold text-gray-700">View Applications</span>
                       </button>
                     </div>
                   </div>
+
+                  {/* Application Status Funnel */}
+                  <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-xs">
+                    <h3 className="font-bold text-gray-900 text-sm mb-3">Application Status</h3>
+                    <div className="flex items-center gap-4">
+                      <div className="w-28 h-28 relative shrink-0">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={applicationStatusMetrics.pieData}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={30}
+                              outerRadius={45}
+                              paddingAngle={3}
+                              dataKey="value"
+                            >
+                              {applicationStatusMetrics.pieData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Pie>
+                          </PieChart>
+                        </ResponsiveContainer>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                          <span className="text-sm font-bold text-gray-900">{applications.length}</span>
+                          <span className="text-[9px] text-gray-400">Total</span>
+                        </div>
+                      </div>
+
+                      <div className="flex-1 space-y-1.5 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="flex items-center gap-1.5 text-gray-600 text-[11px]">
+                            <span className="w-2.5 h-2.5 rounded-full bg-[#1D61F2]"></span> Applied
+                          </span>
+                          <span className="font-bold text-gray-800 text-[11px]">
+                            {applicationStatusMetrics.applied} ({applicationStatusMetrics.appliedPct}%)
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="flex items-center gap-1.5 text-gray-600 text-[11px]">
+                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Shortlisted
+                          </span>
+                          <span className="font-bold text-gray-800 text-[11px]">
+                            {applicationStatusMetrics.shortlisted} ({applicationStatusMetrics.shortlistedPct}%)
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="flex items-center gap-1.5 text-gray-600 text-[11px]">
+                            <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Interview
+                          </span>
+                          <span className="font-bold text-gray-800 text-[11px]">
+                            {applicationStatusMetrics.interview} ({applicationStatusMetrics.interviewPct}%)
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="flex items-center gap-1.5 text-gray-600 text-[11px]">
+                            <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span> Hired
+                          </span>
+                          <span className="font-bold text-gray-800 text-[11px]">
+                            {applicationStatusMetrics.hired} ({applicationStatusMetrics.hiredPct}%)
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+
               </div>
+
+              {/* 4. Bottom Grid (Active Jobs, Top Candidates, Recent Activity) */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                
+                {/* Active Jobs (2 Cols) */}
+                <div className="lg:col-span-2 bg-white border border-gray-150 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-bold text-gray-900 text-sm">Active Jobs</h3>
+                      <button 
+                        onClick={() => setActiveTab('jobs')}
+                        className="text-[11px] font-semibold text-[#1D61F2] hover:underline cursor-pointer"
+                      >
+                        View All
+                      </button>
+                    </div>
+
+                    {jobs.length === 0 ? (
+                      <div className="py-8 text-center bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
+                        <Briefcase className="w-6 h-6 text-gray-300 mx-auto mb-1.5" />
+                        <p className="text-xs font-semibold text-gray-600">No active job listings found</p>
+                        <button
+                          onClick={() => setShowJobForm(true)}
+                          className="mt-2 text-xs font-bold text-[#1D61F2] hover:underline cursor-pointer"
+                        >
+                          + Post a new job
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                          <thead>
+                            <tr className="border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                              <th className="pb-2.5">Job Title</th>
+                              <th className="pb-2.5">Location</th>
+                              <th className="pb-2.5">Applications</th>
+                              <th className="pb-2.5">Status</th>
+                              <th className="pb-2.5 text-right">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-50 text-xs">
+                            {jobs.slice(0, 5).map((job) => {
+                              const appCount = applications.filter(a => a.jobId === job.id).length;
+                              return (
+                                <tr key={job.id} className="hover:bg-blue-50/30 transition-colors">
+                                  <td className="py-3 pr-2">
+                                    <div className="flex items-center gap-2.5">
+                                      {job.companyLogo ? (
+                                        <img src={job.companyLogo} alt={job.title} className="w-7 h-7 rounded-lg border border-gray-200 object-contain p-0.5 shrink-0" />
+                                      ) : (
+                                        <div className="w-7 h-7 rounded-lg bg-blue-50 text-[#1D61F2] font-bold text-[10px] flex items-center justify-center shrink-0">
+                                          {job.title?.charAt(0) || 'J'}
+                                        </div>
+                                      )}
+                                      <div className="truncate max-w-[160px]">
+                                        <p className="font-bold text-gray-900 truncate">{job.title}</p>
+                                        <p className="text-[10px] text-gray-400 truncate">{job.companyName || recruiter.companyName} • {job.employmentType || 'Full Time'}</p>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="py-3 text-gray-600">{job.city || job.location || 'India'}</td>
+                                  <td className="py-3 font-semibold text-gray-900">{appCount}</td>
+                                  <td className="py-3">
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active
+                                    </span>
+                                  </td>
+                                  <td className="py-3 text-right">
+                                    <button
+                                      onClick={() => handleStartEditJob(job)}
+                                      className="p-1 text-gray-400 hover:text-[#1D61F2] transition-colors cursor-pointer"
+                                      title="Edit Job"
+                                    >
+                                      <Edit2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Top Candidates & Recent Activity (1 Col) */}
+                <div className="space-y-5">
+                  {/* Top Candidates Card */}
+                  <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-xs">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-bold text-gray-900 text-sm">Top Candidates</h3>
+                      <button
+                        onClick={() => setActiveTab('urgent-candidates')}
+                        className="text-[11px] font-semibold text-[#1D61F2] hover:underline cursor-pointer"
+                      >
+                        View All
+                      </button>
+                    </div>
+
+                    {topCandidatesList.length === 0 ? (
+                      <p className="text-xs text-gray-400 text-center py-4">No candidate profiles found yet</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {topCandidatesList.map((cand) => (
+                          <div key={cand.id} className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-50 transition-colors">
+                            <div className="flex items-center gap-2.5">
+                              {cand.photo ? (
+                                <img src={cand.photo} alt={cand.name} className="w-8 h-8 rounded-full object-cover border border-gray-200" />
+                              ) : (
+                                <div className="w-8 h-8 rounded-full bg-blue-100 text-[#1D61F2] font-bold text-xs flex items-center justify-center border border-blue-200">
+                                  {cand.name?.charAt(0) || 'C'}
+                                </div>
+                              )}
+                              <div className="truncate">
+                                <p className="font-bold text-gray-900 text-xs truncate">{cand.name}</p>
+                                <p className="text-[10px] text-gray-400 truncate">{cand.exp} • {cand.title}</p>
+                              </div>
+                            </div>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 shrink-0">
+                              {cand.match}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Recent Activity Card */}
+                  <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-xs">
+                    <h3 className="font-bold text-gray-900 text-sm mb-3">Recent Activity</h3>
+                    {recentActivityList.length === 0 ? (
+                      <p className="text-xs text-gray-400 text-center py-4">No recent recruiter activities</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {recentActivityList.map((act) => (
+                          <div key={act.id} className="flex items-start gap-2.5">
+                            <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
+                              act.title.includes('shortlisted') ? 'bg-emerald-500' :
+                              act.title.includes('Interview') ? 'bg-amber-500' :
+                              'bg-[#1D61F2]'
+                            }`}></div>
+                            <div className="flex-1">
+                              <p className="text-xs font-semibold text-gray-900 leading-tight">{act.title}</p>
+                              <p className="text-[10px] text-gray-500 mt-0.5 leading-snug">{act.desc}</p>
+                              <span className="text-[9px] text-gray-400 mt-0.5 block">{act.time}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+              </div>
+
             </motion.div>
           )}
 
