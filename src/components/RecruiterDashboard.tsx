@@ -41,18 +41,18 @@ export default function RecruiterDashboard({
   const [success, setSuccess] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
 
-  // Form states for profile editor
-  const [companyName, setCompanyName] = useState(recruiter.companyName);
-  const [companyLogo, setCompanyLogo] = useState(recruiter.companyLogo || '');
-  const [companyWebsite, setCompanyWebsite] = useState(recruiter.companyWebsite || '');
-  const [recruiterName, setRecruiterName] = useState(recruiter.recruiterName);
-  const [designation, setDesignation] = useState(recruiter.designation);
-  const [mobile, setMobile] = useState(recruiter.mobile);
-  const [email, setEmail] = useState(recruiter.email);
-  const [address, setAddress] = useState(recruiter.address);
-  const [city, setCity] = useState(recruiter.city);
-  const [state, setState] = useState(recruiter.state);
-  const [pincode, setPincode] = useState(recruiter.pincode);
+  // Form states for profile editor with safe fallbacks
+  const [companyName, setCompanyName] = useState(recruiter?.companyName || '');
+  const [companyLogo, setCompanyLogo] = useState(recruiter?.companyLogo || '');
+  const [companyWebsite, setCompanyWebsite] = useState(recruiter?.companyWebsite || '');
+  const [recruiterName, setRecruiterName] = useState(recruiter?.recruiterName || '');
+  const [designation, setDesignation] = useState(recruiter?.designation || '');
+  const [mobile, setMobile] = useState(recruiter?.mobile || '');
+  const [email, setEmail] = useState(recruiter?.email || '');
+  const [address, setAddress] = useState(recruiter?.address || '');
+  const [city, setCity] = useState(recruiter?.city || '');
+  const [state, setState] = useState(recruiter?.state || '');
+  const [pincode, setPincode] = useState(recruiter?.pincode || '');
   const [logoUploading, setLogoUploading] = useState(false);
   const [approving, setApproving] = useState(false);
 
