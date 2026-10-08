@@ -7,7 +7,7 @@ import {
   Search, SlidersHorizontal, ArrowUpDown, Clock, Building, UserCheck, ShieldAlert,
   FileMinus, ExternalLink, ChevronRight, X, Info, RefreshCw,
   RotateCcw, Heart, ThumbsUp, ThumbsDown, ClipboardList, Bookmark,
-  Shield, Store, Car, ChevronDown, Bell, Package, Users, BarChart2, Star, Eye, MessageSquare, Settings, HelpCircle, ArrowUpRight
+  Shield, Store, Car, ChevronDown, Bell, Package, Users, BarChart2, Star, Eye, MessageSquare, Settings, HelpCircle, ArrowUpRight, Menu
 } from 'lucide-react';
 import { Candidate, Profile } from '../types';
 import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
@@ -45,6 +45,9 @@ export default function CandidateDashboard({
   // Notification Modal state
   const [internalNotificationOpen, setInternalNotificationOpen] = React.useState(false);
   const isNotificationOpen = externalNotificationOpen !== undefined ? externalNotificationOpen : internalNotificationOpen;
+
+  // Mobile Navigation Drawer State
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = React.useState(false);
 
   const closeNotificationModal = () => {
     setInternalNotificationOpen(false);
@@ -672,7 +675,7 @@ export default function CandidateDashboard({
   }, [activeJobs]);
 
   return (
-    <div className="w-full text-slate-800" id="candidate-dashboard-container">
+    <div className="w-full text-slate-800 pb-24 lg:pb-0" id="candidate-dashboard-container">
       
       {/* Celebratory Flower Blast Animation */}
       {showFlowerAnimation && (
@@ -683,11 +686,168 @@ export default function CandidateDashboard({
         />
       )}
 
+      {/* ================= MOBILE NAVIGATION TRIGGER BAR (lg:hidden) ================= */}
+      <div className="lg:hidden w-full mb-4">
+        <div className="bg-[#0F172A] text-white p-3 sm:p-3.5 rounded-2xl flex items-center justify-between shadow-md">
+          <button
+            onClick={() => setIsMobileDrawerOpen(true)}
+            className="flex items-center gap-2 px-3 py-1.5 bg-[#1D61F2] hover:bg-blue-600 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-xs active:scale-95"
+          >
+            <Menu className="w-4 h-4" />
+            <span>Navigation Menu</span>
+          </button>
+
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] sm:text-[11px] font-bold text-slate-300 uppercase tracking-wider px-2.5 py-1 bg-slate-800 rounded-lg">
+              {activeTab === 'find_jobs' ? 'Jobs' : activeTab === 'applications' ? 'Applications' : activeTab === 'saved' ? 'Saved Jobs' : 'Profile'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ================= MOBILE SLIDE-OVER DRAWER OVERLAY (lg:hidden) ================= */}
+      <AnimatePresence>
+        {isMobileDrawerOpen && (
+          <React.Fragment>
+            {/* Dark Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileDrawerOpen(false)}
+              className="fixed inset-0 bg-slate-950/75 backdrop-blur-xs z-50 lg:hidden"
+            />
+
+            {/* Slide-over Drawer Panel */}
+            <motion.aside
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 250 }}
+              className="fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-[#0F172A] text-slate-300 p-5 shadow-2xl z-50 overflow-y-auto flex flex-col justify-between lg:hidden"
+            >
+              <div>
+                <div className="flex items-center justify-between px-1 py-1 mb-6 border-b border-slate-800/80 pb-4">
+                  <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setActiveTab('find_jobs'); setIsMobileDrawerOpen(false); }}>
+                    <div className="w-9 h-9 rounded-xl bg-[#1D61F2] text-white font-black flex items-center justify-center text-base shadow-md">
+                      J
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-black text-white tracking-tight leading-none">Jobsner</h2>
+                      <span className="text-[10px] font-semibold text-slate-400">Connecting Talent</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setIsMobileDrawerOpen(false)}
+                    className="p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <nav className="space-y-1.5 font-bold text-xs">
+                  <button
+                    onClick={() => { setActiveTab('find_jobs'); setAppStatusTab('all'); setIsMobileDrawerOpen(false); }}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all cursor-pointer ${
+                      activeTab === 'find_jobs' && appStatusTab === 'all'
+                        ? 'bg-[#1D61F2] text-white shadow-md font-extrabold'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <BarChart2 className="w-4 h-4" />
+                      <span>Dashboard</span>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => { setActiveTab('find_jobs'); setAppStatusTab('all'); setIsMobileDrawerOpen(false); }}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all cursor-pointer ${
+                      activeTab === 'find_jobs' && appStatusTab === 'all'
+                        ? 'text-white bg-slate-800/80'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Briefcase className="w-4 h-4" />
+                      <span>Jobs</span>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => { setActiveTab('applications'); setIsMobileDrawerOpen(false); }}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all cursor-pointer ${
+                      activeTab === 'applications'
+                        ? 'bg-[#1D61F2] text-white shadow-md font-extrabold'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <ClipboardList className="w-4 h-4" />
+                      <span>Applications</span>
+                    </div>
+                    {myApplications.length > 0 && (
+                      <span className="w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center">
+                        {myApplications.length}
+                      </span>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => { setActiveTab('saved'); setIsMobileDrawerOpen(false); }}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all cursor-pointer ${
+                      activeTab === 'saved'
+                        ? 'bg-[#1D61F2] text-white shadow-md font-extrabold'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Bookmark className="w-4 h-4" />
+                      <span>Saved Jobs</span>
+                    </div>
+                    {savedJobIds.length > 0 && (
+                      <span className="px-2 py-0.5 rounded-full bg-blue-600/60 text-white text-[10px] font-bold">
+                        {savedJobIds.length}
+                      </span>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => { setActiveTab('overview'); setIsMobileDrawerOpen(false); }}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all cursor-pointer ${
+                      activeTab === 'overview'
+                        ? 'bg-[#1D61F2] text-white shadow-md font-extrabold'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <User className="w-4 h-4" />
+                      <span>Profile</span>
+                    </div>
+                  </button>
+                </nav>
+              </div>
+
+              {/* Bottom Drawer Promo & Actions */}
+              <div className="mt-6 pt-4 border-t border-slate-800 space-y-3">
+                <button
+                  onClick={() => { setIsMobileDrawerOpen(false); onLogout(); }}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Log Out</span>
+                </button>
+              </div>
+            </motion.aside>
+          </React.Fragment>
+        )}
+      </AnimatePresence>
+
       {/* Main 3-Column Dashboard Layout (Left Nav | Center Content | Right Widgets) */}
       <div className="flex flex-col lg:flex-row gap-6 items-start">
         
-        {/* ================= LEFT NAVIGATION SIDEBAR ================= */}
-        <aside className="w-full lg:w-64 shrink-0 bg-[#0F172A] text-slate-300 rounded-3xl p-5 shadow-xl flex flex-col justify-between min-h-[640px] sticky top-28 z-20">
+        {/* ================= LEFT NAVIGATION SIDEBAR (DESKTOP EXCLUSIVE) ================= */}
+        <aside className="hidden lg:flex w-64 shrink-0 bg-[#0F172A] text-slate-300 rounded-3xl p-5 shadow-xl flex-col justify-between min-h-[640px] sticky top-28 z-20">
           <div>
             {/* Top Brand Branding Header */}
             <div className="px-2 py-1 mb-6 border-b border-slate-800/80 pb-5">
@@ -1647,6 +1807,67 @@ export default function CandidateDashboard({
           </motion.div>
         </div>
       )}
+
+      {/* ================= MOBILE BOTTOM NAVIGATION BAR (lg:hidden) ================= */}
+      <div className="fixed bottom-0 left-0 right-0 bg-[#0F172A]/95 backdrop-blur-md border-t border-slate-800 text-slate-400 z-40 lg:hidden px-3 py-2 flex items-center justify-around shadow-2xl">
+        <button
+          onClick={() => { setActiveTab('find_jobs'); setAppStatusTab('all'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          className={`flex flex-col items-center gap-1 transition-all cursor-pointer ${
+            activeTab === 'find_jobs' ? 'text-[#1D61F2] font-black scale-105' : 'hover:text-white'
+          }`}
+        >
+          <BarChart2 className="w-5 h-5" />
+          <span className="text-[10px]">Dashboard</span>
+        </button>
+
+        <button
+          onClick={() => { setActiveTab('applications'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          className={`flex flex-col items-center gap-1 relative transition-all cursor-pointer ${
+            activeTab === 'applications' ? 'text-[#1D61F2] font-black scale-105' : 'hover:text-white'
+          }`}
+        >
+          <ClipboardList className="w-5 h-5" />
+          <span className="text-[10px]">Apps</span>
+          {myApplications.length > 0 && (
+            <span className="absolute -top-1 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center">
+              {myApplications.length}
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => { setActiveTab('saved'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          className={`flex flex-col items-center gap-1 relative transition-all cursor-pointer ${
+            activeTab === 'saved' ? 'text-[#1D61F2] font-black scale-105' : 'hover:text-white'
+          }`}
+        >
+          <Bookmark className="w-5 h-5" />
+          <span className="text-[10px]">Saved</span>
+          {savedJobIds.length > 0 && (
+            <span className="absolute -top-1 -right-1.5 w-4 h-4 rounded-full bg-blue-500 text-white text-[9px] font-black flex items-center justify-center">
+              {savedJobIds.length}
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => { setActiveTab('overview'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          className={`flex flex-col items-center gap-1 transition-all cursor-pointer ${
+            activeTab === 'overview' ? 'text-[#1D61F2] font-black scale-105' : 'hover:text-white'
+          }`}
+        >
+          <User className="w-5 h-5" />
+          <span className="text-[10px]">Profile</span>
+        </button>
+
+        <button
+          onClick={() => setIsMobileDrawerOpen(true)}
+          className="flex flex-col items-center gap-1 hover:text-white transition-all cursor-pointer"
+        >
+          <Menu className="w-5 h-5" />
+          <span className="text-[10px]">Menu</span>
+        </button>
+      </div>
 
     </div>
   );
