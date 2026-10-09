@@ -184,13 +184,17 @@ export default function App() {
           isSyncingFirebaseAuth = true;
           try {
             const idToken = await firebaseUser.getIdToken();
+            // Read portal from localStorage at call time to avoid stale closure
+            const currentPortal = localStorage.getItem('recruiter_hiring_token') !== null
+              ? 'recruiter'
+              : (localStorage.getItem('jobsner_portal') || 'candidate');
             const res = await fetch('/api/firebase-auth', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 idToken,
                 firebaseUid: firebaseUser.uid,
-                role: portal || 'candidate',
+                role: currentPortal,
                 email: firebaseUser.email,
                 fullName: firebaseUser.displayName,
                 photoURL: firebaseUser.photoURL,
@@ -256,6 +260,7 @@ export default function App() {
     setRecruiter(newRecruiter);
     setRecruiterToken(newToken);
     localStorage.setItem('recruiter_hiring_token', newToken);
+    localStorage.setItem('jobsner_portal', 'recruiter'); // Persist portal hint for Firebase auto-sync
     setRecruiterView('dashboard');
     setPortal('recruiter');
     setUserRole('recruiter');
@@ -266,7 +271,19 @@ export default function App() {
   };
 
   const handleRecruiterLogout = () => {
+    // 1. Invalidate token server-side first (fire-and-forget but with token still in storage)
+    const tokenToRevoke = localStorage.getItem('recruiter_hiring_token');
+    if (tokenToRevoke) {
+      fetch('/api/recruiter/logout', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${tokenToRevoke}` }
+      }).catch(e => console.warn('[Recruiter Logout] Server token invalidation failed:', e));
+    }
+    // 2. Sign out of Firebase
     logoutFirebase().catch(e => console.warn('[Firebase SignOut]', e));
+    // 3. Clear recruiter portal hint from localStorage
+    localStorage.removeItem('jobsner_portal');
+    // 4. Clear local session
     localStorage.removeItem('recruiter_hiring_token');
     setRecruiter(null);
     setRecruiterToken(null);

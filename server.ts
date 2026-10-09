@@ -1433,33 +1433,10 @@ async function authenticateRecruiter(req: express.Request, res: express.Response
     }
   }
 
-  // 3. Fallback: Check recruiter ID passed in body or query params
+  // SECURITY: Do NOT fall back to body/query recruiterId or last-recruiter-in-DB.
+  // An unrecognized token must be rejected with 403 to prevent account switching.
   if (!recruiterId) {
-    const reqRecId = req.body?.recruiterId || req.body?.recruiter_id || req.query?.recruiterId;
-    if (reqRecId) {
-      const liveRecruiters = await getLiveRecruiters();
-      const found = (db.recruiters || []).concat(liveRecruiters).find((r: any) => String(r.id) === String(reqRecId));
-      if (found) {
-        recruiterId = found.id;
-        db.recruiterTokens[token] = recruiterId;
-        writeDB(db);
-      }
-    }
-  }
-
-  // 4. Fallback: Resolve to latest active recruiter in database if recruiters exist
-  if (!recruiterId) {
-    const liveRecruiters = await getLiveRecruiters();
-    const recruitersList = (db.recruiters || []).concat(liveRecruiters);
-    if (recruitersList.length > 0) {
-      recruiterId = recruitersList[recruitersList.length - 1].id;
-      db.recruiterTokens[token] = recruiterId;
-      writeDB(db);
-    }
-  }
-
-  if (!recruiterId) {
-    return res.status(403).json({ error: 'Invalid or expired token.' });
+    return res.status(403).json({ error: 'Invalid or expired token. Please log in again.' });
   }
 
   // Fetch full recruiter object
@@ -2595,6 +2572,25 @@ app.post('/api/recruiter/login', async (req, res) => {
     console.error(err);
     res.status(500).json({ error: 'Server error during recruiter login.' });
   }
+});
+
+// 2b. Logout Recruiter (Invalidate server-side token)
+app.post('/api/recruiter/logout', async (req, res) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (token && token !== 'null' && token !== 'undefined') {
+    try {
+      const db = readDB();
+      db.recruiterTokens = db.recruiterTokens || {};
+      if (db.recruiterTokens[token]) {
+        delete db.recruiterTokens[token];
+        await writeDB(db);
+      }
+    } catch (err) {
+      console.error('[Recruiter Logout] Error invalidating token:', err);
+    }
+  }
+  res.status(200).json({ message: 'Logged out successfully.' });
 });
 
 // 3. Get Recruiter Profile
