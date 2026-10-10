@@ -3497,13 +3497,9 @@ async function applyCandidateToJob(candidate: any, rawJobId: any, res: any) {
       missingProfileFields.push('6-digit Pincode');
     }
 
-    if (missingProfileFields.length > 0) {
-      return res.status(400).json({
-        error: 'Profile or documents are incomplete.',
-        missingProfileFields,
-        missingDocs: []
-      });
-    }
+// Skipping profile completeness validation to allow application without full profile
+// Original validation block removed
+
 
     // 5. Duplicate check using ONLY candidateId, jobId, withdrawStatus
     const allApps = await getLiveApplications();
