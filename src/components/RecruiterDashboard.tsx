@@ -1438,14 +1438,14 @@ export default function RecruiterDashboard({
 
   // --- RENDER APPROVED DASHBOARD ---
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-4 pb-24 md:pb-8">
       {/* Native Browser Notification Permission Prompt */}
       <NotificationPermissionBanner recruiterName={recruiter.recruiterName || recruiter.companyName} />
 
-      <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row gap-6 font-sans text-gray-800" id="recruiter-approved-dashboard">
+      <div className="w-full max-w-7xl mx-auto flex flex-col md:flex-row gap-6 font-sans text-gray-800" id="recruiter-approved-dashboard">
         
-        {/* Sidebar Navigation Panel */}
-        <aside className="w-full lg:w-60 shrink-0" id="recruiter-dashboard-sidebar">
+        {/* Sidebar Navigation Panel (Desktop / Tablet) */}
+        <aside className="hidden md:block w-64 shrink-0" id="recruiter-dashboard-sidebar">
           <div className="bg-white border border-gray-150 rounded-2xl p-4 sticky top-20 shadow-xs space-y-4">
             
             {/* Header info / Logo */}
@@ -1546,10 +1546,49 @@ export default function RecruiterDashboard({
         </aside>
 
         {/* Main Dashboard Content Area */}
-        <main className="flex-1 min-w-0" id="recruiter-dashboard-content-panel">
+        <main className="flex-1 min-w-0 max-w-full overflow-x-hidden" id="recruiter-dashboard-content-panel">
           
           {/* Top Header Search & User Profile Bar */}
           <div className="bg-white border border-gray-150 rounded-2xl p-3 px-4 mb-5 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
+            {/* Mobile Header Brand & Quick Action Strip */}
+            <div className="flex items-center justify-between w-full sm:hidden border-b border-gray-100 pb-2.5">
+              <div className="flex items-center gap-2.5">
+                {recruiter.companyLogo ? (
+                  <img src={recruiter.companyLogo} alt={recruiter.companyName} className="w-8 h-8 rounded-lg border border-gray-200 object-contain p-0.5" />
+                ) : (
+                  <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#1D61F2] font-extrabold text-xs flex items-center justify-center border border-blue-200">
+                    {recruiter.companyName?.charAt(0) || 'J'}
+                  </div>
+                )}
+                <div className="truncate max-w-[140px]">
+                  <h4 className="font-extrabold text-gray-900 text-xs tracking-tight truncate">{recruiter.companyName}</h4>
+                  <p className="text-[10px] text-gray-400 font-medium truncate">{recruiter.recruiterName || 'Recruiter Portal'}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleOpenNewJobForm}
+                  className="py-1.5 px-3 bg-[#1D61F2] hover:bg-blue-700 text-white text-[11px] font-bold rounded-xl shadow-sm flex items-center gap-1 cursor-pointer active:scale-95"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Post Job
+                </button>
+
+                <button
+                  onClick={() => setShowNotifDrawer(true)}
+                  className="relative p-1.5 rounded-xl border border-gray-200 hover:border-[#1D61F2] text-gray-600 cursor-pointer"
+                  title="Notifications"
+                >
+                  <Bell className="w-4 h-4" />
+                  {unreadNotifCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-red-500 text-white text-[8px] font-bold flex items-center justify-center animate-pulse">
+                      {unreadNotifCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+
             <div className="relative w-full sm:w-80">
               <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
@@ -1562,11 +1601,11 @@ export default function RecruiterDashboard({
                     setActiveTab('applications');
                   }
                 }}
-                className="w-full pl-9 pr-4 py-1.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
+                className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
               />
             </div>
 
-            <div className="flex items-center gap-4 w-full sm:w-auto justify-end">
+            <div className="hidden sm:flex items-center gap-4 w-auto justify-end">
               <button
                 onClick={() => setShowNotifDrawer(true)}
                 className="relative p-2 rounded-xl border border-gray-200 hover:border-[#1D61F2] hover:bg-blue-50/50 text-gray-600 transition-all cursor-pointer"
@@ -1580,7 +1619,7 @@ export default function RecruiterDashboard({
                 )}
               </button>
 
-              <div className="h-6 w-px bg-gray-200 hidden sm:block"></div>
+              <div className="h-6 w-px bg-gray-200"></div>
 
               <div className="flex items-center gap-2.5">
                 {recruiter.companyLogo ? (
@@ -1633,18 +1672,63 @@ export default function RecruiterDashboard({
               transition={{ duration: 0.15 }}
               className="space-y-5"
             >
-              {/* 1. Welcome Banner */}
-              <div className="bg-gradient-to-r from-blue-500/10 via-blue-400/5 to-transparent border border-blue-100 rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white shadow-xs">
-                <div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
-                    Welcome back, {recruiter.recruiterName}!
-                  </h2>
-                  <p className="text-xs text-gray-500 mt-1">Here's what's happening with your hiring today.</p>
-                </div>
+              {/* 1. Recruiter Dashboard Professional Blue Gradient Hero Banner */}
+              <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#1D61F2] via-blue-600 to-indigo-700 text-white p-5 sm:p-8 shadow-md shadow-blue-500/15">
+                {/* Decorative Background Effects */}
+                <div className="absolute -right-10 -bottom-10 w-56 h-56 sm:w-72 sm:h-72 rounded-full bg-white/10 blur-2xl pointer-events-none" />
+                <div className="absolute top-0 right-1/3 w-36 h-36 rounded-full bg-blue-300/20 blur-xl pointer-events-none" />
 
-                <div className="flex items-center gap-2 text-xs font-semibold text-[#1D61F2] bg-blue-50 border border-blue-100 px-3.5 py-2 rounded-xl">
-                  <Sparkles className="w-4 h-4 text-[#1D61F2]" />
-                  <span>Great talent builds great teams!</span>
+                <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                  <div className="space-y-3 max-w-xl">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-white border border-white/20 text-[11px] font-bold tracking-wide">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                      <span>JOBSner Recruiter Hub</span>
+                    </div>
+
+                    <h1 className="text-xl sm:text-3xl font-extrabold tracking-tight leading-tight text-white">
+                      Welcome back, {recruiter.companyName || recruiter.recruiterName}!
+                    </h1>
+
+                    <p className="text-xs sm:text-sm text-blue-100 leading-relaxed font-medium">
+                      Manage your logistical hiring, track candidate pipelines, and scale your delivery fleet seamlessly.
+                    </p>
+
+                    {/* Hero Action Buttons */}
+                    <div className="pt-2 flex flex-wrap items-center gap-3">
+                      <button
+                        onClick={handleOpenNewJobForm}
+                        className="py-2.5 px-5 bg-white hover:bg-blue-50 text-[#1D61F2] text-xs font-black rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+                      >
+                        <Plus className="w-4 h-4 stroke-[3]" />
+                        <span>Post a Job</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setActiveTab('applications');
+                          window.scrollTo({ top: 0, behavior: 'instant' });
+                        }}
+                        className="py-2.5 px-4 bg-white/15 hover:bg-white/25 text-white border border-white/25 text-xs font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer"
+                      >
+                        <FileText className="w-4 h-4" />
+                        <span>View Applications ({applications.length})</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Integrated Person / Rider / Recruiter Hero Image */}
+                  <div className="hidden sm:flex items-center justify-center relative shrink-0">
+                    <div className="w-36 h-36 md:w-44 md:h-44 rounded-2xl overflow-hidden border-2 border-white/30 shadow-xl bg-gradient-to-b from-white/20 to-white/5 backdrop-blur-md p-1">
+                      <img
+                        src="/delivery_rider_hero.png"
+                        alt="JOBSner Logistics Hiring"
+                        className="w-full h-full object-cover rounded-xl"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -4631,6 +4715,47 @@ export default function RecruiterDashboard({
           </React.Fragment>
         )}
       </AnimatePresence>
+
+      {/* FIXED MOBILE BOTTOM NAVIGATION BAR */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 px-2 py-2 flex items-center justify-around shadow-2xl shadow-gray-900/20">
+        {[
+          { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, action: () => { setActiveTab('dashboard'); setShowJobForm(false); window.scrollTo({ top: 0, behavior: 'instant' }); } },
+          { id: 'jobs', label: 'Jobs', icon: Briefcase, badge: jobs.length ? String(jobs.length) : undefined, action: () => { handleOpenJobsList(); window.scrollTo({ top: 0, behavior: 'instant' }); } },
+          { id: 'urgent-candidates', label: 'Candidates', icon: Users, badge: urgentCandidates.length ? String(urgentCandidates.length) : undefined, action: () => { setActiveTab('urgent-candidates'); setShowJobForm(false); window.scrollTo({ top: 0, behavior: 'instant' }); } },
+          { id: 'applications', label: 'Applications', icon: FileText, badge: applications.length ? String(applications.length) : undefined, action: () => { setActiveTab('applications'); setShowJobForm(false); window.scrollTo({ top: 0, behavior: 'instant' }); } },
+          { id: 'profile', label: 'Profile', icon: Building2, action: () => { setActiveTab('profile'); setShowJobForm(false); window.scrollTo({ top: 0, behavior: 'instant' }); } },
+        ].map((item) => {
+          const IconComp = item.icon;
+          const isActive = item.id === 'jobs' 
+            ? (activeTab === 'jobs' && !showJobForm)
+            : (activeTab === item.id);
+
+          return (
+            <button
+              key={item.id}
+              onClick={item.action}
+              className={`flex flex-col items-center justify-center flex-1 py-1 px-1 relative transition-all cursor-pointer ${
+                isActive ? 'text-[#1D61F2]' : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              <div className="relative">
+                <IconComp className={`w-5 h-5 ${isActive ? 'text-[#1D61F2] stroke-[2.5]' : 'text-gray-400'}`} />
+                {item.badge && (
+                  <span className="absolute -top-1.5 -right-2.5 bg-[#1D61F2] text-white text-[8px] font-black px-1.5 py-0.2 rounded-full min-w-[14px] text-center leading-tight shadow-xs">
+                    {item.badge}
+                  </span>
+                )}
+              </div>
+              <span className={`text-[10px] mt-1 tracking-tight ${isActive ? 'font-extrabold text-[#1D61F2]' : 'font-medium text-gray-500'}`}>
+                {item.label}
+              </span>
+              {isActive && (
+                <span className="w-1.5 h-1.5 rounded-full bg-[#1D61F2] mt-0.5" />
+              )}
+            </button>
+          );
+        })}
+      </div>
 
     </div>
   );
