@@ -1821,61 +1821,154 @@ export default function RecruiterDashboard({
               transition={{ duration: 0.15 }}
               className="space-y-5"
             >
-              {/* 1. Recruiter Dashboard Professional Blue Gradient Hero Banner */}
-              <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#1D61F2] via-blue-600 to-indigo-700 text-white p-5 sm:p-8 shadow-md shadow-blue-500/15">
-                {/* Decorative Background Effects */}
-                <div className="absolute -right-10 -bottom-10 w-56 h-56 sm:w-72 sm:h-72 rounded-full bg-white/10 blur-2xl pointer-events-none" />
-                <div className="absolute top-0 right-1/3 w-36 h-36 rounded-full bg-blue-300/20 blur-xl pointer-events-none" />
+              {/* 1. Premium Cinematic Hero Banner — reference-style */}
+              <div
+                className="relative overflow-hidden rounded-2xl sm:rounded-3xl text-white shadow-2xl"
+                style={{
+                  background: 'linear-gradient(125deg, #05101e 0%, #0a1f40 30%, #0d2d6b 60%, #1a3a8f 100%)',
+                  minHeight: '280px',
+                }}
+              >
+                {/* === Ambient light blobs === */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                  {/* top-left warm glow */}
+                  <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full opacity-20"
+                    style={{ background: 'radial-gradient(circle, #3b82f6 0%, transparent 70%)' }} />
+                  {/* centre-right blue sweep */}
+                  <div className="absolute top-0 right-1/4 w-80 h-80 rounded-full opacity-15"
+                    style={{ background: 'radial-gradient(circle, #60a5fa 0%, transparent 65%)' }} />
+                  {/* bottom-right bright spot */}
+                  <div className="absolute -bottom-16 -right-16 w-72 h-72 rounded-full opacity-25"
+                    style={{ background: 'radial-gradient(circle, #1d4ed8 0%, transparent 70%)' }} />
+                  {/* horizontal scan line */}
+                  <div className="absolute top-1/2 left-0 right-0 h-px opacity-10"
+                    style={{ background: 'linear-gradient(90deg, transparent, #93c5fd 40%, transparent)' }} />
+                  {/* grid overlay */}
+                  <svg className="absolute inset-0 w-full h-full opacity-[0.04]" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <pattern id="hgrid" width="40" height="40" patternUnits="userSpaceOnUse">
+                        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="0.5"/>
+                      </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#hgrid)" />
+                  </svg>
+                </div>
 
-                <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-                  <div className="space-y-3 max-w-xl">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-white border border-white/20 text-[11px] font-bold tracking-wide">
-                      <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                      <span>JOBSner Recruiter Hub</span>
+                {/* === Main Content === */}
+                <div className="relative z-10 flex flex-col lg:flex-row items-stretch min-h-[280px] sm:min-h-[320px]">
+
+                  {/* ── LEFT: Text & CTAs ── */}
+                  <div className="flex-1 flex flex-col justify-center p-6 sm:p-10 lg:p-12 xl:p-14 space-y-5">
+
+                    {/* Badge */}
+                    <div className="inline-flex items-center gap-2 self-start px-3.5 py-1.5 rounded-full border border-blue-400/30 bg-blue-400/10 backdrop-blur-sm text-blue-200 text-[11px] font-semibold tracking-widest uppercase">
+                      <Sparkles className="w-3 h-3 text-amber-300 shrink-0" />
+                      <span>Recruiting of the Future</span>
                     </div>
 
-                    <h1 className="text-xl sm:text-3xl font-extrabold tracking-tight leading-tight text-white">
-                      Welcome back, {recruiter.companyName || recruiter.recruiterName}!
+                    {/* Headline */}
+                    <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-[2.6rem] font-black leading-[1.12] tracking-tight text-white">
+                      Find the Right Talent<br className="hidden sm:block" />
+                      <span className="text-transparent bg-clip-text"
+                        style={{ backgroundImage: 'linear-gradient(90deg, #93c5fd, #bfdbfe)' }}>
+                        {' '}for Your Team
+                      </span>
                     </h1>
 
-                    <p className="text-xs sm:text-sm text-blue-100 leading-relaxed font-medium">
-                      Manage your logistical hiring, track candidate pipelines, and scale your delivery fleet seamlessly.
+                    {/* Sub-text */}
+                    <p className="text-sm sm:text-[15px] text-blue-100/80 leading-relaxed max-w-md font-medium">
+                      Post logistics jobs, manage your candidate pipeline, and scale your delivery fleet with JOBSner — your all-in-one hiring partner.
                     </p>
 
-                    {/* Hero Action Buttons */}
-                    <div className="pt-2 flex flex-wrap items-center gap-3">
+                    {/* CTA Buttons */}
+                    <div className="flex flex-wrap items-center gap-3 pt-1">
                       <button
                         onClick={handleOpenNewJobForm}
-                        className="py-2.5 px-5 bg-white hover:bg-blue-50 text-[#1D61F2] text-xs font-black rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+                        className="group inline-flex items-center gap-2 py-2.5 px-6 rounded-xl font-extrabold text-sm text-[#0d2d6b] bg-white hover:bg-blue-50 shadow-lg shadow-blue-900/30 transition-all active:scale-95 cursor-pointer"
                       >
-                        <Plus className="w-4 h-4 stroke-[3]" />
-                        <span>Post a Job</span>
+                        <Plus className="w-4 h-4 stroke-[2.5] group-hover:rotate-90 transition-transform duration-200" />
+                        Post a Job
                       </button>
-
                       <button
                         onClick={() => {
                           setActiveTab('applications');
                           window.scrollTo({ top: 0, behavior: 'instant' });
                         }}
-                        className="py-2.5 px-4 bg-white/15 hover:bg-white/25 text-white border border-white/25 text-xs font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer"
+                        className="inline-flex items-center gap-2 py-2.5 px-5 rounded-xl font-bold text-sm text-white border border-white/20 bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all cursor-pointer"
                       >
                         <FileText className="w-4 h-4" />
-                        <span>View Applications ({applications.length})</span>
+                        View Applications ({applications.length})
                       </button>
+                    </div>
+
+                    {/* ── Floating Stat Pills (real data) ── */}
+                    <div className="flex flex-wrap gap-2.5 pt-2">
+                      {/* Active Jobs */}
+                      <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/8 border border-white/15 backdrop-blur-md text-xs font-semibold text-white/90 shadow-sm">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                        <span>{jobs.filter(j => j.status === 'Published' || j.status === 'Active').length} Active Jobs</span>
+                      </div>
+                      {/* Total Applications */}
+                      <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/8 border border-white/15 backdrop-blur-md text-xs font-semibold text-white/90 shadow-sm">
+                        <Users className="w-3.5 h-3.5 text-blue-300 shrink-0" />
+                        <span>{applications.length} Applications</span>
+                      </div>
+                      {/* Hired */}
+                      <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/8 border border-white/15 backdrop-blur-md text-xs font-semibold text-white/90 shadow-sm">
+                        <UserCheck className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                        <span>{applications.filter(a => ['Hired','Selected','Approved'].includes(a.currentStatus)).length} Hired</span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Integrated Professional Recruiter Hero Image */}
-                  <div className="flex items-center justify-center relative shrink-0 self-center sm:self-auto mt-2 sm:mt-0">
-                    <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 rounded-2xl overflow-hidden border-2 border-white/30 shadow-xl bg-gradient-to-b from-white/20 to-white/5 backdrop-blur-md p-1 group">
-                      <img
-                        src="/recruiter_hero.png"
-                        alt="JOBSner Professional Recruiter"
-                        className="w-full h-full object-cover object-top rounded-xl transition-transform duration-300 group-hover:scale-105"
-                        onError={(e) => {
-                          (e.target as HTMLElement).style.display = 'none';
-                        }}
-                      />
+                  {/* ── RIGHT: Recruiter Photo with cinematic overlay ── */}
+                  <div className="relative lg:w-[42%] xl:w-[38%] flex-shrink-0 flex items-end justify-center overflow-hidden">
+                    {/* image glow behind */}
+                    <div className="absolute inset-0 pointer-events-none">
+                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-72 h-72 rounded-full opacity-30"
+                        style={{ background: 'radial-gradient(circle, #3b82f6 0%, transparent 70%)' }} />
+                    </div>
+
+                    {/* Recruiter image — bottom-anchored, fades into banner */}
+                    <img
+                      src="/recruiter_hero_office.png"
+                      alt="JOBSner Professional Recruiter"
+                      className="relative z-10 h-[240px] sm:h-[300px] lg:h-full max-h-[340px] w-auto object-cover object-top"
+                      style={{
+                        maskImage: 'linear-gradient(to top, transparent 0%, black 18%, black 85%, transparent 100%), linear-gradient(to right, transparent 0%, black 15%)',
+                        WebkitMaskImage: 'linear-gradient(to top, transparent 0%, black 18%, black 85%, transparent 100%), linear-gradient(to right, transparent 0%, black 15%)',
+                        maskComposite: 'intersect',
+                        WebkitMaskComposite: 'destination-in',
+                      }}
+                      onError={(e) => {
+                        // fallback to original recruiter image
+                        const img = e.target as HTMLImageElement;
+                        if (!img.src.includes('recruiter_hero.png')) {
+                          img.src = '/recruiter_hero.png';
+                        } else {
+                          img.style.display = 'none';
+                        }
+                      }}
+                    />
+
+                    {/* Floating stat card — top right */}
+                    <div className="absolute top-4 right-4 z-20 bg-white/10 border border-white/20 backdrop-blur-md rounded-2xl px-3.5 py-2.5 shadow-xl text-xs font-semibold text-white hidden sm:flex flex-col gap-0.5">
+                      <span className="text-[10px] text-blue-200 uppercase tracking-wider">Shortlisted</span>
+                      <span className="text-lg font-black leading-none">
+                        {applications.filter(a => a.currentStatus === 'Shortlisted').length}
+                      </span>
+                      <span className="text-[10px] text-emerald-300 font-bold flex items-center gap-1">
+                        <TrendingUp className="w-3 h-3" /> Candidates
+                      </span>
+                    </div>
+
+                    {/* Floating stat card — mid-left edge */}
+                    <div className="absolute bottom-6 left-4 z-20 bg-white/10 border border-white/20 backdrop-blur-md rounded-2xl px-3.5 py-2.5 shadow-xl text-xs font-semibold text-white hidden lg:flex flex-col gap-0.5">
+                      <span className="text-[10px] text-blue-200 uppercase tracking-wider">Jobs Posted</span>
+                      <span className="text-lg font-black leading-none">{jobs.length}</span>
+                      <span className="text-[10px] text-amber-300 font-bold flex items-center gap-1">
+                        <Briefcase className="w-3 h-3" /> Total openings
+                      </span>
                     </div>
                   </div>
                 </div>
