@@ -207,9 +207,10 @@ export default function RecruiterDashboard({
       appliedPct: calcPct(applied),
       shortlistedPct: calcPct(shortlisted),
       interviewPct: calcPct(interview),
-      hiredPct: calcPct(hired),
-      pieData: [
-        { name: 'Applied', value: applied > 0 ? applied : (total === 0 ? 1 : 0), color: '#1D61F2' },
+      pieData: total === 0 ? [
+        { name: 'No Applications', value: 1, color: '#E2E8F0' }
+      ] : [
+        { name: 'Applied', value: applied, color: '#1D61F2' },
         { name: 'Shortlisted', value: shortlisted, color: '#10B981' },
         { name: 'Interview', value: interview, color: '#F59E0B' },
         { name: 'Hired', value: hired, color: '#8B5CF6' }
@@ -1513,6 +1514,80 @@ export default function RecruiterDashboard({
               })}
             </nav>
 
+            {/* Quick Actions (Moved below navigation section) */}
+            <div className="pt-3 border-t border-gray-100" id="sidebar-quick-actions">
+              <div className="flex items-center justify-between px-1 mb-2">
+                <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Quick Actions</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-[#1D61F2]" />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                {/* 1. Post a Job */}
+                <button
+                  onClick={handleOpenNewJobForm}
+                  className="w-full py-2 px-3 rounded-xl border border-gray-150 bg-gray-50/70 hover:bg-blue-50/80 hover:border-[#1D61F2] hover:text-[#1D61F2] transition-all flex items-center justify-between text-left group cursor-pointer active:scale-[0.99]"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-lg bg-blue-100/70 text-[#1D61F2] flex items-center justify-center shrink-0 group-hover:bg-[#1D61F2] group-hover:text-white transition-colors">
+                      <Briefcase className="w-3.5 h-3.5" />
+                    </span>
+                    <span className="text-xs font-bold text-gray-800 group-hover:text-[#1D61F2]">Post a Job</span>
+                  </span>
+                  <Plus className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#1D61F2]" />
+                </button>
+
+                {/* 2. Add Candidate */}
+                <button
+                  onClick={() => {
+                    setActiveTab('urgent-candidates');
+                    setShowJobForm(false);
+                  }}
+                  className="w-full py-2 px-3 rounded-xl border border-gray-150 bg-gray-50/70 hover:bg-emerald-50/80 hover:border-emerald-500 hover:text-emerald-700 transition-all flex items-center justify-between text-left group cursor-pointer active:scale-[0.99]"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-lg bg-emerald-100/70 text-emerald-600 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                      <UserPlus className="w-3.5 h-3.5" />
+                    </span>
+                    <span className="text-xs font-bold text-gray-800 group-hover:text-emerald-700">Add Candidate</span>
+                  </span>
+                  <ChevronRight className="w-3 h-3 text-gray-400 group-hover:text-emerald-600" />
+                </button>
+
+                {/* 3. Search Candidates */}
+                <button
+                  onClick={() => {
+                    setActiveTab('urgent-candidates');
+                    setShowJobForm(false);
+                  }}
+                  className="w-full py-2 px-3 rounded-xl border border-gray-150 bg-gray-50/70 hover:bg-indigo-50/80 hover:border-indigo-500 hover:text-indigo-700 transition-all flex items-center justify-between text-left group cursor-pointer active:scale-[0.99]"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-lg bg-indigo-100/70 text-indigo-600 flex items-center justify-center shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                      <Search className="w-3.5 h-3.5" />
+                    </span>
+                    <span className="text-xs font-bold text-gray-800 group-hover:text-indigo-700">Search Candidates</span>
+                  </span>
+                  <ChevronRight className="w-3 h-3 text-gray-400 group-hover:text-indigo-600" />
+                </button>
+
+                {/* 4. View Applications */}
+                <button
+                  onClick={() => {
+                    setActiveTab('applications');
+                    setShowJobForm(false);
+                  }}
+                  className="w-full py-2 px-3 rounded-xl border border-gray-150 bg-gray-50/70 hover:bg-purple-50/80 hover:border-purple-500 hover:text-purple-700 transition-all flex items-center justify-between text-left group cursor-pointer active:scale-[0.99]"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-lg bg-purple-100/70 text-purple-600 flex items-center justify-center shrink-0 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                      <FileText className="w-3.5 h-3.5" />
+                    </span>
+                    <span className="text-xs font-bold text-gray-800 group-hover:text-purple-700">View Applications</span>
+                  </span>
+                  <ChevronRight className="w-3 h-3 text-gray-400 group-hover:text-purple-600" />
+                </button>
+              </div>
+            </div>
+
             {/* Sidebar Promo CTA Card */}
             <div className="p-3.5 bg-gradient-to-br from-blue-50 to-indigo-50/60 rounded-xl border border-blue-100 text-left space-y-2">
               <div className="w-7 h-7 rounded-lg bg-[#1D61F2] text-white flex items-center justify-center">
@@ -1603,6 +1678,80 @@ export default function RecruiterDashboard({
                 }}
                 className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
               />
+            </div>
+
+            {/* Mobile-only Quick Actions (Below mobile header/navigation, vertically stacked, compact, full-width) */}
+            <div className="md:hidden w-full pt-3 border-t border-gray-100" id="mobile-quick-actions">
+              <div className="flex items-center justify-between px-1 mb-2">
+                <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Quick Actions</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-[#1D61F2]" />
+              </div>
+              <div className="flex flex-col gap-1.5 w-full">
+                {/* 1. Post a Job */}
+                <button
+                  onClick={handleOpenNewJobForm}
+                  className="w-full py-2 px-3 rounded-xl border border-gray-150 bg-gray-50/70 hover:bg-blue-50/80 hover:border-[#1D61F2] hover:text-[#1D61F2] transition-all flex items-center justify-between text-left group cursor-pointer active:scale-[0.99]"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-lg bg-blue-100/70 text-[#1D61F2] flex items-center justify-center shrink-0 group-hover:bg-[#1D61F2] group-hover:text-white transition-colors">
+                      <Briefcase className="w-3.5 h-3.5" />
+                    </span>
+                    <span className="text-xs font-bold text-gray-800 group-hover:text-[#1D61F2]">Post a Job</span>
+                  </span>
+                  <Plus className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#1D61F2]" />
+                </button>
+
+                {/* 2. Add Candidate */}
+                <button
+                  onClick={() => {
+                    setActiveTab('urgent-candidates');
+                    setShowJobForm(false);
+                  }}
+                  className="w-full py-2 px-3 rounded-xl border border-gray-150 bg-gray-50/70 hover:bg-emerald-50/80 hover:border-emerald-500 hover:text-emerald-700 transition-all flex items-center justify-between text-left group cursor-pointer active:scale-[0.99]"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-lg bg-emerald-100/70 text-emerald-600 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                      <UserPlus className="w-3.5 h-3.5" />
+                    </span>
+                    <span className="text-xs font-bold text-gray-800 group-hover:text-emerald-700">Add Candidate</span>
+                  </span>
+                  <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-emerald-600" />
+                </button>
+
+                {/* 3. Search Candidates */}
+                <button
+                  onClick={() => {
+                    setActiveTab('urgent-candidates');
+                    setShowJobForm(false);
+                  }}
+                  className="w-full py-2 px-3 rounded-xl border border-gray-150 bg-gray-50/70 hover:bg-indigo-50/80 hover:border-indigo-500 hover:text-indigo-700 transition-all flex items-center justify-between text-left group cursor-pointer active:scale-[0.99]"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-lg bg-indigo-100/70 text-indigo-600 flex items-center justify-center shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                      <Search className="w-3.5 h-3.5" />
+                    </span>
+                    <span className="text-xs font-bold text-gray-800 group-hover:text-indigo-700">Search Candidates</span>
+                  </span>
+                  <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-indigo-600" />
+                </button>
+
+                {/* 4. View Applications */}
+                <button
+                  onClick={() => {
+                    setActiveTab('applications');
+                    setShowJobForm(false);
+                  }}
+                  className="w-full py-2 px-3 rounded-xl border border-gray-150 bg-gray-50/70 hover:bg-purple-50/80 hover:border-purple-500 hover:text-purple-700 transition-all flex items-center justify-between text-left group cursor-pointer active:scale-[0.99]"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-lg bg-purple-100/70 text-purple-600 flex items-center justify-center shrink-0 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                      <FileText className="w-3.5 h-3.5" />
+                    </span>
+                    <span className="text-xs font-bold text-gray-800 group-hover:text-purple-700">View Applications</span>
+                  </span>
+                  <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-purple-600" />
+                </button>
+              </div>
             </div>
 
             <div className="hidden sm:flex items-center gap-4 w-auto justify-end">
@@ -1716,13 +1865,13 @@ export default function RecruiterDashboard({
                     </div>
                   </div>
 
-                  {/* Integrated Person / Rider / Recruiter Hero Image */}
-                  <div className="hidden sm:flex items-center justify-center relative shrink-0">
-                    <div className="w-36 h-36 md:w-44 md:h-44 rounded-2xl overflow-hidden border-2 border-white/30 shadow-xl bg-gradient-to-b from-white/20 to-white/5 backdrop-blur-md p-1">
+                  {/* Integrated Professional Recruiter Hero Image */}
+                  <div className="flex items-center justify-center relative shrink-0 self-center sm:self-auto mt-2 sm:mt-0">
+                    <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 rounded-2xl overflow-hidden border-2 border-white/30 shadow-xl bg-gradient-to-b from-white/20 to-white/5 backdrop-blur-md p-1 group">
                       <img
-                        src="/delivery_rider_hero.png"
-                        alt="JOBSner Logistics Hiring"
-                        className="w-full h-full object-cover rounded-xl"
+                        src="/recruiter_hero.png"
+                        alt="JOBSner Professional Recruiter"
+                        className="w-full h-full object-cover object-top rounded-xl transition-transform duration-300 group-hover:scale-105"
                         onError={(e) => {
                           (e.target as HTMLElement).style.display = 'none';
                         }}
@@ -1850,115 +1999,90 @@ export default function RecruiterDashboard({
                   </div>
                 </div>
 
-                {/* Right (1 Col): Quick Actions & Application Status */}
-                <div className="space-y-5">
-                  {/* Quick Actions Card */}
-                  <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-xs">
-                    <h3 className="font-bold text-gray-900 text-sm mb-3">Quick Actions</h3>
-                    <div className="grid grid-cols-2 gap-2.5">
-                      <button
-                        onClick={handleOpenNewJobForm}
-                        className="p-3 rounded-xl border border-gray-150 hover:border-[#1D61F2] hover:bg-blue-50/50 transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer text-center group"
-                      >
-                        <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#1D61F2] flex items-center justify-center group-hover:bg-[#1D61F2] group-hover:text-white transition-colors">
-                          <Briefcase className="w-4 h-4" />
-                        </div>
-                        <span className="text-[11px] font-semibold text-gray-700">Post a Job</span>
-                      </button>
-
-                      <button
-                        onClick={() => setActiveTab('urgent-candidates')}
-                        className="p-3 rounded-xl border border-gray-150 hover:border-[#1D61F2] hover:bg-blue-50/50 transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer text-center group"
-                      >
-                        <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-                          <UserPlus className="w-4 h-4" />
-                        </div>
-                        <span className="text-[11px] font-semibold text-gray-700">Add Candidate</span>
-                      </button>
-
-                      <button
-                        onClick={() => setActiveTab('urgent-candidates')}
-                        className="p-3 rounded-xl border border-gray-150 hover:border-[#1D61F2] hover:bg-blue-50/50 transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer text-center group"
-                      >
-                        <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                          <Search className="w-4 h-4" />
-                        </div>
-                        <span className="text-[11px] font-semibold text-gray-700">Search Candidates</span>
-                      </button>
-
-                      <button
-                        onClick={() => setActiveTab('applications')}
-                        className="p-3 rounded-xl border border-gray-150 hover:border-[#1D61F2] hover:bg-blue-50/50 transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer text-center group"
-                      >
-                        <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center group-hover:bg-purple-600 group-hover:text-white transition-colors">
-                          <FileText className="w-4 h-4" />
-                        </div>
-                        <span className="text-[11px] font-semibold text-gray-700">View Applications</span>
-                      </button>
+                {/* Right (1 Col): Optimized Application Status Donut & Stacked Legend */}
+                <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <h3 className="font-bold text-gray-900 text-sm">Application Status</h3>
+                      <p className="text-[11px] text-gray-400 mt-0.5">Pipeline status breakdown</p>
                     </div>
+                    <span className="text-[11px] font-bold text-gray-600 bg-gray-50 border border-gray-200 px-2.5 py-1 rounded-lg">
+                      {applications.length} Total
+                    </span>
                   </div>
 
-                  {/* Application Status Funnel */}
-                  <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-xs">
-                    <h3 className="font-bold text-gray-900 text-sm mb-3">Application Status</h3>
-                    <div className="flex items-center gap-4">
-                      <div className="w-28 h-28 relative shrink-0">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={applicationStatusMetrics.pieData}
-                              cx="50%"
-                              cy="50%"
-                              innerRadius={30}
-                              outerRadius={45}
-                              paddingAngle={3}
-                              dataKey="value"
-                            >
-                              {applicationStatusMetrics.pieData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.color} />
-                              ))}
-                            </Pie>
-                          </PieChart>
-                        </ResponsiveContainer>
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                          <span className="text-sm font-bold text-gray-900">{applications.length}</span>
-                          <span className="text-[9px] text-gray-400">Total</span>
-                        </div>
+                  <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row items-center gap-4 my-auto py-2">
+                    {/* Compact Clearly Visible Donut Chart */}
+                    <div className="w-32 h-32 sm:w-36 sm:h-36 relative shrink-0 mx-auto">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={applicationStatusMetrics.pieData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={36}
+                            outerRadius={52}
+                            paddingAngle={applicationStatusMetrics.pieData.length > 1 ? 4 : 0}
+                            dataKey="value"
+                            stroke="#ffffff"
+                            strokeWidth={2}
+                          >
+                            {applicationStatusMetrics.pieData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                        </PieChart>
+                      </ResponsiveContainer>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+                        <span className="text-base font-extrabold text-gray-900 leading-tight">
+                          {applications.length}
+                        </span>
+                        <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">
+                          Total
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Readable Status Legend (Stacked below chart on narrow screens / mobile, high contrast) */}
+                    <div className="w-full flex-1 space-y-2 pt-2 border-t border-gray-100 sm:border-t-0 sm:pt-0">
+                      <div className="flex items-center justify-between p-2 rounded-xl bg-blue-50/50 border border-blue-100/70 text-xs">
+                        <span className="flex items-center gap-2 text-gray-700 text-xs font-bold">
+                          <span className="w-2.5 h-2.5 rounded-full bg-[#1D61F2] shrink-0"></span>
+                          <span>Applied</span>
+                        </span>
+                        <span className="font-extrabold text-gray-900 text-xs">
+                          {applicationStatusMetrics.applied} <span className="text-gray-400 font-semibold text-[11px]">({applicationStatusMetrics.appliedPct}%)</span>
+                        </span>
                       </div>
 
-                      <div className="flex-1 space-y-1.5 text-xs">
-                        <div className="flex items-center justify-between">
-                          <span className="flex items-center gap-1.5 text-gray-600 text-[11px]">
-                            <span className="w-2.5 h-2.5 rounded-full bg-[#1D61F2]"></span> Applied
-                          </span>
-                          <span className="font-bold text-gray-800 text-[11px]">
-                            {applicationStatusMetrics.applied} ({applicationStatusMetrics.appliedPct}%)
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="flex items-center gap-1.5 text-gray-600 text-[11px]">
-                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Shortlisted
-                          </span>
-                          <span className="font-bold text-gray-800 text-[11px]">
-                            {applicationStatusMetrics.shortlisted} ({applicationStatusMetrics.shortlistedPct}%)
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="flex items-center gap-1.5 text-gray-600 text-[11px]">
-                            <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Interview
-                          </span>
-                          <span className="font-bold text-gray-800 text-[11px]">
-                            {applicationStatusMetrics.interview} ({applicationStatusMetrics.interviewPct}%)
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="flex items-center gap-1.5 text-gray-600 text-[11px]">
-                            <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span> Hired
-                          </span>
-                          <span className="font-bold text-gray-800 text-[11px]">
-                            {applicationStatusMetrics.hired} ({applicationStatusMetrics.hiredPct}%)
-                          </span>
-                        </div>
+                      <div className="flex items-center justify-between p-2 rounded-xl bg-emerald-50/50 border border-emerald-100/70 text-xs">
+                        <span className="flex items-center gap-2 text-gray-700 text-xs font-bold">
+                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
+                          <span>Shortlisted</span>
+                        </span>
+                        <span className="font-extrabold text-gray-900 text-xs">
+                          {applicationStatusMetrics.shortlisted} <span className="text-gray-400 font-semibold text-[11px]">({applicationStatusMetrics.shortlistedPct}%)</span>
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between p-2 rounded-xl bg-amber-50/50 border border-amber-100/70 text-xs">
+                        <span className="flex items-center gap-2 text-gray-700 text-xs font-bold">
+                          <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span>
+                          <span>Interview</span>
+                        </span>
+                        <span className="font-extrabold text-gray-900 text-xs">
+                          {applicationStatusMetrics.interview} <span className="text-gray-400 font-semibold text-[11px]">({applicationStatusMetrics.interviewPct}%)</span>
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between p-2 rounded-xl bg-purple-50/50 border border-purple-100/70 text-xs">
+                        <span className="flex items-center gap-2 text-gray-700 text-xs font-bold">
+                          <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shrink-0"></span>
+                          <span>Hired</span>
+                        </span>
+                        <span className="font-extrabold text-gray-900 text-xs">
+                          {applicationStatusMetrics.hired} <span className="text-gray-400 font-semibold text-[11px]">({applicationStatusMetrics.hiredPct}%)</span>
+                        </span>
                       </div>
                     </div>
                   </div>
