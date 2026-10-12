@@ -787,10 +787,27 @@ export default function RecruiterDashboard({
     fetchUrgentCandidates();
     fetchNotifications();
 
-    // Regular polling fallback every 20 seconds
+    // Regular polling fallback every 20 seconds for notifications
     const intervalId = setInterval(() => {
       fetchNotifications();
     }, 20000);
+
+    // Periodic data refresh every 60 seconds for cross-device sync
+    const dataRefreshId = setInterval(() => {
+      fetchJobs();
+      fetchApplications();
+    }, 60000);
+
+    // Re-fetch all data when user returns to this browser tab (cross-device sync)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchJobs();
+        fetchApplications();
+        fetchUrgentCandidates();
+        fetchNotifications();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     // Supabase Realtime broadcast listener for instant push alerts
     let supaChannel: any = null;
@@ -840,6 +857,8 @@ export default function RecruiterDashboard({
 
     return () => {
       clearInterval(intervalId);
+      clearInterval(dataRefreshId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (supaChannel) {
         try {
           const supa = getSupabase();
@@ -848,6 +867,21 @@ export default function RecruiterDashboard({
       }
     };
   }, [recruiter.id, token]);
+
+  // Re-fetch relevant data whenever the active tab changes (cross-device sync)
+  React.useEffect(() => {
+    if (activeTab === 'dashboard') {
+      fetchJobs();
+      fetchApplications();
+    } else if (activeTab === 'jobs') {
+      fetchJobs();
+    } else if (activeTab === 'applications') {
+      fetchApplications();
+    } else if (activeTab === 'urgent-candidates') {
+      fetchUrgentCandidates();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   const validateStep1 = (): boolean => {
     if (!jobTitle.trim()) {
@@ -1010,8 +1044,9 @@ export default function RecruiterDashboard({
       setPublishedJobData(savedJob);
       setSuccess(editingJob ? 'Job updated successfully!' : `Job saved as ${finalStatus === 'Draft' ? 'Draft' : 'Published'} successfully!`);
       
-      // Refresh list
+      // Refresh lists (jobs + applications for cross-device sync)
       fetchJobs();
+      fetchApplications();
 
       // Advance to Success Screen (Step 4)
       setJobFormStep(4);
@@ -1045,6 +1080,7 @@ export default function RecruiterDashboard({
       if (response.ok) {
         setSuccess('Job deleted successfully.');
         fetchJobs();
+        fetchApplications();
       } else {
         const data = await response.json();
         setError(data.error || 'Failed to delete job.');
@@ -1076,6 +1112,7 @@ export default function RecruiterDashboard({
       if (response.ok) {
         setSuccess(`Job status updated to "${newStatus}" successfully.`);
         fetchJobs();
+        fetchApplications();
       } else {
         setError(data.error || 'Failed to update job status.');
       }
@@ -1157,7 +1194,9 @@ export default function RecruiterDashboard({
     setJobBenefits(job.benefits || '');
     setJobCompanyLogo(job.companyLogo || job.company_logo || recruiter.companyLogo || '');
     
+    setActiveTab('jobs');
     setShowJobForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDirectApprove = async () => {

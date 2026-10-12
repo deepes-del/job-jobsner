@@ -1356,16 +1356,8 @@ async function authenticateToken(req: express.Request, res: express.Response, ne
     }
   }
 
-  // 4. Fallback: Resolve to latest active candidate in database if candidates exist
-  if (!candidateId) {
-    const liveCandidates = await getLiveCandidates();
-    const candidatesList = (db.candidates || []).concat(liveCandidates);
-    if (candidatesList.length > 0) {
-      candidateId = candidatesList[candidatesList.length - 1].id;
-      db.tokens[token] = candidateId;
-      writeDB(db);
-    }
-  }
+  // SECURITY: Do NOT fall back to last-candidate-in-DB.
+  // An unrecognized token must be rejected with 403 to prevent cross-account data leaks.
 
   if (!candidateId) {
     return res.status(403).json({ error: 'Invalid or expired token.' });
@@ -2992,14 +2984,17 @@ app.get('/api/recruiter/jobs', authenticateRecruiter, async (req, res) => {
   }
 });
 
-// 3. Get a single Job (by id)
-app.get('/api/recruiter/jobs/:id', authenticateRecruiter, (req, res) => {
+// 3. Get a single Job (by id) — always reads live from Supabase for cross-device sync
+app.get('/api/recruiter/jobs/:id', authenticateRecruiter, async (req, res) => {
   const recruiter = (req as any).recruiter;
   const jobId = req.params.id;
   try {
-    const db = readDB();
-    db.jobs = db.jobs || [];
-    const job = db.jobs.find((j: any) => j.id === jobId && j.recruiterId === recruiter.id);
+    const allJobs = await getLiveJobs();
+    const job = allJobs.find((j: any) => j.id === jobId && (
+      j.recruiterId === recruiter.id ||
+      j.recruiterId === recruiter.email ||
+      (recruiter.companyName && j.companyName && j.companyName.toLowerCase() === recruiter.companyName.toLowerCase())
+    ));
     if (!job) {
       return res.status(404).json({ error: 'Job not found.' });
     }
@@ -3021,9 +3016,15 @@ app.put('/api/recruiter/jobs/:id', authenticateRecruiter, async (req, res) => {
   const jobId = req.params.id;
 
   try {
+    // Fetch live jobs from Supabase for cross-device sync
+    const liveJobs = await getLiveJobs();
     const db = readDB();
-    db.jobs = db.jobs || [];
-    const index = db.jobs.findIndex((j: any) => j.id === jobId && j.recruiterId === recruiter.id);
+    db.jobs = liveJobs;
+    const index = db.jobs.findIndex((j: any) => j.id === jobId && (
+      j.recruiterId === recruiter.id ||
+      j.recruiterId === recruiter.email ||
+      (recruiter.companyName && j.companyName && j.companyName.toLowerCase() === recruiter.companyName.toLowerCase())
+    ));
     
     if (index === -1) {
       return res.status(404).json({ error: 'Job not found or access denied.' });
@@ -3168,9 +3169,15 @@ app.patch('/api/recruiter/jobs/:id/status', authenticateRecruiter, async (req, r
   }
 
   try {
+    // Fetch live jobs from Supabase for cross-device sync
+    const liveJobs = await getLiveJobs();
     const db = readDB();
-    db.jobs = db.jobs || [];
-    const index = db.jobs.findIndex((j: any) => j.id === jobId && j.recruiterId === recruiter.id);
+    db.jobs = liveJobs;
+    const index = db.jobs.findIndex((j: any) => j.id === jobId && (
+      j.recruiterId === recruiter.id ||
+      j.recruiterId === recruiter.email ||
+      (recruiter.companyName && j.companyName && j.companyName.toLowerCase() === recruiter.companyName.toLowerCase())
+    ));
 
     if (index === -1) {
       return res.status(404).json({ error: 'Job not found or access denied.' });
@@ -3209,9 +3216,15 @@ app.delete('/api/recruiter/jobs/:id', authenticateRecruiter, async (req, res) =>
   const jobId = req.params.id;
 
   try {
+    // Fetch live jobs from Supabase for cross-device sync
+    const liveJobs = await getLiveJobs();
     const db = readDB();
-    db.jobs = db.jobs || [];
-    const index = db.jobs.findIndex((j: any) => j.id === jobId && j.recruiterId === recruiter.id);
+    db.jobs = liveJobs;
+    const index = db.jobs.findIndex((j: any) => j.id === jobId && (
+      j.recruiterId === recruiter.id ||
+      j.recruiterId === recruiter.email ||
+      (recruiter.companyName && j.companyName && j.companyName.toLowerCase() === recruiter.companyName.toLowerCase())
+    ));
 
     if (index === -1) {
       return res.status(404).json({ error: 'Job not found or access denied.' });
@@ -3403,12 +3416,11 @@ app.get('/api/jobs/filter', async (req, res) => {
   }
 });
 
-// 7.3 Get Job Details (Candidates)
-app.get('/api/jobs/:id', (req, res) => {
+// 7.3 Get Job Details (Candidates) — always reads live for cross-device sync
+app.get('/api/jobs/:id', async (req, res) => {
   try {
-    const db = readDB();
-    db.jobs = db.jobs || [];
-    const job = db.jobs.find((j: any) => j.id === req.params.id);
+    const allJobs = await getLiveJobs();
+    const job = allJobs.find((j: any) => j.id === req.params.id);
     if (!job) {
       return res.status(404).json({ error: 'Job opening not found.' });
     }
@@ -3418,8 +3430,13 @@ app.get('/api/jobs/:id', (req, res) => {
     }
     
     // Increment views Count when details are viewed
-    job.viewsCount = (job.viewsCount || 0) + 1;
-    writeDB(db);
+    const db = readDB();
+    db.jobs = db.jobs || [];
+    const dbJob = db.jobs.find((j: any) => j.id === req.params.id);
+    if (dbJob) {
+      dbJob.viewsCount = (dbJob.viewsCount || 0) + 1;
+      writeDB(db);
+    }
 
     res.status(200).json({ job });
   } catch (err) {
