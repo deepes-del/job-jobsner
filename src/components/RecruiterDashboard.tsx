@@ -2223,13 +2223,22 @@ export default function RecruiterDashboard({
                                     </span>
                                   </td>
                                   <td className="py-3 text-right">
-                                    <button
-                                      onClick={() => handleStartEditJob(job)}
-                                      className="p-1 text-gray-400 hover:text-[#1D61F2] transition-colors cursor-pointer"
-                                      title="Edit Job"
-                                    >
-                                      <Edit2 className="w-3.5 h-3.5" />
-                                    </button>
+                                    <div className="flex items-center justify-end gap-1.5">
+                                      <button
+                                        onClick={() => setViewingJob(job)}
+                                        className="p-1.5 text-gray-400 hover:text-[#1D61F2] hover:bg-blue-50/60 rounded-lg transition-colors cursor-pointer"
+                                        title="View Details"
+                                      >
+                                        <Eye className="w-3.5 h-3.5" />
+                                      </button>
+                                      <button
+                                        onClick={() => handleStartEditJob(job)}
+                                        className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50/60 rounded-lg transition-colors cursor-pointer"
+                                        title="Edit Job"
+                                      >
+                                        <Edit2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
                                   </td>
                                 </tr>
                               );

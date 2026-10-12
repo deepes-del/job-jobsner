@@ -3559,12 +3559,39 @@ async function applyCandidateToJob(candidate: any, rawJobId: any, res: any) {
       const newCount = (job.applicationsCount || 0) + 1;
       const jobRow = toSupabaseJobRow({ ...job, applicationsCount: newCount, updatedAt: nowIso });
       await safeSupabaseUpsert('jobs', [jobRow]);
+
+      // 9. Auto-allocate direct application as Recruiter Visible in Supabase
+      const allocRecord = {
+        applicationId: newApplication.id,
+        allocationStatus: 'Recruiter Visible',
+        jobId: String(jobId),
+        recruiterId: String(recruiterId),
+        candidateId: String(candidate.id),
+        allocatedAt: nowIso
+      };
+      try {
+        await safeSupabaseUpsert('candidateAllocations', [toSupabaseAllocationRow(allocRecord)]);
+      } catch (allocErr) {
+        console.warn('[Supabase Candidate Allocation Auto-upsert Warning]', allocErr);
+      }
     }
+
+    const allocRecord = {
+      applicationId: newApplication.id,
+      allocationStatus: 'Recruiter Visible',
+      jobId: String(jobId),
+      recruiterId: String(recruiterId),
+      candidateId: String(candidate.id),
+      allocatedAt: nowIso
+    };
 
     // Local DB fallback update
     const db = readDB();
     db.applications = db.applications || [];
     db.applications.push(newApplication);
+
+    db.candidateAllocations = db.candidateAllocations || [];
+    db.candidateAllocations.push(allocRecord);
 
     db.jobs = db.jobs || [];
     const dbJob = db.jobs.find((j: any) => String(j.id) === jobId);
@@ -3621,6 +3648,12 @@ async function applyCandidateToJob(candidate: any, rawJobId: any, res: any) {
           companyName: job.companyName
         }
       });
+
+      try {
+        await notifyRecruiterOnCandidateAllocation(allocRecord, candidate, job);
+      } catch (allocNotifErr) {
+        console.warn('[Recruiter Allocation Notification Warning]', allocNotifErr);
+      }
     } catch (notifErr) {
       console.warn('[Notification Error]', notifErr);
     }
@@ -3798,11 +3831,11 @@ app.get('/api/recruiter/applications', authenticateRecruiter, async (req, res) =
     const allAllocations = await getLiveAllocations();
     const allDocs = await getLiveDocuments();
 
-    const visibleAppIds = new Set(
-      allAllocations
-        .filter((al: any) => al.allocationStatus === 'Recruiter Visible')
-        .map((al: any) => String(al.applicationId || al.id))
-    );
+    const allocStatusMap = new Map<string, string>();
+    allAllocations.forEach((al: any) => {
+      const appId = String(al.applicationId || al.id || '');
+      if (appId) allocStatusMap.set(appId, String(al.allocationStatus || al.allocation_status || ''));
+    });
 
     const isRecruiterJob = (j: any) => {
       if (!j) return false;
@@ -3816,14 +3849,31 @@ app.get('/api/recruiter/applications', authenticateRecruiter, async (req, res) =
     };
 
     const myJobs = allJobs.filter(isRecruiterJob);
-    const myJobIds = myJobs.map((j: any) => String(j.id));
+    const myJobIds = new Set(myJobs.map((j: any) => String(j.id)));
+    const recId = String(recruiter.id || '');
+    const recEmail = String(recruiter.email || '').toLowerCase();
     
-    // Filter apps: must belong to recruiter's job AND be allocated as 'Recruiter Visible' (unless admin)
+    // Filter apps: must belong to recruiter's job OR have recruiterId matching this recruiter
     const myApps = allApps.filter((app: any) => {
-      const matchesJob = myJobIds.includes(String(app.jobId)) || myJobIds.includes(String(app.job_id));
-      if (!matchesJob) return false;
+      const appId = String(app.id || '');
+      const appJobId = String(app.jobId || app.job_id || '');
+      const appRecId = String(app.recruiterId || app.recruiter_id || '');
+
+      const matchesJob = myJobIds.has(appJobId);
+      const matchesRec = appRecId && (appRecId === recId || (recEmail && appRecId.toLowerCase() === recEmail));
+
+      if (!matchesJob && !matchesRec && recruiter.role !== 'admin') {
+        return false;
+      }
+
       if (recruiter.role === 'admin') return true;
-      return visibleAppIds.has(String(app.id));
+
+      // Check allocation status: only hide if Admin explicitly allocated this to 'Admin Only'
+      const status = allocStatusMap.get(appId);
+      if (status === 'Admin Only') {
+        return false;
+      }
+      return true;
     });
 
     const appMap = new Map<string, any>();
