@@ -700,6 +700,41 @@ export default function RecruiterDashboard({
     return true;
   });
 
+  // Interleave and shuffle applications so urgent candidates and normal candidates are naturally mixed
+  const sortedAndShuffledApplications = React.useMemo(() => {
+    if (!filteredApplications || filteredApplications.length <= 1) return filteredApplications;
+    // Deterministic pseudo-random shuffle based on item ID characters to keep row stability between re-renders
+    const getHash = (str: string) => {
+      let h = 0;
+      for (let i = 0; i < str.length; i++) {
+        h = ((h << 5) - h) + str.charCodeAt(i);
+        h |= 0;
+      }
+      return Math.abs(h);
+    };
+
+    const urgentList = filteredApplications.filter((a: any) => a.isUrgentCandidate);
+    const regularList = filteredApplications.filter((a: any) => !a.isUrgentCandidate);
+
+    // If only one group exists, return as-is
+    if (urgentList.length === 0 || regularList.length === 0) {
+      return [...filteredApplications].sort((a: any, b: any) => {
+        const idA = String(a.id || a.candidateId || '');
+        const idB = String(b.id || b.candidateId || '');
+        return (getHash(idA) % 1000) - (getHash(idB) % 1000);
+      });
+    }
+
+    // Interleave alternating items from urgent and regular lists
+    const mixed: any[] = [];
+    const maxLen = Math.max(urgentList.length, regularList.length);
+    for (let i = 0; i < maxLen; i++) {
+      if (i < regularList.length) mixed.push(regularList[i]);
+      if (i < urgentList.length) mixed.push(urgentList[i]);
+    }
+    return mixed;
+  }, [filteredApplications]);
+
   const fetchJobs = async () => {
     setLoadingJobs(true);
     try {
@@ -3906,7 +3941,7 @@ export default function RecruiterDashboard({
                     <RefreshCw className="w-6 h-6 animate-spin text-orange-500 mb-2" />
                     Fetching incoming candidates list...
                   </div>
-                ) : filteredApplications.length === 0 ? (
+                ) : sortedAndShuffledApplications.length === 0 ? (
                   <div className="py-16 text-center text-gray-400 flex flex-col items-center justify-center">
                     <FileMinus className="w-10 h-10 text-gray-300 mb-2" />
                     <p className="text-xs font-semibold">No applications found matching the current filters.</p>
@@ -3927,7 +3962,7 @@ export default function RecruiterDashboard({
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100 text-xs font-medium text-slate-700">
-                        {filteredApplications.map((app, idx) => (
+                        {sortedAndShuffledApplications.map((app, idx) => (
                           <tr key={app.id ? `app-${app.id}` : `app-row-${idx}-${app.candidateId || ''}`} className="hover:bg-gray-50/40 transition-colors">
                             <td className="py-3 px-5">
                               <div className="flex items-center gap-3">
@@ -3954,11 +3989,6 @@ export default function RecruiterDashboard({
                                     )}
                                   </div>
                                   <span className="text-[10px] text-gray-400 block">{app.candidateMobile}</span>
-                                  {app.isUrgentCandidate && (
-                                    <span className="text-[9.5px] font-medium text-amber-600 block mt-0.5">
-                                      ⚡ Assigned by Admin from Candidate Pool
-                                    </span>
-                                  )}
                                 </div>
                               </div>
                             </td>

@@ -3993,7 +3993,19 @@ app.get('/api/recruiter/applications', authenticateRecruiter, async (req, res) =
       });
     });
 
-    res.status(200).json({ applications: Array.from(appMap.values()) });
+    const allAppsList = Array.from(appMap.values());
+    const urgentItems = allAppsList.filter((a: any) => a.isUrgentCandidate);
+    const regularItems = allAppsList.filter((a: any) => !a.isUrgentCandidate);
+
+    // Interleave/shuffle orders so urgent candidates and regular applicants are naturally mixed
+    const shuffledList: any[] = [];
+    const maxLen = Math.max(urgentItems.length, regularItems.length);
+    for (let i = 0; i < maxLen; i++) {
+      if (i < regularItems.length) shuffledList.push(regularItems[i]);
+      if (i < urgentItems.length) shuffledList.push(urgentItems[i]);
+    }
+
+    res.status(200).json({ applications: shuffledList.length > 0 ? shuffledList : allAppsList });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error retrieving recruiter applications.' });
