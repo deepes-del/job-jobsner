@@ -140,11 +140,16 @@ export default function App() {
             setPortal('recruiter');
             setUserRole('recruiter');
             return true;
-          } else if (res.status === 401 || res.status === 403) {
+          } else if (res.status === 401) {
+            // Only clear on 401 (truly invalid token); 403 may be transient
             localStorage.removeItem('recruiter_hiring_token');
+          } else if (res.status === 403) {
+            // 403 could be a transient server restart; keep the token and let user retry
+            console.warn('[Session Restore] 403 received, keeping token for retry');
           }
         } catch (err) {
-          console.error('Recruiter restore error:', err);
+          // Network error: don't clear the stored token, session may still be valid
+          console.error('Recruiter restore error (network):', err);
         }
       }
       return false;

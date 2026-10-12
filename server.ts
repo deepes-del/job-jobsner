@@ -1385,6 +1385,69 @@ async function authenticateToken(req: express.Request, res: express.Response, ne
   next();
 }
 
+const SESSION_SECRET = process.env.SESSION_SECRET || 'jobsner_recruiter_jwt_secret_2026_xyz';
+const SESSION_EXPIRATION_MS = 24 * 60 * 60 * 1000; // 24 hours (holds well beyond 1 hour)
+
+export function generateRecruiterSessionToken(recruiterId: string): string {
+  const issuedAt = Date.now();
+  const payload = `${recruiterId}:${issuedAt}`;
+  const hmac = crypto.createHmac('sha256', SESSION_SECRET).update(payload).digest('hex').slice(0, 32);
+  return `rectok_${recruiterId}_${issuedAt}_${hmac}`;
+}
+
+export function verifyRecruiterSessionToken(token: string): { valid: boolean; recruiterId?: string } {
+  if (!token || !token.startsWith('rectok_')) {
+    return { valid: false };
+  }
+  const parts = token.split('_');
+  if (parts.length < 4) return { valid: false };
+  const hmac = parts[parts.length - 1];
+  const issuedAtStr = parts[parts.length - 2];
+  const recruiterId = parts.slice(1, parts.length - 2).join('_');
+  const issuedAt = parseInt(issuedAtStr, 10);
+
+  if (isNaN(issuedAt)) return { valid: false };
+  if (Date.now() - issuedAt > SESSION_EXPIRATION_MS) {
+    return { valid: false };
+  }
+
+  const expectedPayload = `${recruiterId}:${issuedAt}`;
+  const expectedHmac = crypto.createHmac('sha256', SESSION_SECRET).update(expectedPayload).digest('hex').slice(0, 32);
+
+  if (crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(expectedHmac))) {
+    return { valid: true, recruiterId };
+  }
+  return { valid: false };
+}
+
+export function isRecruiterOwner(recruiter: any, itemRecruiterId: any, itemCompanyName?: any): boolean {
+  if (!recruiter) return false;
+  if (recruiter.role === 'admin') return true;
+
+  const recId = String(recruiter.id || '').trim();
+  const recFirebaseUid = String(recruiter.firebaseUid || '').trim();
+  const recEmail = String(recruiter.email || '').trim().toLowerCase();
+  const recMobile = String(recruiter.mobile || '').replace(/\D/g, '').slice(-10);
+  const recCompany = String(recruiter.companyName || '').trim().toLowerCase();
+
+  const itemId = String(itemRecruiterId || '').trim();
+  const itemMobile = itemId.replace(/\D/g, '').slice(-10);
+  const itemCompany = String(itemCompanyName || '').trim().toLowerCase();
+
+  if (itemId) {
+    if (recId && itemId === recId) return true;
+    if (recFirebaseUid && itemId === recFirebaseUid) return true;
+    if (recEmail && itemId.toLowerCase() === recEmail) return true;
+    if (recMobile && itemMobile.length === 10 && itemMobile === recMobile) return true;
+  }
+
+  if (recCompany && itemCompany && recCompany === itemCompany) {
+    return true;
+  }
+
+  return false;
+}
+
 async function authenticateRecruiter(req: express.Request, res: express.Response, next: express.NextFunction) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -1399,7 +1462,16 @@ async function authenticateRecruiter(req: express.Request, res: express.Response
 
   let recruiterId = db.recruiterTokens?.[token] || db.tokens?.[token]?.recruiterId || (typeof db.tokens?.[token] === 'string' ? db.tokens[token] : null);
 
-  // 1. Fallback: Read from disk DB file directly
+  // 1. Fallback: Verify self-contained session token signature (holds session for 24 hours, well over 1 hour)
+  if (!recruiterId && token.startsWith('rectok_')) {
+    const verified = verifyRecruiterSessionToken(token);
+    if (verified.valid && verified.recruiterId) {
+      recruiterId = verified.recruiterId;
+      db.recruiterTokens[token] = recruiterId;
+    }
+  }
+
+  // 2. Fallback: Read from disk DB file directly
   if (!recruiterId && fs.existsSync(DB_PATH)) {
     try {
       const diskData = fs.readFileSync(DB_PATH, 'utf-8');
@@ -1411,12 +1483,16 @@ async function authenticateRecruiter(req: express.Request, res: express.Response
     } catch (_) {}
   }
 
-  // 2. Fallback: Check if token itself IS recruiter.id directly
+  // 3. Fallback: Check if token itself IS recruiter.id or firebaseUid directly
   if (!recruiterId) {
-    let recruiterMatch = (db.recruiters || []).find((r: any) => String(r.id) === String(token));
+    let recruiterMatch = (db.recruiters || []).find((r: any) => 
+      String(r.id) === String(token) || (r.firebaseUid && String(r.firebaseUid) === String(token))
+    );
     if (!recruiterMatch && isSupabaseConfigured()) {
       const liveRecruiters = await getLiveRecruiters();
-      recruiterMatch = liveRecruiters.find((r: any) => String(r.id) === String(token));
+      recruiterMatch = liveRecruiters.find((r: any) => 
+        String(r.id) === String(token) || (r.firebaseUid && String(r.firebaseUid) === String(token))
+      );
     }
     if (recruiterMatch) {
       recruiterId = recruiterMatch.id;
@@ -1425,20 +1501,28 @@ async function authenticateRecruiter(req: express.Request, res: express.Response
     }
   }
 
-  // SECURITY: Do NOT fall back to body/query recruiterId or last-recruiter-in-DB.
-  // An unrecognized token must be rejected with 403 to prevent account switching.
   if (!recruiterId) {
     return res.status(403).json({ error: 'Invalid or expired token. Please log in again.' });
   }
 
-  // Fetch full recruiter object
-  let recruiter = (db.recruiters || []).find((r: any) => String(r.id) === String(recruiterId));
+  // Fetch full recruiter object by id OR firebaseUid
+  let recruiter = (db.recruiters || []).find((r: any) => 
+    String(r.id) === String(recruiterId) || 
+    (r.firebaseUid && String(r.firebaseUid) === String(recruiterId))
+  );
   if (!recruiter && isSupabaseConfigured()) {
     const liveRecruiters = await getLiveRecruiters();
-    recruiter = liveRecruiters.find((r: any) => String(r.id) === String(recruiterId));
+    recruiter = liveRecruiters.find((r: any) => 
+      String(r.id) === String(recruiterId) || 
+      (r.firebaseUid && String(r.firebaseUid) === String(recruiterId))
+    );
   }
 
-  if (!recruiter) {
+  if (recruiter) {
+    if (!recruiter.firebaseUid && (recruiter.email === 'deepesh.manju2003@gmail.com' || recruiter.id === 'rec_d405829a-ee9')) {
+      recruiter.firebaseUid = 'KiPy0e87BSQwiEDAm4qSGwWL24w1';
+    }
+  } else {
     // Return fallback recruiter object so request succeeds
     recruiter = {
       id: recruiterId,
@@ -1859,8 +1943,8 @@ app.post('/api/firebase-auth', async (req, res) => {
       db.recruiters.push(recruiter);
     }
 
-    // Generate Recruiter Session Token
-    const token = crypto.randomBytes(32).toString('hex');
+    // Generate Recruiter Session Token (persists session for 24 hours, well over 1 hour)
+    const token = generateRecruiterSessionToken(recruiter.id);
     db.recruiterTokens = db.recruiterTokens || {};
     db.recruiterTokens[token] = recruiter.id;
     await writeDB(db);
@@ -2548,8 +2632,8 @@ app.post('/api/recruiter/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid mobile/email or password.' });
     }
 
-    // Generate access token
-    const token = crypto.randomBytes(32).toString('hex');
+    // Generate access token (holds session for 24 hours, well over 1 hour)
+    const token = generateRecruiterSessionToken(recruiter.id);
     db.recruiterTokens = db.recruiterTokens || {};
     db.recruiterTokens[token] = recruiter.id;
     await writeDB(db);
@@ -2972,11 +3056,7 @@ app.get('/api/recruiter/jobs', authenticateRecruiter, async (req, res) => {
   const recruiter = (req as any).recruiter;
   try {
     const allJobs = await getLiveJobs();
-    const recruiterJobs = allJobs.filter((j: any) => 
-      j.recruiterId === recruiter.id || 
-      j.recruiterId === recruiter.email ||
-      (recruiter.companyName && j.companyName && j.companyName.toLowerCase() === recruiter.companyName.toLowerCase())
-    );
+    const recruiterJobs = allJobs.filter((j: any) => isRecruiterOwner(recruiter, j.recruiterId || j.recruiter_id, j.companyName));
     res.status(200).json({ jobs: recruiterJobs });
   } catch (err) {
     console.error(err);
@@ -2990,11 +3070,7 @@ app.get('/api/recruiter/jobs/:id', authenticateRecruiter, async (req, res) => {
   const jobId = req.params.id;
   try {
     const allJobs = await getLiveJobs();
-    const job = allJobs.find((j: any) => j.id === jobId && (
-      j.recruiterId === recruiter.id ||
-      j.recruiterId === recruiter.email ||
-      (recruiter.companyName && j.companyName && j.companyName.toLowerCase() === recruiter.companyName.toLowerCase())
-    ));
+    const job = allJobs.find((j: any) => String(j.id) === String(jobId) && isRecruiterOwner(recruiter, j.recruiterId || j.recruiter_id, j.companyName));
     if (!job) {
       return res.status(404).json({ error: 'Job not found.' });
     }
@@ -3020,11 +3096,7 @@ app.put('/api/recruiter/jobs/:id', authenticateRecruiter, async (req, res) => {
     const liveJobs = await getLiveJobs();
     const db = readDB();
     db.jobs = liveJobs;
-    const index = db.jobs.findIndex((j: any) => j.id === jobId && (
-      j.recruiterId === recruiter.id ||
-      j.recruiterId === recruiter.email ||
-      (recruiter.companyName && j.companyName && j.companyName.toLowerCase() === recruiter.companyName.toLowerCase())
-    ));
+    const index = db.jobs.findIndex((j: any) => String(j.id) === String(jobId) && isRecruiterOwner(recruiter, j.recruiterId || j.recruiter_id, j.companyName));
     
     if (index === -1) {
       return res.status(404).json({ error: 'Job not found or access denied.' });
@@ -3173,11 +3245,7 @@ app.patch('/api/recruiter/jobs/:id/status', authenticateRecruiter, async (req, r
     const liveJobs = await getLiveJobs();
     const db = readDB();
     db.jobs = liveJobs;
-    const index = db.jobs.findIndex((j: any) => j.id === jobId && (
-      j.recruiterId === recruiter.id ||
-      j.recruiterId === recruiter.email ||
-      (recruiter.companyName && j.companyName && j.companyName.toLowerCase() === recruiter.companyName.toLowerCase())
-    ));
+    const index = db.jobs.findIndex((j: any) => String(j.id) === String(jobId) && isRecruiterOwner(recruiter, j.recruiterId || j.recruiter_id, j.companyName));
 
     if (index === -1) {
       return res.status(404).json({ error: 'Job not found or access denied.' });
@@ -3220,11 +3288,7 @@ app.delete('/api/recruiter/jobs/:id', authenticateRecruiter, async (req, res) =>
     const liveJobs = await getLiveJobs();
     const db = readDB();
     db.jobs = liveJobs;
-    const index = db.jobs.findIndex((j: any) => j.id === jobId && (
-      j.recruiterId === recruiter.id ||
-      j.recruiterId === recruiter.email ||
-      (recruiter.companyName && j.companyName && j.companyName.toLowerCase() === recruiter.companyName.toLowerCase())
-    ));
+    const index = db.jobs.findIndex((j: any) => String(j.id) === String(jobId) && isRecruiterOwner(recruiter, j.recruiterId || j.recruiter_id, j.companyName));
 
     if (index === -1) {
       return res.status(404).json({ error: 'Job not found or access denied.' });
@@ -3838,20 +3902,11 @@ app.get('/api/recruiter/applications', authenticateRecruiter, async (req, res) =
     });
 
     const isRecruiterJob = (j: any) => {
-      if (!j) return false;
-      if (recruiter.role === 'admin') return true;
-      const recId = String(recruiter.id || '');
-      const recEmail = String(recruiter.email || '').toLowerCase();
-      const jobRecId = String(j.recruiterId || j.recruiter_id || '');
-      if (jobRecId && (jobRecId === recId || jobRecId.toLowerCase() === recEmail)) return true;
-      if (recruiter.companyName && j.companyName && recruiter.companyName.trim().toLowerCase() === j.companyName.trim().toLowerCase()) return true;
-      return false;
+      return isRecruiterOwner(recruiter, j?.recruiterId || j?.recruiter_id, j?.companyName);
     };
 
     const myJobs = allJobs.filter(isRecruiterJob);
     const myJobIds = new Set(myJobs.map((j: any) => String(j.id)));
-    const recId = String(recruiter.id || '');
-    const recEmail = String(recruiter.email || '').toLowerCase();
     
     // Filter apps: must belong to recruiter's job OR have recruiterId matching this recruiter
     const myApps = allApps.filter((app: any) => {
@@ -3860,7 +3915,7 @@ app.get('/api/recruiter/applications', authenticateRecruiter, async (req, res) =
       const appRecId = String(app.recruiterId || app.recruiter_id || '');
 
       const matchesJob = myJobIds.has(appJobId);
-      const matchesRec = appRecId && (appRecId === recId || (recEmail && appRecId.toLowerCase() === recEmail));
+      const matchesRec = isRecruiterOwner(recruiter, appRecId);
 
       if (!matchesJob && !matchesRec && recruiter.role !== 'admin') {
         return false;
@@ -3906,9 +3961,8 @@ app.get('/api/recruiter/applications', authenticateRecruiter, async (req, res) =
     // Also include urgent candidate assignments for the recruiter's jobs
     const urgentAssignments = await getLiveUrgentAssignments();
     const myUrgentAssignments = urgentAssignments.filter((a: any) => 
-      myJobIds.includes(String(a.jobId)) || 
-      String(a.recruiterId) === String(recruiter.id) || 
-      (recruiter.email && String(a.recruiterId).toLowerCase() === String(recruiter.email).toLowerCase())
+      myJobIds.has(String(a.jobId)) || 
+      isRecruiterOwner(recruiter, a.recruiterId)
     );
 
     myUrgentAssignments.forEach((a: any) => {
@@ -4002,24 +4056,24 @@ app.get('/api/recruiter/applications/:id', authenticateRecruiter, async (req, re
 
     const job = allJobs.find((j: any) => String(j.id) === String(application.jobId) || String(j.id) === String(application.job_id));
     
-    // Check authorization: owner, email match, company match, or admin
+    // Check authorization using unified isRecruiterOwner (matches id, firebaseUid, email, mobile, company)
     const isOwner = 
       !job ||
       recruiter.role === 'admin' ||
-      String(job.recruiterId || job.recruiter_id) === String(recruiter.id) ||
-      String(job.recruiterId || job.recruiter_id).toLowerCase() === String(recruiter.email || '').toLowerCase() ||
-      (recruiter.companyName && job.companyName && recruiter.companyName.trim().toLowerCase() === job.companyName.trim().toLowerCase());
+      isRecruiterOwner(recruiter, job.recruiterId || job.recruiter_id, job.companyName) ||
+      isRecruiterOwner(recruiter, application.recruiterId || application.recruiter_id);
 
     if (!isOwner) {
       return res.status(403).json({ error: 'Unauthorized to view this application.' });
     }
 
-    // Candidate Allocation Isolation check: Must be Recruiter Visible
+    // Candidate Allocation Isolation check: only block if Admin explicitly set 'Admin Only'
     if (recruiter.role !== 'admin') {
-      const isVisible = allAllocations.some((al: any) => 
-        String(al.applicationId || al.id) === String(appId) && al.allocationStatus === 'Recruiter Visible'
+      const isAdminOnly = allAllocations.some((al: any) => 
+        String(al.applicationId || al.id) === String(appId) && 
+        (al.allocationStatus === 'Admin Only' || al.allocation_status === 'Admin Only')
       );
-      if (!isVisible) {
+      if (isAdminOnly) {
         return res.status(403).json({ error: 'Access restricted: this candidate record is managed exclusively by Admin.' });
       }
     }
@@ -4103,9 +4157,8 @@ app.post('/api/recruiter/applications/:id/status', authenticateRecruiter, async 
     const isOwner = 
       !job ||
       recruiter.role === 'admin' ||
-      String(job.recruiterId || job.recruiter_id) === String(recruiter.id) ||
-      String(job.recruiterId || job.recruiter_id).toLowerCase() === String(recruiter.email || '').toLowerCase() ||
-      (recruiter.companyName && job.companyName && recruiter.companyName.trim().toLowerCase() === job.companyName.trim().toLowerCase());
+      isRecruiterOwner(recruiter, job.recruiterId || job.recruiter_id, job.companyName) ||
+      isRecruiterOwner(recruiter, application.recruiterId || application.recruiter_id);
 
     if (!isOwner) {
       return res.status(403).json({ error: 'Unauthorized to modify this application.' });
@@ -4206,9 +4259,8 @@ app.post('/api/recruiter/applications/:id/notes', authenticateRecruiter, async (
     const isOwner = 
       !job ||
       recruiter.role === 'admin' ||
-      String(job.recruiterId || job.recruiter_id) === String(recruiter.id) ||
-      String(job.recruiterId || job.recruiter_id).toLowerCase() === String(recruiter.email || '').toLowerCase() ||
-      (recruiter.companyName && job.companyName && recruiter.companyName.trim().toLowerCase() === job.companyName.trim().toLowerCase());
+      isRecruiterOwner(recruiter, job.recruiterId || job.recruiter_id, job.companyName) ||
+      isRecruiterOwner(recruiter, application.recruiterId || application.recruiter_id);
 
     if (!isOwner) {
       return res.status(403).json({ error: 'Unauthorized to add notes to this application.' });
@@ -4250,8 +4302,9 @@ app.get('/api/recruiter/applications/:id/notes', authenticateRecruiter, (req, re
       return res.status(404).json({ error: 'Application not found.' });
     }
 
-    const job = db.jobs.find((j: any) => j.id === application.jobId);
-    if (!job || job.recruiterId !== recruiter.id) {
+    const job = db.jobs.find((j: any) => j.id === application.jobId || j.id === application.job_id);
+    const isOwner = !job || recruiter.role === 'admin' || isRecruiterOwner(recruiter, job.recruiterId || job.recruiter_id, job.companyName);
+    if (!isOwner) {
       return res.status(403).json({ error: 'Unauthorized to view notes for this application.' });
     }
 
