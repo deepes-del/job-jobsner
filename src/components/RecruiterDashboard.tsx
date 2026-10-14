@@ -352,8 +352,16 @@ export default function RecruiterDashboard({
       setJobCompanyLogo('');
     }
     setShowJobForm(true);
+    setTimeout(() => {
+      scrollToJobFormTop();
+    }, 10);
+  };
+
+  const scrollToJobFormTop = () => {
+    document.getElementById('job-posting-fullscreen-page')?.scrollTo({ top: 0, behavior: 'instant' });
     window.scrollTo({ top: 0, behavior: 'instant' });
   };
+
 
   const fetchUrgentCandidates = async () => {
     setLoadingUrgent(true);
@@ -1516,65 +1524,6 @@ export default function RecruiterDashboard({
   const renderJobPostingWizard = () => {
     return (
       <div className="space-y-4" id="recruiter-dedicated-job-form-wrapper">
-        {/* Dedicated Top Action Header with Clear Back Button */}
-        <div className="bg-white border border-gray-150 rounded-2xl p-3 sm:p-4 shadow-xs flex items-center justify-between gap-3 sticky top-16 z-20">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <button
-              type="button"
-              onClick={() => {
-                if (jobFormStep > 1 && jobFormStep < 4) {
-                  setJobFormStep((prev) => (prev - 1) as 1 | 2 | 3);
-                  window.scrollTo({ top: 0, behavior: 'instant' });
-                } else {
-                  setShowJobForm(false);
-                  setEditingJob(null);
-                }
-              }}
-              className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-800 font-bold text-xs transition-all cursor-pointer active:scale-95 shadow-2xs"
-              id="job-form-top-back-btn"
-            >
-              <ChevronLeft className="w-4 h-4 text-[#1D61F2]" />
-              <span>{jobFormStep > 1 && jobFormStep < 4 ? 'Previous Step' : 'Back to Dashboard'}</span>
-            </button>
-
-            <div>
-              <h3 className="font-extrabold text-gray-900 text-xs sm:text-sm leading-tight">
-                {editingJob ? 'Edit Job Opening' : 'Post a Job Opening'}
-              </h3>
-              <p className="text-[10px] text-gray-400 font-medium">
-                Step {jobFormStep} of 4 • {jobFormStep === 1 ? 'Basic Information' : jobFormStep === 2 ? 'Job Details' : jobFormStep === 3 ? 'Review & Publish' : 'Live Confirmation'}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {jobFormStep < 4 && (
-              <button
-                type="button"
-                onClick={() => {
-                  if (window.confirm('Reset this job form and start over?')) {
-                    handleOpenNewJobForm(true);
-                  }
-                }}
-                className="text-[11px] text-gray-400 hover:text-red-600 font-semibold transition-colors cursor-pointer"
-              >
-                Reset Form
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => {
-                setShowJobForm(false);
-                setEditingJob(null);
-              }}
-              className="p-1.5 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100 transition-all cursor-pointer"
-              title="Close"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-
         {/* 4-STAGE POST A JOB WIZARD FLOW */}
         <div className="bg-white border border-gray-150 rounded-2xl p-4 sm:p-6 shadow-xs">
           {/* STEPPER PROGRESS BAR */}
@@ -1603,7 +1552,10 @@ export default function RecruiterDashboard({
                       type="button"
                       disabled={s.step > jobFormStep && !isCompleted}
                       onClick={() => {
-                        if (isCompleted) setJobFormStep(s.step as 1 | 2 | 3);
+                        if (isCompleted) {
+                          setJobFormStep(s.step as 1 | 2 | 3);
+                          scrollToJobFormTop();
+                        }
                       }}
                       className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center font-extrabold text-xs transition-all ${
                         isActive
@@ -1877,7 +1829,7 @@ export default function RecruiterDashboard({
                     onClick={() => {
                       if (validateStep1()) {
                         setJobFormStep(2);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        scrollToJobFormTop();
                       }
                     }}
                     className="py-2.5 px-5 sm:px-6 bg-[#1D61F2] hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer"
@@ -2071,7 +2023,7 @@ export default function RecruiterDashboard({
                     type="button"
                     onClick={() => {
                       setJobFormStep(1);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                      scrollToJobFormTop();
                     }}
                     className="py-2.5 px-4 sm:px-5 border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer"
                   >
@@ -2084,7 +2036,7 @@ export default function RecruiterDashboard({
                     onClick={() => {
                       if (validateStep2()) {
                         setJobFormStep(3);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        scrollToJobFormTop();
                       }
                     }}
                     className="py-2.5 px-5 sm:px-6 bg-[#1D61F2] hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer"
@@ -2117,7 +2069,7 @@ export default function RecruiterDashboard({
                       </h6>
                       <button
                         type="button"
-                        onClick={() => { setJobFormStep(1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                        onClick={() => { setJobFormStep(1); scrollToJobFormTop(); }}
                         className="text-xs text-[#1D61F2] hover:underline font-bold flex items-center gap-1 cursor-pointer"
                       >
                         <Edit2 className="w-3.5 h-3.5" /> Edit Basic Info
@@ -2160,7 +2112,7 @@ export default function RecruiterDashboard({
                       </h6>
                       <button
                         type="button"
-                        onClick={() => { setJobFormStep(2); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                        onClick={() => { setJobFormStep(2); scrollToJobFormTop(); }}
                         className="text-xs text-[#1D61F2] hover:underline font-bold flex items-center gap-1 cursor-pointer"
                       >
                         <Edit2 className="w-3.5 h-3.5" /> Edit Details
@@ -2211,7 +2163,7 @@ export default function RecruiterDashboard({
                       </h6>
                       <button
                         type="button"
-                        onClick={() => { setJobFormStep(2); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                        onClick={() => { setJobFormStep(2); scrollToJobFormTop(); }}
                         className="text-xs text-[#1D61F2] hover:underline font-bold flex items-center gap-1 cursor-pointer"
                       >
                         <Edit2 className="w-3.5 h-3.5" /> Edit Descriptions
@@ -2241,7 +2193,7 @@ export default function RecruiterDashboard({
                     type="button"
                     onClick={() => {
                       setJobFormStep(2);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                      scrollToJobFormTop();
                     }}
                     className="w-full sm:w-auto py-2.5 px-4 sm:px-5 border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
@@ -2365,6 +2317,81 @@ export default function RecruiterDashboard({
       </div>
     );
   };
+
+  // --- FULL-SCREEN JOB POSTING PAGE (replaces dashboard entirely when open) ---
+  if (showJobForm) {
+    return (
+      <div
+        className="fixed inset-0 z-[200] bg-gray-50 overflow-y-auto"
+        id="job-posting-fullscreen-page"
+      >
+        {/* Sticky top bar */}
+        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm px-3 sm:px-6 py-3 flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              if (jobFormStep > 1 && jobFormStep < 4) {
+                setJobFormStep((prev) => (prev - 1) as 1 | 2 | 3);
+                scrollToJobFormTop();
+              } else {
+                setShowJobForm(false);
+                setEditingJob(null);
+                window.scrollTo({ top: 0, behavior: 'instant' });
+              }
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-800 font-bold text-xs transition-all cursor-pointer active:scale-95"
+            id="job-form-fullscreen-back-btn"
+          >
+            <ChevronLeft className="w-4 h-4 text-[#1D61F2]" />
+            <span>{jobFormStep > 1 && jobFormStep < 4 ? 'Previous Step' : 'Back to Dashboard'}</span>
+          </button>
+
+          <div className="flex-1 min-w-0 text-center">
+            <h2 className="font-extrabold text-gray-900 text-sm leading-tight truncate">
+              {editingJob ? 'Edit Job Opening' : 'Post a Job Opening'}
+            </h2>
+            <p className="text-[10px] text-gray-400 font-medium">
+              Step {jobFormStep} of 4 &bull;{' '}
+              {jobFormStep === 1 ? 'Basic Information' : jobFormStep === 2 ? 'Job Details' : jobFormStep === 3 ? 'Review & Publish' : 'Published!'}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {jobFormStep < 4 && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.confirm('Reset this job form and start over?')) {
+                    handleOpenNewJobForm(true);
+                  }
+                }}
+                className="text-[11px] text-gray-400 hover:text-red-600 font-semibold transition-colors cursor-pointer hidden sm:block"
+              >
+                Reset
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                setShowJobForm(false);
+                setEditingJob(null);
+                window.scrollTo({ top: 0, behavior: 'instant' });
+              }}
+              className="p-1.5 text-gray-400 hover:text-gray-700 rounded-xl hover:bg-gray-100 transition-all cursor-pointer"
+              title="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Main form content — max-width centered, padding clears bottom on mobile */}
+        <div className="max-w-2xl mx-auto px-3 sm:px-6 py-5 pb-24">
+          {renderJobPostingWizard()}
+        </div>
+      </div>
+    );
+  }
 
   // --- RENDER APPROVED DASHBOARD ---
   return (
@@ -2758,23 +2785,9 @@ export default function RecruiterDashboard({
           )}
         </AnimatePresence>
 
-        {/* Dynamic renders based on Active Tab or Dedicated Job Form Page */}
+        {/* Dynamic renders based on Active Tab */}
         <AnimatePresence mode="wait">
-          {showJobForm && (
-            <motion.div
-              key="dedicated-job-form-page"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.15 }}
-              className="space-y-4"
-              id="dedicated-job-posting-view"
-            >
-              {renderJobPostingWizard()}
-            </motion.div>
-          )}
-
-          {!showJobForm && activeTab === 'dashboard' && (
+          {activeTab === 'dashboard' && (
             <motion.div
               key="dashboard-tab"
               initial={{ opacity: 0, y: 8 }}

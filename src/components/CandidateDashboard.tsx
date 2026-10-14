@@ -369,7 +369,7 @@ export default function CandidateDashboard({
   }, [myApplications]);
 
   const profileViewsCount = React.useMemo(() => {
-    return (candidate as any).profileViews || (candidate as any).viewsCount || profile.viewsCount || profile.profileViews || (myApplications.length > 0 ? myApplications.length * 8 + 14 : 24);
+    return (candidate as any).profileViews || (candidate as any).viewsCount || (profile as any).viewsCount || (profile as any).profileViews || (myApplications.length > 0 ? myApplications.length * 8 + 14 : 24);
   }, [candidate, profile, myApplications]);
 
   // Dynamic Profile Completion Calculation
@@ -379,9 +379,9 @@ export default function CandidateDashboard({
     if (profile.fullName?.trim() || candidate.fullName?.trim()) filled++;
     if (mobile || candidate.mobile) filled++;
     if (email || candidate.email) filled++;
-    if (profile.locality || profile.city || profile.location) filled++;
-    if (profile.workExperience || profile.experience) filled++;
-    if (profile.drivingLicenseNumber || profile.drivingLicense) filled++;
+    if (profile.locality || profile.city || (profile as any).location) filled++;
+    if ((profile as any).workExperience || profile.experience) filled++;
+    if ((profile as any).drivingLicenseNumber || (profile as any).drivingLicense) filled++;
     if (profile.profilePhoto || candidate.profile?.profilePhoto) filled++;
     if (documents && documents.length > 0) filled++;
     return Math.round((filled / total) * 100);
@@ -679,13 +679,12 @@ export default function CandidateDashboard({
     <div className="w-full text-slate-800 pb-24 lg:pb-0" id="candidate-dashboard-container">
       
       {/* Celebratory Flower Blast Animation */}
-      {showFlowerAnimation && (
-        <FlowerBlastAnimation
-          jobTitle={flowerJobDetails.title}
-          companyName={flowerJobDetails.companyName}
-          onClose={() => setShowFlowerAnimation(false)}
-        />
-      )}
+      <FlowerBlastAnimation
+        show={showFlowerAnimation}
+        jobTitle={flowerJobDetails.title}
+        companyName={flowerJobDetails.companyName}
+        onComplete={() => setShowFlowerAnimation(false)}
+      />
 
       {/* ================= MOBILE NAVIGATION TRIGGER BAR (lg:hidden) ================= */}
       <div className="lg:hidden w-full mb-4">
