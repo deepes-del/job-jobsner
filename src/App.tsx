@@ -435,9 +435,20 @@ export default function App() {
               </div>
             ) : (
               isRecruiterLoggedIn ? (
-                <div className="hidden sm:flex items-center gap-2.5">
-                  <span className={`w-2.5 h-2.5 rounded-full animate-pulse ${recruiter?.status === 'Approved' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                  <span className="text-xs font-semibold text-gray-600">Logged in as {recruiter?.recruiterName} ({recruiter?.companyName})</span>
+                <div className="flex items-center gap-2 sm:gap-2.5">
+                  <span className={`w-2.5 h-2.5 rounded-full animate-pulse shrink-0 ${recruiter?.status === 'Approved' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                  <span className="hidden sm:inline text-xs font-semibold text-gray-700 truncate max-w-[200px]">
+                    {recruiter?.recruiterName} ({recruiter?.companyName})
+                  </span>
+                  <button
+                    onClick={handleRecruiterLogout}
+                    className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/70 rounded-xl text-xs font-extrabold transition-all cursor-pointer shadow-2xs ml-1"
+                    title="Log Out of Recruiter Account"
+                    id="header-recruiter-logout-btn"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Log Out</span>
+                  </button>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">

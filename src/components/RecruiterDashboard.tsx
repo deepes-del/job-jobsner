@@ -321,37 +321,38 @@ export default function RecruiterDashboard({
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleOpenNewJobForm = () => {
+  const handleOpenNewJobForm = (forceFresh: boolean = false) => {
     setEditingJob(null);
-    setJobFormStep(1);
     setPublishedJobData(null);
-    setJobTitle('');
-    setJobCategory('Last-Mile Delivery');
-    setJobOpenings('1');
-    setJobEmploymentType('Full Time');
-    setJobState(recruiter?.state || '');
-    setJobCity(recruiter?.city || '');
-    setJobArea('');
-    setJobWorkLocation('');
-    setJobMinSalary('');
-    setJobMaxSalary('');
-    setJobSalaryType('Monthly');
-    setJobShift('Day');
-    setJobExperience('0');
-    setJobEducation('10th Pass');
-    setJobGenderPreference('Any');
-    setJobAgeLimitMin('18');
-    setJobAgeLimitMax('45');
-    setJobBikeRequired('No');
-    setJobDrivingLicense('No');
-    setJobImmediateJoining('No');
-    setJobDescription('');
-    setJobResponsibilities('');
-    setJobBenefits('');
-    setJobCompanyLogo('');
-    setActiveTab('jobs');
+    if (forceFresh || (!jobTitle && !jobArea && !jobMinSalary)) {
+      setJobFormStep(1);
+      setJobTitle('');
+      setJobCategory('Last-Mile Delivery');
+      setJobOpenings('1');
+      setJobEmploymentType('Full Time');
+      setJobState(recruiter?.state || '');
+      setJobCity(recruiter?.city || '');
+      setJobArea('');
+      setJobWorkLocation('');
+      setJobMinSalary('');
+      setJobMaxSalary('');
+      setJobSalaryType('Monthly');
+      setJobShift('Day');
+      setJobExperience('0');
+      setJobEducation('10th Pass');
+      setJobGenderPreference('Any');
+      setJobAgeLimitMin('18');
+      setJobAgeLimitMax('45');
+      setJobBikeRequired('No');
+      setJobDrivingLicense('No');
+      setJobImmediateJoining('No');
+      setJobDescription('');
+      setJobResponsibilities('');
+      setJobBenefits('');
+      setJobCompanyLogo('');
+    }
     setShowJobForm(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
   const fetchUrgentCandidates = async () => {
@@ -1511,9 +1512,863 @@ export default function RecruiterDashboard({
     });
   };
 
+  // --- DEDICATED MOBILE-FRIENDLY 4-STAGE JOB POSTING WIZARD ---
+  const renderJobPostingWizard = () => {
+    return (
+      <div className="space-y-4" id="recruiter-dedicated-job-form-wrapper">
+        {/* Dedicated Top Action Header with Clear Back Button */}
+        <div className="bg-white border border-gray-150 rounded-2xl p-3 sm:p-4 shadow-xs flex items-center justify-between gap-3 sticky top-16 z-20">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                if (jobFormStep > 1 && jobFormStep < 4) {
+                  setJobFormStep((prev) => (prev - 1) as 1 | 2 | 3);
+                  window.scrollTo({ top: 0, behavior: 'instant' });
+                } else {
+                  setShowJobForm(false);
+                  setEditingJob(null);
+                }
+              }}
+              className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-800 font-bold text-xs transition-all cursor-pointer active:scale-95 shadow-2xs"
+              id="job-form-top-back-btn"
+            >
+              <ChevronLeft className="w-4 h-4 text-[#1D61F2]" />
+              <span>{jobFormStep > 1 && jobFormStep < 4 ? 'Previous Step' : 'Back to Dashboard'}</span>
+            </button>
+
+            <div>
+              <h3 className="font-extrabold text-gray-900 text-xs sm:text-sm leading-tight">
+                {editingJob ? 'Edit Job Opening' : 'Post a Job Opening'}
+              </h3>
+              <p className="text-[10px] text-gray-400 font-medium">
+                Step {jobFormStep} of 4 • {jobFormStep === 1 ? 'Basic Information' : jobFormStep === 2 ? 'Job Details' : jobFormStep === 3 ? 'Review & Publish' : 'Live Confirmation'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {jobFormStep < 4 && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.confirm('Reset this job form and start over?')) {
+                    handleOpenNewJobForm(true);
+                  }
+                }}
+                className="text-[11px] text-gray-400 hover:text-red-600 font-semibold transition-colors cursor-pointer"
+              >
+                Reset Form
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                setShowJobForm(false);
+                setEditingJob(null);
+              }}
+              className="p-1.5 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100 transition-all cursor-pointer"
+              title="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* 4-STAGE POST A JOB WIZARD FLOW */}
+        <div className="bg-white border border-gray-150 rounded-2xl p-4 sm:p-6 shadow-xs">
+          {/* STEPPER PROGRESS BAR */}
+          <div className="mb-6 bg-blue-50/70 border border-blue-100 rounded-2xl p-3 sm:p-4">
+            <div className="flex items-center justify-between max-w-2xl mx-auto relative">
+              {/* Connecting lines */}
+              <div className="absolute top-4 left-8 right-8 h-0.5 bg-blue-200 -z-0 hidden sm:block" />
+              <div 
+                className="absolute top-4 left-8 h-0.5 bg-[#1D61F2] transition-all duration-300 -z-0 hidden sm:block" 
+                style={{
+                  width: jobFormStep === 1 ? '0%' : jobFormStep === 2 ? '33.3%' : jobFormStep === 3 ? '66.6%' : '100%'
+                }}
+              />
+
+              {[
+                { step: 1, label: 'Basic Info', desc: 'Title, Salary & Location' },
+                { step: 2, label: 'Job Details', desc: 'Requirements & Specs' },
+                { step: 3, label: 'Review', desc: 'Verify Details' },
+                { step: 4, label: 'Published', desc: 'Confirmation' },
+              ].map((s) => {
+                const isActive = jobFormStep === s.step;
+                const isCompleted = jobFormStep > s.step;
+                return (
+                  <div key={s.step} className="flex flex-col items-center relative z-10 text-center">
+                    <button
+                      type="button"
+                      disabled={s.step > jobFormStep && !isCompleted}
+                      onClick={() => {
+                        if (isCompleted) setJobFormStep(s.step as 1 | 2 | 3);
+                      }}
+                      className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center font-extrabold text-xs transition-all ${
+                        isActive
+                          ? 'bg-[#1D61F2] text-white ring-4 ring-blue-100 shadow-md scale-105'
+                          : isCompleted
+                          ? 'bg-emerald-600 text-white shadow-xs cursor-pointer'
+                          : 'bg-white text-gray-400 border border-gray-200'
+                      }`}
+                    >
+                      {isCompleted ? <Check className="w-4 h-4 stroke-[2.5]" /> : s.step}
+                    </button>
+                    <div className="mt-1.5">
+                      <span className={`block text-[11px] sm:text-xs font-bold ${isActive ? 'text-[#1D61F2]' : isCompleted ? 'text-emerald-700' : 'text-gray-400'}`}>
+                        {s.label}
+                      </span>
+                      <span className="hidden md:block text-[9px] text-gray-400 font-normal">
+                        {s.desc}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* WIZARD CONTENT BY STEP */}
+          <div>
+            {/* STEP 1: BASIC INFORMATION */}
+            {jobFormStep === 1 && (
+              <div className="space-y-5">
+                <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-3 sm:p-4 flex items-center gap-3">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#1D61F2] text-white flex items-center justify-center font-black text-xs sm:text-sm shrink-0">1</div>
+                  <div>
+                    <h5 className="text-xs font-extrabold text-gray-900 uppercase tracking-wider">Step 1 — Basic Information</h5>
+                    <p className="text-[11px] text-gray-500">Provide job title, category, open positions, location, and compensation structure.</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Job Title / Role Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={jobTitle}
+                      onChange={(e) => setJobTitle(e.target.value)}
+                      placeholder="e.g. Last Mile Delivery Associate"
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Job Category *</label>
+                    <select
+                      required
+                      value={jobCategory}
+                      onChange={(e) => setJobCategory(e.target.value)}
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
+                    >
+                      <option value="Delivery Jobs">Delivery Jobs</option>
+                      <option value="Warehouse / Picker&Packer">Warehouse / Picker&Packer</option>
+                      <option value="Last-Mile Delivery">Last-Mile Delivery</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Open Positions *</label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      value={jobOpenings}
+                      onChange={(e) => setJobOpenings(e.target.value)}
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Employment Type *</label>
+                    <select
+                      required
+                      value={jobEmploymentType}
+                      onChange={(e) => setJobEmploymentType(e.target.value as any)}
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
+                    >
+                      <option value="Full Time">Full Time</option>
+                      <option value="Part Time">Part Time</option>
+                      <option value="Flexible">Flexible</option>
+                    </select>
+                  </div>
+
+                  {/* Logo Upload */}
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                      Job Company Logo <span className="text-gray-400 font-normal normal-case">(Optional — ≤ 50KB, shown to candidates)</span>
+                    </label>
+                    <div className="flex items-start gap-4">
+                      <div className="w-14 h-14 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
+                        {jobCompanyLogo ? (
+                          <img
+                            src={jobCompanyLogo}
+                            alt="Job company logo"
+                            className="w-full h-full object-contain p-1"
+                            referrerPolicy="no-referrer"
+                          />
+                        ) : recruiter.companyLogo ? (
+                          <img
+                            src={recruiter.companyLogo}
+                            alt={recruiter.companyName}
+                            className="w-full h-full object-contain p-1 opacity-40"
+                            referrerPolicy="no-referrer"
+                            title="Profile logo (auto-used if no custom logo uploaded)"
+                          />
+                        ) : (
+                          <Building2 className="w-6 h-6 text-gray-300" />
+                        )}
+                      </div>
+
+                      <div className="flex-1 space-y-1.5">
+                        <label
+                          htmlFor="job-logo-upload"
+                          className={`inline-flex items-center gap-2 py-2 px-3.5 rounded-xl text-xs font-bold cursor-pointer transition-all border ${
+                            jobLogoUploading
+                              ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+                              : 'bg-blue-50 border-blue-200 text-[#1D61F2] hover:bg-blue-100'
+                          }`}
+                        >
+                          <Upload className="w-3.5 h-3.5" />
+                          {jobLogoUploading ? 'Compressing...' : jobCompanyLogo ? 'Replace Logo' : 'Upload Custom Logo'}
+                        </label>
+                        <input
+                          id="job-logo-upload"
+                          type="file"
+                          accept="image/jpeg,image/jpg,image/png,image/webp"
+                          className="hidden"
+                          disabled={jobLogoUploading}
+                          onChange={handleJobLogoUpload}
+                        />
+                        {jobCompanyLogo && (
+                          <button
+                            type="button"
+                            onClick={() => setJobCompanyLogo('')}
+                            className="flex items-center gap-1 text-[11px] text-red-500 hover:text-red-700 font-bold cursor-pointer"
+                          >
+                            <X className="w-3 h-3" /> Remove custom logo
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Location */}
+                <div className="space-y-4 pt-4 border-t border-gray-100">
+                  <h6 className="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-[#1D61F2]" /> Location Details
+                  </h6>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">State *</label>
+                      <input
+                        type="text"
+                        required
+                        value={jobState}
+                        onChange={(e) => setJobState(e.target.value)}
+                        placeholder="e.g. Karnataka"
+                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">City / Hub HQ *</label>
+                      <input
+                        type="text"
+                        required
+                        value={jobCity}
+                        onChange={(e) => setJobCity(e.target.value)}
+                        placeholder="e.g. Bengaluru"
+                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Area / Locality *</label>
+                      <input
+                        type="text"
+                        required
+                        value={jobArea}
+                        onChange={(e) => setJobArea(e.target.value)}
+                        placeholder="e.g. Nelamangala Hub"
+                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-3">
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Work Hub Address (Optional)</label>
+                      <input
+                        type="text"
+                        value={jobWorkLocation}
+                        onChange={(e) => setJobWorkLocation(e.target.value)}
+                        placeholder="e.g. Phase 2, Logistics Gate C, NH 48"
+                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Salary */}
+                <div className="space-y-4 pt-4 border-t border-gray-100">
+                  <h6 className="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-2">
+                    <Briefcase className="w-4 h-4 text-[#1D61F2]" /> Salary & Compensation
+                  </h6>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Minimum Salary (₹) *</label>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        placeholder="e.g. 18000"
+                        value={jobMinSalary}
+                        onChange={(e) => setJobMinSalary(e.target.value)}
+                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Maximum Salary (₹) *</label>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        placeholder="e.g. 26000"
+                        value={jobMaxSalary}
+                        onChange={(e) => setJobMaxSalary(e.target.value)}
+                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Compensation Schedule *</label>
+                      <select
+                        required
+                        value={jobSalaryType}
+                        onChange={(e) => setJobSalaryType(e.target.value as any)}
+                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
+                      >
+                        <option value="Monthly">Monthly</option>
+                        <option value="Weekly">Weekly</option>
+                        <option value="Daily">Daily</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Step 1 Navigation buttons */}
+                <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowJobForm(false);
+                      setEditingJob(null);
+                    }}
+                    className="py-2.5 px-4 sm:px-5 border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (validateStep1()) {
+                        setJobFormStep(2);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }
+                    }}
+                    className="py-2.5 px-5 sm:px-6 bg-[#1D61F2] hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer"
+                  >
+                    <span>Next: Job Details</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2: JOB DETAILS */}
+            {jobFormStep === 2 && (
+              <div className="space-y-5">
+                <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-3 sm:p-4 flex items-center gap-3">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#1D61F2] text-white flex items-center justify-center font-black text-xs sm:text-sm shrink-0">2</div>
+                  <div>
+                    <h5 className="text-xs font-extrabold text-gray-900 uppercase tracking-wider">Step 2 — Job Details & Requirements</h5>
+                    <p className="text-[11px] text-gray-500">Define shift, criteria, candidate eligibility, responsibilities, and perks.</p>
+                  </div>
+                </div>
+
+                {/* Criteria Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Shift *</label>
+                    <select
+                      required
+                      value={jobShift}
+                      onChange={(e) => setJobShift(e.target.value as any)}
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
+                    >
+                      <option value="Day">Day Shift</option>
+                      <option value="Night">Night Shift</option>
+                      <option value="Rotational">Rotational Shift</option>
+                      <option value="Flexible">Flexible Shift</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Min Experience (Years) *</label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      max="30"
+                      value={jobExperience}
+                      onChange={(e) => setJobExperience(e.target.value)}
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Education Needed *</label>
+                    <select
+                      required
+                      value={jobEducation}
+                      onChange={(e) => setJobEducation(e.target.value)}
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
+                    >
+                      <option value="No Education Required">No Education Required</option>
+                      <option value="10th Pass">10th Pass</option>
+                      <option value="12th Pass">12th Pass</option>
+                      <option value="Graduate">Graduate</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Gender Preference *</label>
+                    <select
+                      required
+                      value={jobGenderPreference}
+                      onChange={(e) => setJobGenderPreference(e.target.value as any)}
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
+                    >
+                      <option value="Any">Any Gender</option>
+                      <option value="Male">Male Candidates Only</option>
+                      <option value="Female">Female Candidates Only</option>
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Min Age *</label>
+                      <input
+                        type="number"
+                        required
+                        min="18"
+                        max="65"
+                        value={jobAgeLimitMin}
+                        onChange={(e) => setJobAgeLimitMin(e.target.value)}
+                        className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Max Age *</label>
+                      <input
+                        type="number"
+                        required
+                        min="18"
+                        max="70"
+                        value={jobAgeLimitMax}
+                        onChange={(e) => setJobAgeLimitMax(e.target.value)}
+                        className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Personal Bike Needed? *</label>
+                    <select
+                      required
+                      value={jobBikeRequired}
+                      onChange={(e) => setJobBikeRequired(e.target.value as any)}
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
+                    >
+                      <option value="No">No</option>
+                      <option value="Yes">Yes</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Driving License Required? *</label>
+                    <select
+                      required
+                      value={jobDrivingLicense}
+                      onChange={(e) => setJobDrivingLicense(e.target.value as any)}
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
+                    >
+                      <option value="No">No</option>
+                      <option value="Yes">Yes</option>
+                    </select>
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Immediate Joining? *</label>
+                    <select
+                      required
+                      value={jobImmediateJoining}
+                      onChange={(e) => setJobImmediateJoining(e.target.value as any)}
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
+                    >
+                      <option value="No">No (Standard Vetting)</option>
+                      <option value="Yes">Yes (Immediate Batch)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Text Descriptions */}
+                <div className="space-y-4 pt-4 border-t border-gray-100">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Job Description *</label>
+                    <textarea
+                      required
+                      rows={3}
+                      value={jobDescription}
+                      onChange={(e) => setJobDescription(e.target.value)}
+                      placeholder="State what the role is, the client sector, and what vehicles they will pilot."
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none leading-relaxed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Detailed Responsibilities *</label>
+                    <textarea
+                      required
+                      rows={3}
+                      value={jobResponsibilities}
+                      onChange={(e) => setJobResponsibilities(e.target.value)}
+                      placeholder="E.g. Safe loading of FMCG, handling dispatch billing terminals, executing 20 drops daily."
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none leading-relaxed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Perks & Benefits *</label>
+                    <textarea
+                      required
+                      rows={3}
+                      value={jobBenefits}
+                      onChange={(e) => setJobBenefits(e.target.value)}
+                      placeholder="E.g. PF & ESIC, free corporate meals, mileage reimbursements, accidental insurance."
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none leading-relaxed"
+                    />
+                  </div>
+                </div>
+
+                {/* Step 2 Navigation buttons */}
+                <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setJobFormStep(1);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="py-2.5 px-4 sm:px-5 border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    <span>Previous</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (validateStep2()) {
+                        setJobFormStep(3);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }
+                    }}
+                    className="py-2.5 px-5 sm:px-6 bg-[#1D61F2] hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer"
+                  >
+                    <span>Next: Review & Publish</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 3: REVIEW & PUBLISH */}
+            {jobFormStep === 3 && (
+              <div className="space-y-5">
+                <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-3 sm:p-4 flex items-center gap-3">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#1D61F2] text-white flex items-center justify-center font-black text-xs sm:text-sm shrink-0">3</div>
+                  <div>
+                    <h5 className="text-xs font-extrabold text-gray-900 uppercase tracking-wider">Step 3 — Review & Publish</h5>
+                    <p className="text-[11px] text-gray-500">Please review all job details carefully before confirming publication.</p>
+                  </div>
+                </div>
+
+                {/* Summary Cards */}
+                <div className="space-y-4">
+                  {/* Card 1: Basic Info & Salary */}
+                  <div className="bg-gray-50/80 border border-gray-200/80 rounded-2xl p-4 sm:p-5 space-y-3">
+                    <div className="flex items-center justify-between pb-2 border-b border-gray-200">
+                      <h6 className="text-xs font-black text-gray-800 uppercase tracking-wider flex items-center gap-2">
+                        <Briefcase className="w-4 h-4 text-[#1D61F2]" /> Basic Information & Compensation
+                      </h6>
+                      <button
+                        type="button"
+                        onClick={() => { setJobFormStep(1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                        className="text-xs text-[#1D61F2] hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" /> Edit Basic Info
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 text-xs">
+                      <div>
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Job Title</span>
+                        <span className="font-extrabold text-gray-900">{jobTitle}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Category</span>
+                        <span className="font-bold text-gray-800">{jobCategory}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Open Positions</span>
+                        <span className="font-bold text-gray-800">{jobOpenings} openings</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Employment Type</span>
+                        <span className="font-bold text-gray-800">{jobEmploymentType}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Location</span>
+                        <span className="font-bold text-gray-800">{jobArea}, {jobCity}, {jobState}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Salary Range</span>
+                        <span className="font-extrabold text-emerald-700">₹{jobMinSalary} - ₹{jobMaxSalary} / {jobSalaryType}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card 2: Requirements */}
+                  <div className="bg-gray-50/80 border border-gray-200/80 rounded-2xl p-4 sm:p-5 space-y-3">
+                    <div className="flex items-center justify-between pb-2 border-b border-gray-200">
+                      <h6 className="text-xs font-black text-gray-800 uppercase tracking-wider flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-[#1D61F2]" /> Candidate Eligibility & Criteria
+                      </h6>
+                      <button
+                        type="button"
+                        onClick={() => { setJobFormStep(2); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                        className="text-xs text-[#1D61F2] hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" /> Edit Details
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 text-xs">
+                      <div>
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Shift</span>
+                        <span className="font-bold text-gray-800">{jobShift} Shift</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Experience</span>
+                        <span className="font-bold text-gray-800">{jobExperience === '0' ? 'Fresher Friendly' : `${jobExperience}+ years`}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Education</span>
+                        <span className="font-bold text-gray-800">{jobEducation}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Gender</span>
+                        <span className="font-bold text-gray-800">{jobGenderPreference}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Age Range</span>
+                        <span className="font-bold text-gray-800">{jobAgeLimitMin} - {jobAgeLimitMax} yrs</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Personal Bike</span>
+                        <span className="font-bold text-gray-800">{jobBikeRequired}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Driving License</span>
+                        <span className="font-bold text-gray-800">{jobDrivingLicense}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Immediate Joining</span>
+                        <span className="font-bold text-gray-800">{jobImmediateJoining}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card 3: Description */}
+                  <div className="bg-gray-50/80 border border-gray-200/80 rounded-2xl p-4 sm:p-5 space-y-3 text-xs">
+                    <div className="flex items-center justify-between pb-2 border-b border-gray-200">
+                      <h6 className="text-xs font-black text-gray-800 uppercase tracking-wider flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-[#1D61F2]" /> Role Overview & Benefits
+                      </h6>
+                      <button
+                        type="button"
+                        onClick={() => { setJobFormStep(2); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                        className="text-xs text-[#1D61F2] hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" /> Edit Descriptions
+                      </button>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div>
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1">Description</span>
+                        <p className="text-gray-700 leading-relaxed whitespace-pre-line">{jobDescription}</p>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1">Responsibilities</span>
+                        <p className="text-gray-700 leading-relaxed whitespace-pre-line">{jobResponsibilities}</p>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1">Perks & Benefits</span>
+                        <p className="text-gray-700 leading-relaxed whitespace-pre-line">{jobBenefits}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Step 3 Navigation & Submission Buttons */}
+                <div className="pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setJobFormStep(2);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="w-full sm:w-auto py-2.5 px-4 sm:px-5 border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    <span>Previous</span>
+                  </button>
+
+                  <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                    <button
+                      type="button"
+                      onClick={() => handleJobSubmit(undefined, 'Draft')}
+                      disabled={submittingJob}
+                      className="py-2.5 px-5 border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
+                    >
+                      {submittingJob && submitStatus === 'Draft' ? <RefreshCw className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+                      <span>Save as Draft</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleJobSubmit(undefined, 'Published')}
+                      disabled={submittingJob}
+                      className="py-2.5 px-6 sm:px-7 bg-[#1D61F2] hover:bg-blue-700 text-white text-xs font-extrabold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
+                    >
+                      {submittingJob ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                      <span>{editingJob ? 'Save & Update Job' : 'Publish Job Opening'}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 4: SUCCESS SCREEN */}
+            {jobFormStep === 4 && (
+              <div className="py-6 sm:py-8 px-2 sm:px-4 text-center space-y-5 max-w-xl mx-auto">
+                <div className="relative inline-flex items-center justify-center">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-emerald-100 flex items-center justify-center animate-pulse">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-lg">
+                      <Check className="w-6 h-6 sm:w-8 sm:h-8 stroke-[3]" />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg sm:text-xl font-black text-gray-900 tracking-tight">
+                    Congratulations! Job Posted Successfully
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">
+                    Your logistical vacancy has been created and published on JOBSner. Candidates looking for delivery & logistics roles in your area can now discover and apply immediately.
+                  </p>
+                </div>
+
+                {publishedJobData && (
+                  <div className="bg-emerald-50/50 border border-emerald-200/80 rounded-2xl p-4 sm:p-5 text-left space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-full">
+                        ✓ Live & Active
+                      </span>
+                      <span className="text-xs font-bold text-gray-500">
+                        {publishedJobData.openings || 1} Openings
+                      </span>
+                    </div>
+
+                    <div>
+                      <h5 className="font-extrabold text-gray-900 text-sm">{publishedJobData.title}</h5>
+                      <p className="text-xs text-gray-600 mt-0.5">{recruiter.companyName} • {publishedJobData.category}</p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 text-xs pt-2 border-t border-emerald-100 text-gray-700">
+                      <span className="flex items-center gap-1 font-semibold">
+                        <MapPin className="w-3.5 h-3.5 text-emerald-600" /> {publishedJobData.area}, {publishedJobData.city}
+                      </span>
+                      <span className="font-bold text-emerald-800 bg-emerald-100/60 px-2 py-0.5 rounded">
+                        ₹{publishedJobData.minSalary} - ₹{publishedJobData.maxSalary} / {publishedJobData.salaryType || 'Monthly'}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-3 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowJobForm(false);
+                      if (publishedJobData) {
+                        setViewingJob(publishedJobData);
+                      }
+                    }}
+                    className="w-full sm:w-auto py-2.5 px-5 bg-[#1D61F2] hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Eye className="w-4 h-4" />
+                    <span>View Job</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleOpenNewJobForm(true);
+                    }}
+                    className="w-full sm:w-auto py-2.5 px-5 border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Post Another Job</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowJobForm(false);
+                      setActiveTab('dashboard');
+                    }}
+                    className="w-full sm:w-auto py-2.5 px-5 border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span>Back to Dashboard</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // --- RENDER APPROVED DASHBOARD ---
   return (
-    <div className="w-full space-y-4 pb-24 md:pb-8">
+    <div className="w-full space-y-3 sm:space-y-4 pb-28 md:pb-8 max-w-full overflow-x-hidden">
       {/* Native Browser Notification Permission Prompt */}
       <NotificationPermissionBanner recruiterName={recruiter.recruiterName || recruiter.companyName} />
 
@@ -1715,10 +2570,10 @@ export default function RecruiterDashboard({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <button
-                  onClick={handleOpenNewJobForm}
-                  className="py-1.5 px-3 bg-[#1D61F2] hover:bg-blue-700 text-white text-[11px] font-bold rounded-xl shadow-sm flex items-center gap-1 cursor-pointer active:scale-95"
+                  onClick={() => handleOpenNewJobForm()}
+                  className="py-1.5 px-2.5 bg-[#1D61F2] hover:bg-blue-700 text-white text-[11px] font-bold rounded-xl shadow-xs flex items-center gap-1 cursor-pointer active:scale-95"
                 >
                   <Plus className="w-3.5 h-3.5" /> Post Job
                 </button>
@@ -1734,6 +2589,15 @@ export default function RecruiterDashboard({
                       {unreadNotifCount}
                     </span>
                   )}
+                </button>
+
+                <button
+                  onClick={onLogout}
+                  className="p-1.5 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 transition-colors cursor-pointer"
+                  title="Sign Out"
+                  id="mobile-header-signout-btn"
+                >
+                  <LogOut className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -1857,6 +2721,16 @@ export default function RecruiterDashboard({
                   <p className="text-[10px] text-gray-400 leading-none mt-0.5">{recruiter.designation || 'Recruiter'}</p>
                 </div>
               </div>
+
+              <button
+                onClick={onLogout}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/70 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs ml-1"
+                title="Sign Out"
+                id="desktop-header-signout-btn"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Sign Out</span>
+              </button>
             </div>
           </div>
         
@@ -1884,9 +2758,23 @@ export default function RecruiterDashboard({
           )}
         </AnimatePresence>
 
-        {/* Dynamic renders based on Active Tab */}
+        {/* Dynamic renders based on Active Tab or Dedicated Job Form Page */}
         <AnimatePresence mode="wait">
-          {activeTab === 'dashboard' && (
+          {showJobForm && (
+            <motion.div
+              key="dedicated-job-form-page"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.15 }}
+              className="space-y-4"
+              id="dedicated-job-posting-view"
+            >
+              {renderJobPostingWizard()}
+            </motion.div>
+          )}
+
+          {!showJobForm && activeTab === 'dashboard' && (
             <motion.div
               key="dashboard-tab"
               initial={{ opacity: 0, y: 8 }}
@@ -2358,7 +3246,7 @@ export default function RecruiterDashboard({
             </motion.div>
           )}
 
-          {activeTab === 'profile' && (
+          {!showJobForm && activeTab === 'profile' && (
             <motion.div
               key="profile-tab"
               initial={{ opacity: 0, y: 10 }}
@@ -2561,7 +3449,7 @@ export default function RecruiterDashboard({
                     <button
                       type="submit"
                       disabled={updating || logoUploading}
-                      className="py-2.5 px-6 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer disabled:opacity-75"
+                      className="py-2.5 px-6 bg-[#1D61F2] hover:bg-blue-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer disabled:opacity-75"
                     >
                       {updating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                       Save Profile Changes
@@ -2592,12 +3480,35 @@ export default function RecruiterDashboard({
 
                 </form>
 
+                {/* Dedicated Account & Session Management Card */}
+                <div className="mt-8 pt-6 border-t border-gray-150 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-50 border border-slate-200/80 rounded-2xl p-4 sm:p-5" id="recruiter-profile-session-card">
+                  <div className="space-y-1">
+                    <h4 className="font-extrabold text-xs sm:text-sm text-gray-900 flex items-center gap-2">
+                      <Lock className="w-4 h-4 text-[#1D61F2]" />
+                      <span>Account Session & Security</span>
+                    </h4>
+                    <p className="text-[11px] text-gray-500 leading-relaxed">
+                      Signed in as <span className="font-semibold text-gray-700">{recruiter.email || recruiter.mobile}</span> ({recruiter.companyName}). Securely log out from this device when finished.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={onLogout}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0"
+                    id="recruiter-profile-logout-btn"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+
               </div>
             </motion.div>
           )}
 
           {/* JOB MANAGEMENT TAB */}
-          {activeTab === 'jobs' && (
+          {!showJobForm && activeTab === 'jobs' && (
             <motion.div
               key="jobs-tab"
               initial={{ opacity: 0, y: 10 }}
@@ -2612,40 +3523,14 @@ export default function RecruiterDashboard({
                   <h3 className="text-lg font-black text-gray-900 tracking-tight">Enterprise Logistics Job Openings</h3>
                   <p className="text-xs text-gray-400 mt-1">Deploy, optimize, and manage logistical delivery openings for verified driver candidates.</p>
                 </div>
-                {!showJobForm && (
-                  <button
-                    onClick={() => {
-                      setEditingJob(null);
-                      setJobTitle('');
-                      setJobCategory('Last-Mile Delivery');
-                      setJobOpenings('1');
-                      setJobEmploymentType('Full Time');
-                      setJobState(recruiter.state || '');
-                      setJobCity(recruiter.city || '');
-                      setJobArea('');
-                      setJobWorkLocation('');
-                      setJobMinSalary('');
-                      setJobMaxSalary('');
-                      setJobSalaryType('Monthly');
-                      setJobShift('Day');
-                      setJobExperience('0');
-                      setJobEducation('10th Pass');
-                      setJobGenderPreference('Any');
-                      setJobAgeLimitMin('18');
-                      setJobAgeLimitMax('45');
-                      setJobBikeRequired('No');
-                      setJobDrivingLicense('No');
-                      setJobImmediateJoining('No');
-                      setJobDescription('');
-                      setJobResponsibilities('');
-                      setJobBenefits('');
-                      setShowJobForm(true);
-                    }}
-                    className="py-2.5 px-5 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-orange-600/10 flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <Plus className="w-4 h-4" /> Post a New Job
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => handleOpenNewJobForm(false)}
+                  className="py-2.5 px-5 bg-[#1D61F2] hover:bg-blue-700 active:scale-95 text-white text-xs font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                  id="jobs-tab-post-new-job-btn"
+                >
+                  <Plus className="w-4 h-4" /> Post a New Job
+                </button>
               </div>
 
               {/* View Overlay Modal */}
@@ -2761,818 +3646,8 @@ export default function RecruiterDashboard({
                 </div>
               )}
 
-              {showJobForm ? (
-                /* 4-STAGE POST A JOB WIZARD FLOW */
-                <div className="bg-white border border-gray-150 rounded-3xl p-6 sm:p-8 shadow-sm">
-                  {/* Header & Cancel */}
-                  <div className="flex justify-between items-center pb-4 border-b border-gray-100 mb-6">
-                    <div>
-                      <h4 className="text-base font-extrabold text-gray-900 tracking-tight">
-                        {editingJob ? 'Edit Job Opening' : 'Post a New Job Opening'}
-                      </h4>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        Follow the 4 steps below to create and publish your logistical vacancy.
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setShowJobForm(false);
-                        setEditingJob(null);
-                        setJobFormStep(1);
-                      }}
-                      className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100 transition-all cursor-pointer"
-                      title="Close"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-
-                  {/* STEPPER PROGRESS BAR */}
-                  <div className="mb-8 bg-blue-50/70 border border-blue-100 rounded-2xl p-4 sm:p-5">
-                    <div className="flex items-center justify-between max-w-2xl mx-auto relative">
-                      {/* Connecting lines */}
-                      <div className="absolute top-5 left-10 right-10 h-0.5 bg-blue-200 -z-0 hidden sm:block" />
-                      <div 
-                        className="absolute top-5 left-10 h-0.5 bg-[#1D61F2] transition-all duration-300 -z-0 hidden sm:block" 
-                        style={{
-                          width: jobFormStep === 1 ? '0%' : jobFormStep === 2 ? '33.3%' : jobFormStep === 3 ? '66.6%' : '100%'
-                        }}
-                      />
-
-                      {[
-                        { step: 1, label: 'Basic Info', desc: 'Title, Salary & Location' },
-                        { step: 2, label: 'Job Details', desc: 'Requirements & Description' },
-                        { step: 3, label: 'Review & Publish', desc: 'Verify Information' },
-                        { step: 4, label: 'Published', desc: 'Confirmation' },
-                      ].map((s) => {
-                        const isActive = jobFormStep === s.step;
-                        const isCompleted = jobFormStep > s.step;
-                        return (
-                          <div key={s.step} className="flex flex-col items-center relative z-10 text-center">
-                            <button
-                              type="button"
-                              disabled={s.step > jobFormStep && !isCompleted}
-                              onClick={() => {
-                                if (isCompleted) setJobFormStep(s.step as 1 | 2 | 3);
-                              }}
-                              className={`w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-xs transition-all ${
-                                isActive
-                                  ? 'bg-[#1D61F2] text-white ring-4 ring-blue-100 shadow-md scale-105'
-                                  : isCompleted
-                                  ? 'bg-emerald-600 text-white shadow-sm cursor-pointer'
-                                  : 'bg-white text-gray-400 border border-gray-200'
-                              }`}
-                            >
-                              {isCompleted ? <Check className="w-5 h-5" /> : s.step}
-                            </button>
-                            <div className="mt-2">
-                              <span className={`block text-xs font-bold ${isActive ? 'text-[#1D61F2]' : isCompleted ? 'text-emerald-700' : 'text-gray-400'}`}>
-                                {s.label}
-                              </span>
-                              <span className="hidden md:block text-[10px] text-gray-400 font-normal">
-                                {s.desc}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* WIZARD CONTENT BY STEP */}
-                  <div>
-                    {/* STEP 1: BASIC INFORMATION */}
-                    {jobFormStep === 1 && (
-                      <div className="space-y-6">
-                        <div className="bg-blue-50/40 border border-blue-100/80 rounded-2xl p-4 flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-xl bg-[#1D61F2] text-white flex items-center justify-center font-black text-sm shrink-0">1</div>
-                          <div>
-                            <h5 className="text-xs font-extrabold text-gray-900 uppercase tracking-wider">Step 1 — Basic Information</h5>
-                            <p className="text-[11px] text-gray-500">Provide job title, category, open positions, location, and salary structure.</p>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Job Title / Role Name *</label>
-                            <input
-                              type="text"
-                              required
-                              value={jobTitle}
-                              onChange={(e) => setJobTitle(e.target.value)}
-                              placeholder="e.g. Last Mile Delivery Associate"
-                              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Company Name (Auto-Filled)</label>
-                            <input
-                              type="text"
-                              disabled
-                              value={recruiter.companyName}
-                              className="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 text-gray-500 rounded-xl text-xs transition-all outline-none"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Job Category *</label>
-                            <select
-                              required
-                              value={jobCategory}
-                              onChange={(e) => setJobCategory(e.target.value)}
-                              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
-                            >
-                              <option value="Delivery Jobs">Delivery Jobs</option>
-                              <option value="Warehouse / Picker&Packer">Warehouse / Picker&Packer</option>
-                              <option value="Last-Mile Delivery">Last-Mile Delivery</option>
-                            </select>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Open Positions *</label>
-                              <input
-                                type="number"
-                                required
-                                min="1"
-                                value={jobOpenings}
-                                onChange={(e) => setJobOpenings(e.target.value)}
-                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Employment Type *</label>
-                              <select
-                                required
-                                value={jobEmploymentType}
-                                onChange={(e) => setJobEmploymentType(e.target.value as any)}
-                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
-                              >
-                                <option value="Full Time">Full Time</option>
-                                <option value="Part Time">Part Time</option>
-                                <option value="Flexible">Flexible</option>
-                              </select>
-                            </div>
-                          </div>
-
-                          {/* Logo Upload */}
-                          <div className="md:col-span-2">
-                            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-                              Job Company Logo <span className="text-gray-400 font-normal normal-case">(Optional — ≤ 50KB, shown to candidates)</span>
-                            </label>
-                            <div className="flex items-start gap-4">
-                              <div className="w-16 h-16 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
-                                {jobCompanyLogo ? (
-                                  <img
-                                    src={jobCompanyLogo}
-                                    alt="Job company logo"
-                                    className="w-full h-full object-contain p-1"
-                                    referrerPolicy="no-referrer"
-                                  />
-                                ) : recruiter.companyLogo ? (
-                                  <img
-                                    src={recruiter.companyLogo}
-                                    alt={recruiter.companyName}
-                                    className="w-full h-full object-contain p-1 opacity-40"
-                                    referrerPolicy="no-referrer"
-                                    title="Profile logo (auto-used if no custom logo uploaded)"
-                                  />
-                                ) : (
-                                  <Building2 className="w-6 h-6 text-gray-300" />
-                                )}
-                              </div>
-
-                              <div className="flex-1 space-y-2">
-                                <label
-                                  htmlFor="job-logo-upload"
-                                  className={`inline-flex items-center gap-2 py-2 px-4 rounded-xl text-xs font-bold cursor-pointer transition-all border ${
-                                    jobLogoUploading
-                                      ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
-                                      : 'bg-blue-50 border-blue-200 text-[#1D61F2] hover:bg-blue-100'
-                                  }`}
-                                >
-                                  <Upload className="w-3.5 h-3.5" />
-                                  {jobLogoUploading ? 'Compressing...' : jobCompanyLogo ? 'Replace Logo' : 'Upload Custom Logo'}
-                                </label>
-                                <input
-                                  id="job-logo-upload"
-                                  type="file"
-                                  accept="image/jpeg,image/jpg,image/png,image/webp"
-                                  className="hidden"
-                                  disabled={jobLogoUploading}
-                                  onChange={handleJobLogoUpload}
-                                />
-                                {jobCompanyLogo && (
-                                  <button
-                                    type="button"
-                                    onClick={() => setJobCompanyLogo('')}
-                                    className="flex items-center gap-1 text-[11px] text-red-500 hover:text-red-700 font-bold cursor-pointer"
-                                  >
-                                    <X className="w-3 h-3" /> Remove custom logo
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Location */}
-                        <div className="space-y-4 pt-4 border-t border-gray-100">
-                          <h6 className="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-2">
-                            <MapPin className="w-4 h-4 text-[#1D61F2]" /> Location Details
-                          </h6>
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div>
-                              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">State *</label>
-                              <input
-                                type="text"
-                                required
-                                value={jobState}
-                                onChange={(e) => setJobState(e.target.value)}
-                                placeholder="e.g. Karnataka"
-                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">City / Hub HQ *</label>
-                              <input
-                                type="text"
-                                required
-                                value={jobCity}
-                                onChange={(e) => setJobCity(e.target.value)}
-                                placeholder="e.g. Bengaluru"
-                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Area / Locality *</label>
-                              <input
-                                type="text"
-                                required
-                                value={jobArea}
-                                onChange={(e) => setJobArea(e.target.value)}
-                                placeholder="e.g. Nelamangala Hub"
-                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
-                              />
-                            </div>
-
-                            <div className="sm:col-span-3">
-                              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Work Hub Address (Optional)</label>
-                              <input
-                                type="text"
-                                value={jobWorkLocation}
-                                onChange={(e) => setJobWorkLocation(e.target.value)}
-                                placeholder="e.g. Phase 2, Logistics Gate C, NH 48"
-                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
-                              />
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Salary */}
-                        <div className="space-y-4 pt-4 border-t border-gray-100">
-                          <h6 className="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-2">
-                            <Briefcase className="w-4 h-4 text-[#1D61F2]" /> Salary & Compensation
-                          </h6>
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div>
-                              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Minimum Salary (₹) *</label>
-                              <input
-                                type="number"
-                                required
-                                min="0"
-                                placeholder="e.g. 18000"
-                                value={jobMinSalary}
-                                onChange={(e) => setJobMinSalary(e.target.value)}
-                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Maximum Salary (₹) *</label>
-                              <input
-                                type="number"
-                                required
-                                min="0"
-                                placeholder="e.g. 26000"
-                                value={jobMaxSalary}
-                                onChange={(e) => setJobMaxSalary(e.target.value)}
-                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Compensation Schedule *</label>
-                              <select
-                                required
-                                value={jobSalaryType}
-                                onChange={(e) => setJobSalaryType(e.target.value as any)}
-                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
-                              >
-                                <option value="Monthly">Monthly</option>
-                                <option value="Weekly">Weekly</option>
-                                <option value="Daily">Daily</option>
-                              </select>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Step 1 Navigation buttons */}
-                        <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setShowJobForm(false);
-                              setEditingJob(null);
-                            }}
-                            className="py-2.5 px-5 border border-red-200 hover:bg-red-50 text-red-600 text-xs font-bold rounded-xl transition-all cursor-pointer"
-                          >
-                            Cancel
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (validateStep1()) {
-                                setJobFormStep(2);
-                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                              }
-                            }}
-                            className="py-2.5 px-6 bg-[#1D61F2] hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer"
-                          >
-                            Next: Job Details <ChevronRight className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* STEP 2: JOB DETAILS */}
-                    {jobFormStep === 2 && (
-                      <div className="space-y-6">
-                        <div className="bg-blue-50/40 border border-blue-100/80 rounded-2xl p-4 flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-xl bg-[#1D61F2] text-white flex items-center justify-center font-black text-sm shrink-0">2</div>
-                          <div>
-                            <h5 className="text-xs font-extrabold text-gray-900 uppercase tracking-wider">Step 2 — Job Details & Requirements</h5>
-                            <p className="text-[11px] text-gray-500">Define shift, criteria, candidate eligibility, responsibilities, and perks.</p>
-                          </div>
-                        </div>
-
-                        {/* Criteria Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                          <div>
-                            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Shift *</label>
-                            <select
-                              required
-                              value={jobShift}
-                              onChange={(e) => setJobShift(e.target.value as any)}
-                              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
-                            >
-                              <option value="Day">Day Shift</option>
-                              <option value="Night">Night Shift</option>
-                              <option value="Rotational">Rotational Shift</option>
-                              <option value="Flexible">Flexible Shift</option>
-                            </select>
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Min Experience Required (Years) *</label>
-                            <input
-                              type="number"
-                              required
-                              min="0"
-                              max="30"
-                              value={jobExperience}
-                              onChange={(e) => setJobExperience(e.target.value)}
-                              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Education Needed *</label>
-                            <select
-                              required
-                              value={jobEducation}
-                              onChange={(e) => setJobEducation(e.target.value)}
-                              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
-                            >
-                              <option value="No Education Required">No Education Required</option>
-                              <option value="10th Pass">10th Pass</option>
-                              <option value="12th Pass">12th Pass</option>
-                              <option value="Graduate">Graduate</option>
-                            </select>
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Gender Preference *</label>
-                            <select
-                              required
-                              value={jobGenderPreference}
-                              onChange={(e) => setJobGenderPreference(e.target.value as any)}
-                              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
-                            >
-                              <option value="Any">Any Gender</option>
-                              <option value="Male">Male Candidates Only</option>
-                              <option value="Female">Female Candidates Only</option>
-                            </select>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Min Age *</label>
-                              <input
-                                type="number"
-                                required
-                                min="18"
-                                max="65"
-                                value={jobAgeLimitMin}
-                                onChange={(e) => setJobAgeLimitMin(e.target.value)}
-                                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Max Age *</label>
-                              <input
-                                type="number"
-                                required
-                                min="18"
-                                max="70"
-                                value={jobAgeLimitMax}
-                                onChange={(e) => setJobAgeLimitMax(e.target.value)}
-                                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
-                              />
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Personal Bike Needed? *</label>
-                            <select
-                              required
-                              value={jobBikeRequired}
-                              onChange={(e) => setJobBikeRequired(e.target.value as any)}
-                              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
-                            >
-                              <option value="No">No</option>
-                              <option value="Yes">Yes</option>
-                            </select>
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Driving License Required? *</label>
-                            <select
-                              required
-                              value={jobDrivingLicense}
-                              onChange={(e) => setJobDrivingLicense(e.target.value as any)}
-                              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
-                            >
-                              <option value="No">No</option>
-                              <option value="Yes">Yes</option>
-                            </select>
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Immediate Joining? *</label>
-                            <select
-                              required
-                              value={jobImmediateJoining}
-                              onChange={(e) => setJobImmediateJoining(e.target.value as any)}
-                              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
-                            >
-                              <option value="No">No (Standard Vetting)</option>
-                              <option value="Yes">Yes (Immediate Batch)</option>
-                            </select>
-                          </div>
-                        </div>
-
-                        {/* Text Descriptions */}
-                        <div className="space-y-4 pt-4 border-t border-gray-100">
-                          <div>
-                            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Job Description *</label>
-                            <textarea
-                              required
-                              rows={3}
-                              value={jobDescription}
-                              onChange={(e) => setJobDescription(e.target.value)}
-                              placeholder="State what the role is, the client sector, and what vehicles they will pilot."
-                              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none leading-relaxed"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Detailed Responsibilities *</label>
-                            <textarea
-                              required
-                              rows={3}
-                              value={jobResponsibilities}
-                              onChange={(e) => setJobResponsibilities(e.target.value)}
-                              placeholder="E.g. Safe loading of FMCG, handling dispatch billing terminals, executing 20 drops daily."
-                              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none leading-relaxed"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Perks & Benefits *</label>
-                            <textarea
-                              required
-                              rows={3}
-                              value={jobBenefits}
-                              onChange={(e) => setJobBenefits(e.target.value)}
-                              placeholder="E.g. PF & ESIC, free corporate meals, mileage reimbursements, accidental insurance."
-                              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none leading-relaxed"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Step 2 Navigation buttons */}
-                        <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setJobFormStep(1);
-                              window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }}
-                            className="py-2.5 px-5 border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer"
-                          >
-                            <ChevronLeft className="w-4 h-4" /> Previous
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (validateStep2()) {
-                                setJobFormStep(3);
-                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                              }
-                            }}
-                            className="py-2.5 px-6 bg-[#1D61F2] hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer"
-                          >
-                            Next: Review & Publish <ChevronRight className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* STEP 3: REVIEW & PUBLISH */}
-                    {jobFormStep === 3 && (
-                      <div className="space-y-6">
-                        <div className="bg-blue-50/40 border border-blue-100/80 rounded-2xl p-4 flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-xl bg-[#1D61F2] text-white flex items-center justify-center font-black text-sm shrink-0">3</div>
-                          <div>
-                            <h5 className="text-xs font-extrabold text-gray-900 uppercase tracking-wider">Step 3 — Review & Publish</h5>
-                            <p className="text-[11px] text-gray-500">Please review all job details carefully before confirming publication.</p>
-                          </div>
-                        </div>
-
-                        {/* Summary Cards */}
-                        <div className="space-y-4">
-                          {/* Card 1: Basic Info & Salary */}
-                          <div className="bg-gray-50/80 border border-gray-200/80 rounded-2xl p-5 space-y-3">
-                            <div className="flex items-center justify-between pb-2 border-b border-gray-200">
-                              <h6 className="text-xs font-black text-gray-800 uppercase tracking-wider flex items-center gap-2">
-                                <Briefcase className="w-4 h-4 text-[#1D61F2]" /> Basic Information & Compensation
-                              </h6>
-                              <button
-                                type="button"
-                                onClick={() => { setJobFormStep(1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                                className="text-xs text-[#1D61F2] hover:underline font-bold flex items-center gap-1 cursor-pointer"
-                              >
-                                <Edit2 className="w-3.5 h-3.5" /> Edit Basic Info
-                              </button>
-                            </div>
-
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
-                              <div>
-                                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Job Title</span>
-                                <span className="font-extrabold text-gray-900">{jobTitle}</span>
-                              </div>
-                              <div>
-                                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Category</span>
-                                <span className="font-bold text-gray-800">{jobCategory}</span>
-                              </div>
-                              <div>
-                                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Open Positions</span>
-                                <span className="font-bold text-gray-800">{jobOpenings} openings</span>
-                              </div>
-                              <div>
-                                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Employment Type</span>
-                                <span className="font-bold text-gray-800">{jobEmploymentType}</span>
-                              </div>
-                              <div>
-                                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Location</span>
-                                <span className="font-bold text-gray-800">{jobArea}, {jobCity}, {jobState}</span>
-                              </div>
-                              <div>
-                                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Salary Range</span>
-                                <span className="font-extrabold text-emerald-700">₹{jobMinSalary} - ₹{jobMaxSalary} / {jobSalaryType}</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Card 2: Requirements */}
-                          <div className="bg-gray-50/80 border border-gray-200/80 rounded-2xl p-5 space-y-3">
-                            <div className="flex items-center justify-between pb-2 border-b border-gray-200">
-                              <h6 className="text-xs font-black text-gray-800 uppercase tracking-wider flex items-center gap-2">
-                                <CheckCircle className="w-4 h-4 text-[#1D61F2]" /> Candidate Eligibility & Criteria
-                              </h6>
-                              <button
-                                type="button"
-                                onClick={() => { setJobFormStep(2); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                                className="text-xs text-[#1D61F2] hover:underline font-bold flex items-center gap-1 cursor-pointer"
-                              >
-                                <Edit2 className="w-3.5 h-3.5" /> Edit Details
-                              </button>
-                            </div>
-
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-                              <div>
-                                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Shift</span>
-                                <span className="font-bold text-gray-800">{jobShift} Shift</span>
-                              </div>
-                              <div>
-                                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Experience</span>
-                                <span className="font-bold text-gray-800">{jobExperience === '0' ? 'Fresher Friendly' : `${jobExperience}+ years`}</span>
-                              </div>
-                              <div>
-                                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Education</span>
-                                <span className="font-bold text-gray-800">{jobEducation}</span>
-                              </div>
-                              <div>
-                                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Gender</span>
-                                <span className="font-bold text-gray-800">{jobGenderPreference}</span>
-                              </div>
-                              <div>
-                                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Age Range</span>
-                                <span className="font-bold text-gray-800">{jobAgeLimitMin} - {jobAgeLimitMax} yrs</span>
-                              </div>
-                              <div>
-                                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Personal Bike</span>
-                                <span className="font-bold text-gray-800">{jobBikeRequired}</span>
-                              </div>
-                              <div>
-                                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Driving License</span>
-                                <span className="font-bold text-gray-800">{jobDrivingLicense}</span>
-                              </div>
-                              <div>
-                                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Immediate Joining</span>
-                                <span className="font-bold text-gray-800">{jobImmediateJoining}</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Card 3: Description */}
-                          <div className="bg-gray-50/80 border border-gray-200/80 rounded-2xl p-5 space-y-3 text-xs">
-                            <div className="flex items-center justify-between pb-2 border-b border-gray-200">
-                              <h6 className="text-xs font-black text-gray-800 uppercase tracking-wider flex items-center gap-2">
-                                <FileText className="w-4 h-4 text-[#1D61F2]" /> Role Overview & Benefits
-                              </h6>
-                              <button
-                                type="button"
-                                onClick={() => { setJobFormStep(2); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                                className="text-xs text-[#1D61F2] hover:underline font-bold flex items-center gap-1 cursor-pointer"
-                              >
-                                <Edit2 className="w-3.5 h-3.5" /> Edit Descriptions
-                              </button>
-                            </div>
-
-                            <div className="space-y-3">
-                              <div>
-                                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1">Description</span>
-                                <p className="text-gray-700 leading-relaxed whitespace-pre-line">{jobDescription}</p>
-                              </div>
-                              <div>
-                                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1">Responsibilities</span>
-                                <p className="text-gray-700 leading-relaxed whitespace-pre-line">{jobResponsibilities}</p>
-                              </div>
-                              <div>
-                                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1">Perks & Benefits</span>
-                                <p className="text-gray-700 leading-relaxed whitespace-pre-line">{jobBenefits}</p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Step 3 Navigation & Submission Buttons */}
-                        <div className="pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setJobFormStep(2);
-                              window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }}
-                            className="w-full sm:w-auto py-2.5 px-5 border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
-                          >
-                            <ChevronLeft className="w-4 h-4" /> Previous
-                          </button>
-
-                          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                            <button
-                              type="button"
-                              onClick={() => handleJobSubmit(undefined, 'Draft')}
-                              disabled={submittingJob}
-                              className="py-2.5 px-5 border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
-                            >
-                              {submittingJob && submitStatus === 'Draft' ? <RefreshCw className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
-                              Save as Draft
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => handleJobSubmit(undefined, 'Published')}
-                              disabled={submittingJob}
-                              className="py-2.5 px-7 bg-[#1D61F2] hover:bg-blue-700 text-white text-xs font-extrabold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
-                            >
-                              {submittingJob ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                              {editingJob ? 'Save & Update Job' : 'Publish Job Opening'}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* STEP 4: SUCCESS SCREEN */}
-                    {jobFormStep === 4 && (
-                      <div className="py-8 px-4 text-center space-y-6 max-w-xl mx-auto">
-                        {/* Green Success Icon */}
-                        <div className="relative inline-flex items-center justify-center">
-                          <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center animate-pulse">
-                            <div className="w-14 h-14 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-lg">
-                              <Check className="w-8 h-8 stroke-[3]" />
-                            </div>
-                          </div>
-                        </div>
-
-                        <div>
-                          <h3 className="text-xl font-black text-gray-900 tracking-tight">
-                            Congratulations! Job Posted Successfully
-                          </h3>
-                          <p className="text-xs text-gray-500 mt-2 leading-relaxed">
-                            Your logistical vacancy has been created and published on JOBSner. Candidates looking for delivery & logistics roles in your area can now discover and apply immediately.
-                          </p>
-                        </div>
-
-                        {/* Summary of Published Job */}
-                        {publishedJobData && (
-                          <div className="bg-emerald-50/50 border border-emerald-200/80 rounded-2xl p-5 text-left space-y-3">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-full">
-                                ✓ Live & Active
-                              </span>
-                              <span className="text-xs font-bold text-gray-500">
-                                {publishedJobData.openings || 1} Openings
-                              </span>
-                            </div>
-
-                            <div>
-                              <h5 className="font-extrabold text-gray-900 text-sm">{publishedJobData.title}</h5>
-                              <p className="text-xs text-gray-600 mt-0.5">{recruiter.companyName} • {publishedJobData.category}</p>
-                            </div>
-
-                            <div className="flex flex-wrap items-center gap-3 text-xs pt-2 border-t border-emerald-100 text-gray-700">
-                              <span className="flex items-center gap-1 font-semibold">
-                                <MapPin className="w-3.5 h-3.5 text-emerald-600" /> {publishedJobData.area}, {publishedJobData.city}
-                              </span>
-                              <span className="font-bold text-emerald-800 bg-emerald-100/60 px-2 py-0.5 rounded">
-                                ₹{publishedJobData.minSalary} - ₹{publishedJobData.maxSalary} / {publishedJobData.salaryType || 'Monthly'}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Step 4 Action Buttons */}
-                        <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setShowJobForm(false);
-                              if (publishedJobData) {
-                                setViewingJob(publishedJobData);
-                              }
-                            }}
-                            className="w-full sm:w-auto py-3 px-6 bg-[#1D61F2] hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-                          >
-                            <Eye className="w-4 h-4" /> View Job
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              handleOpenNewJobForm();
-                            }}
-                            className="w-full sm:w-auto py-3 px-6 border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
-                          >
-                            <Plus className="w-4 h-4" /> Post Another Job
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                /* LIVE JOBS LISTING VIEW */
-                <div className="space-y-4">
+              {/* LIVE JOBS LISTING VIEW */}
+              <div className="space-y-4">
                   {/* SEARCH FILTERS AND CONTROLS */}
                   <div className="bg-white border border-gray-150 rounded-2xl p-4 shadow-sm space-y-4">
                     <div className="flex flex-col sm:flex-row items-center gap-3">
@@ -3790,11 +3865,10 @@ export default function RecruiterDashboard({
                     </div>
                   )}
                 </div>
-              )}
             </motion.div>
           )}
 
-          {activeTab === 'applications' && (
+          {!showJobForm && activeTab === 'applications' && (
             <motion.div
               key="applications-tab"
               initial={{ opacity: 0, y: 10 }}
@@ -4042,7 +4116,7 @@ export default function RecruiterDashboard({
           )}
 
           {/* URGENT CANDIDATES TAB (EXACTLY THE SAME CANDIDATE PRESENTATION FORMAT) */}
-          {activeTab === 'urgent-candidates' && (
+          {!showJobForm && activeTab === 'urgent-candidates' && (
             <motion.div
               key="urgent-candidates-tab"
               initial={{ opacity: 0, y: 10 }}
@@ -4266,7 +4340,7 @@ export default function RecruiterDashboard({
             </motion.div>
           )}
 
-          {activeTab === 'settings' && (
+          {!showJobForm && activeTab === 'settings' && (
             <motion.div
               key="settings-tab"
               initial={{ opacity: 0, y: 10 }}
