@@ -54,6 +54,7 @@ export default function RecruiterLogin({
   // Google Sign In
   const handleGoogleSignIn = async () => {
     setError(null);
+    localStorage.removeItem('jobsner_explicit_logout');
     setLoading(true);
 
     try {
@@ -101,6 +102,7 @@ export default function RecruiterLogin({
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    localStorage.removeItem('jobsner_explicit_logout');
 
     const cleanMobile = mobile.replace(/\D/g, '');
     if (cleanMobile.length < 10) {
@@ -181,6 +183,7 @@ export default function RecruiterLogin({
   const handleSubmitPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    localStorage.removeItem('jobsner_explicit_logout');
 
     if (!identifier.trim() || !password) {
       setError('Please provide your mobile/email and password.');

@@ -1302,91 +1302,40 @@ function verifyPassword(password: string, salt: string, hash: string): boolean {
   return verifyHash === hash;
 }
 
-// Auth Middleware for Candidates
-async function authenticateToken(req: express.Request, res: express.Response, next: express.NextFunction) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+const SESSION_SECRET = process.env.SESSION_SECRET || 'jobsner_recruiter_jwt_secret_2026_xyz';
+const SESSION_EXPIRATION_MS = 24 * 60 * 60 * 1000; // 24 hours (holds session well beyond 1 hour)
 
-  if (!token || token === 'null' || token === 'undefined') {
-    return res.status(401).json({ error: 'Access denied. No token provided.' });
-  }
-
-  let db = readDB();
-  db.tokens = db.tokens || {};
-  let candidateId = db.tokens[token];
-
-  // 1. Fallback: Read from disk DB file directly
-  if (!candidateId && fs.existsSync(DB_PATH)) {
-    try {
-      const diskData = fs.readFileSync(DB_PATH, 'utf-8');
-      const diskDb = JSON.parse(diskData);
-      if (diskDb.tokens && diskDb.tokens[token]) {
-        candidateId = diskDb.tokens[token];
-        db.tokens[token] = candidateId; // Restore in memory
-      }
-    } catch (diskErr) {
-      console.warn('[Token Auth Disk Fallback Warning]', diskErr);
-    }
-  }
-
-  // 2. Fallback: Check if token itself IS candidate.id directly
-  if (!candidateId) {
-    let candidateMatch = (db.candidates || []).find((c: any) => String(c.id) === String(token));
-    if (!candidateMatch && isSupabaseConfigured()) {
-      const liveCandidates = await getLiveCandidates();
-      candidateMatch = liveCandidates.find((c: any) => String(c.id) === String(token));
-    }
-    if (candidateMatch) {
-      candidateId = candidateMatch.id;
-      db.tokens[token] = candidateId;
-      writeDB(db);
-    }
-  }
-
-  // 3. Fallback: Check candidate ID passed in body or query
-  if (!candidateId) {
-    const reqCandidateId = req.body?.candidateId || req.body?.candidate_id || req.query?.candidateId;
-    if (reqCandidateId) {
-      const found = (db.candidates || []).find((c: any) => String(c.id) === String(reqCandidateId));
-      if (found) {
-        candidateId = found.id;
-        db.tokens[token] = candidateId;
-        writeDB(db);
-      }
-    }
-  }
-
-  // SECURITY: Do NOT fall back to last-candidate-in-DB.
-  // An unrecognized token must be rejected with 403 to prevent cross-account data leaks.
-
-  if (!candidateId) {
-    return res.status(403).json({ error: 'Invalid or expired token.' });
-  }
-
-  let candidate = (db.candidates || []).find((c: any) => String(c.id) === String(candidateId));
-  if (!candidate && isSupabaseConfigured()) {
-    const liveCandidates = await getLiveCandidates();
-    candidate = liveCandidates.find((c: any) => String(c.id) === String(candidateId));
-  }
-
-  if (!candidate) {
-    // Return fallback candidate object so request succeeds
-    candidate = {
-      id: candidateId,
-      fullName: 'Candidate',
-      mobile: '',
-      email: '',
-      profile: { fullName: 'Candidate', bikeAvailable: 'No', drivingLicenseAvailable: 'No', languagesKnown: [] }
-    };
-  }
-
-  (req as any).candidate = candidate;
-  (req as any).token = token;
-  next();
+export function generateCandidateSessionToken(candidateId: string): string {
+  const issuedAt = Date.now();
+  const payload = `cand:${candidateId}:${issuedAt}`;
+  const hmac = crypto.createHmac('sha256', SESSION_SECRET).update(payload).digest('hex').slice(0, 32);
+  return `candtok_${candidateId}_${issuedAt}_${hmac}`;
 }
 
-const SESSION_SECRET = process.env.SESSION_SECRET || 'jobsner_recruiter_jwt_secret_2026_xyz';
-const SESSION_EXPIRATION_MS = 24 * 60 * 60 * 1000; // 24 hours (holds well beyond 1 hour)
+export function verifyCandidateSessionToken(token: string): { valid: boolean; candidateId?: string } {
+  if (!token || !token.startsWith('candtok_')) {
+    return { valid: false };
+  }
+  const parts = token.split('_');
+  if (parts.length < 4) return { valid: false };
+  const hmac = parts[parts.length - 1];
+  const issuedAtStr = parts[parts.length - 2];
+  const candidateId = parts.slice(1, parts.length - 2).join('_');
+  const issuedAt = parseInt(issuedAtStr, 10);
+
+  if (isNaN(issuedAt)) return { valid: false };
+  if (Date.now() - issuedAt > SESSION_EXPIRATION_MS) {
+    return { valid: false };
+  }
+
+  const expectedPayload = `cand:${candidateId}:${issuedAt}`;
+  const expectedHmac = crypto.createHmac('sha256', SESSION_SECRET).update(expectedPayload).digest('hex').slice(0, 32);
+
+  if (crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(expectedHmac))) {
+    return { valid: true, candidateId };
+  }
+  return { valid: false };
+}
 
 export function generateRecruiterSessionToken(recruiterId: string): string {
   const issuedAt = Date.now();
@@ -1418,6 +1367,102 @@ export function verifyRecruiterSessionToken(token: string): { valid: boolean; re
     return { valid: true, recruiterId };
   }
   return { valid: false };
+}
+
+// Auth Middleware for Candidates
+async function authenticateToken(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token || token === 'null' || token === 'undefined') {
+    return res.status(401).json({ error: 'Access denied. No token provided.' });
+  }
+
+  let db = readDB();
+  db.tokens = db.tokens || {};
+  db.revokedTokens = db.revokedTokens || {};
+
+  // Check if token was revoked upon explicit logout
+  if (db.revokedTokens[token]) {
+    return res.status(401).json({ error: 'Session has expired or been logged out.' });
+  }
+
+  let candidateId = db.tokens[token];
+
+  // 1. Fallback: Verify self-contained candidate session token signature (24h validity)
+  if (!candidateId && token.startsWith('candtok_')) {
+    const verified = verifyCandidateSessionToken(token);
+    if (verified.valid && verified.candidateId) {
+      candidateId = verified.candidateId;
+      db.tokens[token] = candidateId;
+    }
+  }
+
+  // 2. Fallback: Read from disk DB file directly
+  if (!candidateId && fs.existsSync(DB_PATH)) {
+    try {
+      const diskData = fs.readFileSync(DB_PATH, 'utf-8');
+      const diskDb = JSON.parse(diskData);
+      if (diskDb.tokens && diskDb.tokens[token]) {
+        candidateId = diskDb.tokens[token];
+        db.tokens[token] = candidateId; // Restore in memory
+      }
+    } catch (diskErr) {
+      console.warn('[Token Auth Disk Fallback Warning]', diskErr);
+    }
+  }
+
+  // 3. Fallback: Check if token itself IS candidate.id directly
+  if (!candidateId) {
+    let candidateMatch = (db.candidates || []).find((c: any) => String(c.id) === String(token));
+    if (!candidateMatch && isSupabaseConfigured()) {
+      const liveCandidates = await getLiveCandidates();
+      candidateMatch = liveCandidates.find((c: any) => String(c.id) === String(token));
+    }
+    if (candidateMatch) {
+      candidateId = candidateMatch.id;
+      db.tokens[token] = candidateId;
+      writeDB(db).catch(() => {});
+    }
+  }
+
+  // 4. Fallback: Check candidate ID passed in body or query
+  if (!candidateId) {
+    const reqCandidateId = req.body?.candidateId || req.body?.candidate_id || req.query?.candidateId;
+    if (reqCandidateId) {
+      const found = (db.candidates || []).find((c: any) => String(c.id) === String(reqCandidateId));
+      if (found) {
+        candidateId = found.id;
+        db.tokens[token] = candidateId;
+        writeDB(db).catch(() => {});
+      }
+    }
+  }
+
+  if (!candidateId) {
+    return res.status(401).json({ error: 'Invalid or expired token. Please log in again.' });
+  }
+
+  let candidate = (db.candidates || []).find((c: any) => String(c.id) === String(candidateId));
+  if (!candidate && isSupabaseConfigured()) {
+    const liveCandidates = await getLiveCandidates();
+    candidate = liveCandidates.find((c: any) => String(c.id) === String(candidateId));
+  }
+
+  if (!candidate) {
+    // Return fallback candidate object so request succeeds
+    candidate = {
+      id: candidateId,
+      fullName: 'Candidate',
+      mobile: '',
+      email: '',
+      profile: { fullName: 'Candidate', bikeAvailable: 'No', drivingLicenseAvailable: 'No', languagesKnown: [] }
+    };
+  }
+
+  (req as any).candidate = candidate;
+  (req as any).token = token;
+  next();
 }
 
 export function isRecruiterOwner(recruiter: any, itemRecruiterId: any, itemCompanyName?: any): boolean {
@@ -1459,6 +1504,11 @@ async function authenticateRecruiter(req: express.Request, res: express.Response
   let db = readDB();
   db.recruiterTokens = db.recruiterTokens || {};
   db.tokens = db.tokens || {};
+  db.revokedRecruiterTokens = db.revokedRecruiterTokens || {};
+
+  if (db.revokedRecruiterTokens[token]) {
+    return res.status(401).json({ error: 'Session has expired or been logged out. Please log in again.' });
+  }
 
   let recruiterId = db.recruiterTokens?.[token] || db.tokens?.[token]?.recruiterId || (typeof db.tokens?.[token] === 'string' ? db.tokens[token] : null);
 
@@ -1497,12 +1547,12 @@ async function authenticateRecruiter(req: express.Request, res: express.Response
     if (recruiterMatch) {
       recruiterId = recruiterMatch.id;
       db.recruiterTokens[token] = recruiterId;
-      writeDB(db);
+      writeDB(db).catch(() => {});
     }
   }
 
   if (!recruiterId) {
-    return res.status(403).json({ error: 'Invalid or expired token. Please log in again.' });
+    return res.status(401).json({ error: 'Invalid or expired token. Please log in again.' });
   }
 
   // Fetch full recruiter object by id OR firebaseUid
@@ -1590,8 +1640,8 @@ app.post('/api/register', async (req, res) => {
 
   db.candidates.push(newCandidate);
 
-  // Generate Session Token
-  const token = crypto.randomBytes(32).toString('hex');
+  // Generate Candidate Session Token
+  const token = generateCandidateSessionToken(id);
   db.tokens[token] = id;
 
   await writeDB(db);
@@ -1717,8 +1767,8 @@ app.post('/api/login', async (req, res) => {
     return res.status(400).json({ error: 'Invalid mobile/email or password.' });
   }
 
-  // Generate Session Token
-  const token = crypto.randomBytes(32).toString('hex');
+  // Generate Candidate Session Token
+  const token = generateCandidateSessionToken(candidate.id);
   db.tokens[token] = candidate.id;
 
   writeDB(db);
@@ -1849,8 +1899,8 @@ app.post('/api/firebase-auth', async (req, res) => {
       }
     }
 
-    // Generate Session Token
-    const token = crypto.randomBytes(32).toString('hex');
+    // Generate Candidate Session Token
+    const token = generateCandidateSessionToken(candidate.id);
     db.tokens[token] = candidate.id;
     await writeDB(db);
 
@@ -1981,13 +2031,29 @@ app.get('/api/profile', authenticateToken, async (req, res) => {
     let candidateRecord = liveCandidates.find((c: any) => String(c.id) === String(candidate.id)) || candidate;
     const documents = liveDocs.filter((d: any) => String(d.candidateId || d.candidate_id) === String(candidate.id));
 
+    // Rolling token renewal: if token is a valid signed token older than 12h, renew it
+    const currentToken = (req as any).token;
+    let renewedToken = currentToken;
+    if (currentToken && typeof currentToken === 'string' && currentToken.startsWith('candtok_')) {
+      const parts = currentToken.split('_');
+      const issuedAt = parseInt(parts[parts.length - 2], 10);
+      if (!isNaN(issuedAt) && Date.now() - issuedAt > 12 * 60 * 60 * 1000) {
+        renewedToken = generateCandidateSessionToken(candidateRecord.id);
+        const db = readDB();
+        db.tokens = db.tokens || {};
+        db.tokens[renewedToken] = candidateRecord.id;
+        writeDB(db).catch(() => {});
+      }
+    }
+
     res.status(200).json({
       id: candidateRecord.id,
       profile: candidateRecord.profile || {},
       fullName: candidateRecord.fullName || candidateRecord.profile?.fullName || candidate.fullName,
       email: candidateRecord.email || candidate.email,
       mobile: candidateRecord.mobile || candidate.mobile,
-      documents
+      documents,
+      renewedToken
     });
   } catch (err) {
     console.error(err);
@@ -2650,6 +2716,27 @@ app.post('/api/recruiter/login', async (req, res) => {
   }
 });
 
+// 2a. Logout Candidate (Invalidate server-side token)
+app.post('/api/logout', async (req, res) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (token && token !== 'null' && token !== 'undefined') {
+    try {
+      const db = readDB();
+      db.tokens = db.tokens || {};
+      db.revokedTokens = db.revokedTokens || {};
+      db.revokedTokens[token] = true;
+      if (db.tokens[token]) {
+        delete db.tokens[token];
+        await writeDB(db);
+      }
+    } catch (err) {
+      console.error('[Candidate Logout] Error invalidating token:', err);
+    }
+  }
+  res.status(200).json({ message: 'Logged out successfully.' });
+});
+
 // 2b. Logout Recruiter (Invalidate server-side token)
 app.post('/api/recruiter/logout', async (req, res) => {
   const authHeader = req.headers['authorization'];
@@ -2658,6 +2745,8 @@ app.post('/api/recruiter/logout', async (req, res) => {
     try {
       const db = readDB();
       db.recruiterTokens = db.recruiterTokens || {};
+      db.revokedRecruiterTokens = db.revokedRecruiterTokens || {};
+      db.revokedRecruiterTokens[token] = true;
       if (db.recruiterTokens[token]) {
         delete db.recruiterTokens[token];
         await writeDB(db);
@@ -2674,8 +2763,24 @@ app.get('/api/recruiter/profile', authenticateRecruiter, async (req, res) => {
   const recruiter = (req as any).recruiter;
   const liveRecruiters = await getLiveRecruiters();
   const currentRecruiter = liveRecruiters.find((r: any) => String(r.id) === String(recruiter.id)) || recruiter;
+
+  // Rolling token renewal: if token is a valid signed token older than 12h, renew it
+  const currentToken = (req as any).token;
+  let renewedToken = currentToken;
+  if (currentToken && typeof currentToken === 'string' && currentToken.startsWith('rectok_')) {
+    const parts = currentToken.split('_');
+    const issuedAt = parseInt(parts[parts.length - 2], 10);
+    if (!isNaN(issuedAt) && Date.now() - issuedAt > 12 * 60 * 60 * 1000) {
+      renewedToken = generateRecruiterSessionToken(currentRecruiter.id);
+      const db = readDB();
+      db.recruiterTokens = db.recruiterTokens || {};
+      db.recruiterTokens[renewedToken] = currentRecruiter.id;
+      writeDB(db).catch(() => {});
+    }
+  }
+
   const { salt: _s, hash: _h, ...recruiterDetails } = currentRecruiter;
-  res.status(200).json({ recruiter: recruiterDetails });
+  res.status(200).json({ recruiter: recruiterDetails, renewedToken });
 });
 
 // 4. Update Recruiter Profile
@@ -4719,6 +4824,35 @@ async function initDatabase() {
 // --- ADMIN AUTHENTICATION & SESSION ENDPOINTS ---
 
 const activeAdminTokens = new Set<string>();
+const revokedAdminTokens = new Set<string>();
+
+export function generateAdminSessionToken(): string {
+  const issuedAt = Date.now();
+  const payload = `admin:${issuedAt}`;
+  const hmac = crypto.createHmac('sha256', SESSION_SECRET).update(payload).digest('hex').slice(0, 32);
+  return `admin_sess_${issuedAt}_${hmac}`;
+}
+
+export function verifyAdminSessionToken(token: string): boolean {
+  if (!token || !token.startsWith('admin_sess_')) return false;
+  if (revokedAdminTokens.has(token)) return false;
+  if (activeAdminTokens.has(token)) return true;
+  const parts = token.split('_');
+  if (parts.length < 4) return false;
+  const hmac = parts[parts.length - 1];
+  const issuedAtStr = parts[parts.length - 2];
+  const issuedAt = parseInt(issuedAtStr, 10);
+  if (isNaN(issuedAt)) return false;
+  if (Date.now() - issuedAt > SESSION_EXPIRATION_MS) return false;
+
+  const expectedPayload = `admin:${issuedAt}`;
+  const expectedHmac = crypto.createHmac('sha256', SESSION_SECRET).update(expectedPayload).digest('hex').slice(0, 32);
+  if (crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(expectedHmac))) {
+    activeAdminTokens.add(token);
+    return true;
+  }
+  return false;
+}
 
 // Endpoint to verify Admin login against Supabase 'admins' table
 app.post('/api/admin/login', async (req, res) => {
@@ -4781,8 +4915,8 @@ app.post('/api/admin/login', async (req, res) => {
       return res.status(401).json({ success: false, error: 'Invalid username or password.' });
     }
 
-    // Success: Generate secure session token
-    const token = 'admin_sess_' + crypto.randomBytes(32).toString('hex');
+    // Success: Generate secure session token with cryptographic HMAC signature
+    const token = generateAdminSessionToken();
     activeAdminTokens.add(token);
 
     return res.status(200).json({
@@ -4803,7 +4937,7 @@ app.post('/api/admin/login', async (req, res) => {
 // Endpoint to verify existing admin session token
 app.post('/api/admin/verify-session', (req, res) => {
   const { token } = req.body || {};
-  if (token && activeAdminTokens.has(token)) {
+  if (token && verifyAdminSessionToken(token)) {
     return res.status(200).json({ success: true, valid: true });
   }
   return res.status(401).json({ success: false, valid: false });
@@ -4814,6 +4948,7 @@ app.post('/api/admin/logout', (req, res) => {
   const { token } = req.body || {};
   if (token) {
     activeAdminTokens.delete(token);
+    revokedAdminTokens.add(token);
   }
   return res.status(200).json({ success: true });
 });

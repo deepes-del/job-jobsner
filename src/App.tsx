@@ -87,20 +87,22 @@ export default function App() {
 
   // Restore session tokens on mount
   useEffect(() => {
+    let isCancelled = false;
     let isSyncingFirebaseAuth = false;
-    const savedToken = localStorage.getItem('delivery_hiring_token');
-    const savedRecruiterToken = localStorage.getItem('recruiter_hiring_token');
 
-    const checkCandidate = async (): Promise<boolean> => {
-      if (savedToken) {
-        try {
-          const res = await fetch('/api/profile', {
-            headers: {
-              'Authorization': `Bearer ${savedToken}`
-            }
-          });
-          if (res.ok) {
-            const data = await res.json();
+    const checkCandidate = async (): Promise<'success' | 'unauthorized' | 'transient'> => {
+      const currentToken = localStorage.getItem('delivery_hiring_token');
+      if (!currentToken) return 'unauthorized';
+
+      try {
+        const res = await fetch('/api/profile', {
+          headers: {
+            'Authorization': `Bearer ${currentToken}`
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (!isCancelled) {
             setCandidate({
               id: data.id,
               fullName: data.fullName,
@@ -109,90 +111,130 @@ export default function App() {
               profile: data.profile,
               documents: data.documents || []
             });
-            setToken(savedToken);
+            if (data.renewedToken && data.renewedToken !== currentToken) {
+              localStorage.setItem('delivery_hiring_token', data.renewedToken);
+              setToken(data.renewedToken);
+            } else {
+              setToken(currentToken);
+            }
             setView('dashboard');
             setPortal('candidate');
             setUserRole('candidate');
-            return true;
-          } else if (res.status === 401 || res.status === 403) {
-            localStorage.removeItem('delivery_hiring_token');
           }
-        } catch (err) {
-          console.error('Candidate restore error:', err);
+          return 'success';
+        } else if (res.status === 401) {
+          // Token is genuinely invalid, expired or revoked on server
+          localStorage.removeItem('delivery_hiring_token');
+          return 'unauthorized';
+        } else {
+          // 403, 500, etc. may be transient server restart; preserve token
+          console.warn('[Candidate Restore] Status', res.status, '- keeping token for retry');
+          return 'transient';
         }
+      } catch (err) {
+        console.error('Candidate restore error (network):', err);
+        return 'transient';
       }
-      return false;
     };
 
-    const checkRecruiter = async (): Promise<boolean> => {
-      if (savedRecruiterToken) {
-        try {
-          const res = await fetch('/api/recruiter/profile', {
-            headers: {
-              'Authorization': `Bearer ${savedRecruiterToken}`
-            }
-          });
-          if (res.ok) {
-            const data = await res.json();
+    const checkRecruiter = async (): Promise<'success' | 'unauthorized' | 'transient'> => {
+      const currentRecToken = localStorage.getItem('recruiter_hiring_token');
+      if (!currentRecToken) return 'unauthorized';
+
+      try {
+        const res = await fetch('/api/recruiter/profile', {
+          headers: {
+            'Authorization': `Bearer ${currentRecToken}`
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (!isCancelled) {
             setRecruiter(data.recruiter);
-            setRecruiterToken(savedRecruiterToken);
+            if (data.renewedToken && data.renewedToken !== currentRecToken) {
+              localStorage.setItem('recruiter_hiring_token', data.renewedToken);
+              setRecruiterToken(data.renewedToken);
+            } else {
+              setRecruiterToken(currentRecToken);
+            }
             setRecruiterView('dashboard');
             setPortal('recruiter');
             setUserRole('recruiter');
-            return true;
-          } else if (res.status === 401) {
-            // Only clear on 401 (truly invalid token); 403 may be transient
-            localStorage.removeItem('recruiter_hiring_token');
-          } else if (res.status === 403) {
-            // 403 could be a transient server restart; keep the token and let user retry
-            console.warn('[Session Restore] 403 received, keeping token for retry');
           }
-        } catch (err) {
-          // Network error: don't clear the stored token, session may still be valid
-          console.error('Recruiter restore error (network):', err);
+          return 'success';
+        } else if (res.status === 401) {
+          // Only clear on 401 (truly invalid token); 403 may be transient
+          localStorage.removeItem('recruiter_hiring_token');
+          return 'unauthorized';
+        } else {
+          console.warn('[Recruiter Restore] Status', res.status, '- keeping token for retry');
+          return 'transient';
         }
+      } catch (err) {
+        console.error('Recruiter restore error (network):', err);
+        return 'transient';
       }
-      return false;
     };
 
     const restoreAll = async () => {
       try {
         fetchDbStatus().catch(() => {});
-        const candidateRestored = await checkCandidate();
-        if (!candidateRestored) {
-          const recruiterRestored = await checkRecruiter();
-          if (!recruiterRestored) {
-            setUserRole(null);
-            setView('login');
-            setRecruiterView('login');
+        const preferredPortal = localStorage.getItem('jobsner_portal') || 'candidate';
+
+        let candResult: 'success' | 'unauthorized' | 'transient' = 'unauthorized';
+        let recResult: 'success' | 'unauthorized' | 'transient' = 'unauthorized';
+
+        if (preferredPortal === 'recruiter') {
+          recResult = await checkRecruiter();
+          if (recResult !== 'success') {
+            candResult = await checkCandidate();
           }
+        } else {
+          candResult = await checkCandidate();
+          if (candResult !== 'success') {
+            recResult = await checkRecruiter();
+          }
+        }
+
+        if (isCancelled) return;
+
+        const isRestored = candResult === 'success' || recResult === 'success';
+        const isTransient = candResult === 'transient' || recResult === 'transient';
+
+        // Only clear role and force login view if user has no valid session and not a transient network error
+        if (!isRestored && !isTransient) {
+          setUserRole(null);
+          setView('login');
+          setRecruiterView('login');
         }
       } catch (err) {
         console.error('Session restore error:', err);
-        setUserRole(null);
-        setView('login');
-        setRecruiterView('login');
       } finally {
-        setInitialLoading(false);
+        if (!isCancelled) {
+          setInitialLoading(false);
+        }
       }
     };
 
     restoreAll();
 
-    // Firebase Auth State Listener (Guard against repeated auto-sync loops)
+    // Firebase Auth State Listener (Guard against repeated auto-sync loops & explicit logout)
     const unsubscribe = subscribeToAuthState(async (firebaseUser) => {
-      if (firebaseUser && !isSyncingFirebaseAuth) {
+      // 1. If user explicitly logged out, DO NOT automatically log back in!
+      if (localStorage.getItem('jobsner_explicit_logout') === 'true') {
+        return;
+      }
+
+      if (firebaseUser && !isSyncingFirebaseAuth && !isCancelled) {
         const currentCandToken = localStorage.getItem('delivery_hiring_token');
         const currentRecToken = localStorage.getItem('recruiter_hiring_token');
 
+        // Only attempt auto-sync if neither token is present and user is not explicitly logged out
         if (!currentCandToken && !currentRecToken) {
           isSyncingFirebaseAuth = true;
           try {
             const idToken = await firebaseUser.getIdToken();
-            // Read portal from localStorage at call time to avoid stale closure
-            const currentPortal = localStorage.getItem('recruiter_hiring_token') !== null
-              ? 'recruiter'
-              : (localStorage.getItem('jobsner_portal') || 'candidate');
+            const currentPortal = localStorage.getItem('jobsner_portal') || 'candidate';
             const res = await fetch('/api/firebase-auth', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -206,7 +248,7 @@ export default function App() {
                 mobile: firebaseUser.phoneNumber
               })
             });
-            if (res.ok) {
+            if (res.ok && !isCancelled) {
               const data = await res.json();
               if (data.role === 'candidate') {
                 handleCandidateAuthSuccess(data.candidate, data.token);
@@ -225,14 +267,19 @@ export default function App() {
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      isCancelled = true;
+      unsubscribe();
+    };
   }, []);
 
   // --- CANDIDATE EVENT HANDLERS ---
   const handleCandidateAuthSuccess = (newCandidate: Candidate, newToken: string) => {
+    localStorage.removeItem('jobsner_explicit_logout');
     setCandidate(newCandidate);
     setToken(newToken);
     localStorage.setItem('delivery_hiring_token', newToken);
+    localStorage.setItem('jobsner_portal', 'candidate');
     setUserRole('candidate');
     setView('dashboard');
     setPortal('candidate');
@@ -252,6 +299,14 @@ export default function App() {
   };
 
   const handleCandidateLogout = () => {
+    localStorage.setItem('jobsner_explicit_logout', 'true');
+    const tokenToRevoke = localStorage.getItem('delivery_hiring_token');
+    if (tokenToRevoke) {
+      fetch('/api/logout', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${tokenToRevoke}` }
+      }).catch(e => console.warn('[Candidate Logout] Server token invalidation failed:', e));
+    }
     logoutFirebase().catch(e => console.warn('[Firebase SignOut]', e));
     localStorage.removeItem('delivery_hiring_token');
     setCandidate(null);
@@ -262,10 +317,11 @@ export default function App() {
 
   // --- RECRUITER EVENT HANDLERS ---
   const handleRecruiterAuthSuccess = (newRecruiter: Recruiter, newToken: string) => {
+    localStorage.removeItem('jobsner_explicit_logout');
     setRecruiter(newRecruiter);
     setRecruiterToken(newToken);
     localStorage.setItem('recruiter_hiring_token', newToken);
-    localStorage.setItem('jobsner_portal', 'recruiter'); // Persist portal hint for Firebase auto-sync
+    localStorage.setItem('jobsner_portal', 'recruiter');
     setRecruiterView('dashboard');
     setPortal('recruiter');
     setUserRole('recruiter');
@@ -276,7 +332,7 @@ export default function App() {
   };
 
   const handleRecruiterLogout = () => {
-    // 1. Invalidate token server-side first (fire-and-forget but with token still in storage)
+    localStorage.setItem('jobsner_explicit_logout', 'true');
     const tokenToRevoke = localStorage.getItem('recruiter_hiring_token');
     if (tokenToRevoke) {
       fetch('/api/recruiter/logout', {
@@ -284,11 +340,8 @@ export default function App() {
         headers: { 'Authorization': `Bearer ${tokenToRevoke}` }
       }).catch(e => console.warn('[Recruiter Logout] Server token invalidation failed:', e));
     }
-    // 2. Sign out of Firebase
     logoutFirebase().catch(e => console.warn('[Firebase SignOut]', e));
-    // 3. Clear recruiter portal hint from localStorage
     localStorage.removeItem('jobsner_portal');
-    // 4. Clear local session
     localStorage.removeItem('recruiter_hiring_token');
     setRecruiter(null);
     setRecruiterToken(null);
@@ -422,10 +475,14 @@ export default function App() {
               <div className="flex items-center gap-2">
                 <button 
                   onClick={() => {
-                    setView('login');
                     setPortal('recruiter');
-                    setRecruiterView('login');
                     setUserRole('recruiter');
+                    localStorage.setItem('jobsner_portal', 'recruiter');
+                    if (isRecruiterLoggedIn) {
+                      setRecruiterView('dashboard');
+                    } else {
+                      setRecruiterView('login');
+                    }
                   }}
                   className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 hover:border-orange-500 hover:text-orange-600 rounded-lg text-xs font-bold transition-all cursor-pointer text-gray-600 bg-white"
                   id="switch-to-recruiter-portal"
@@ -454,10 +511,14 @@ export default function App() {
                 <div className="flex items-center gap-2">
                   <button 
                     onClick={() => {
-                      setRecruiterView('login');
                       setPortal('candidate');
-                      setView('login');
                       setUserRole('candidate');
+                      localStorage.setItem('jobsner_portal', 'candidate');
+                      if (isCandidateLoggedIn) {
+                        setView('dashboard');
+                      } else {
+                        setView('login');
+                      }
                     }}
                     className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 hover:border-orange-500 hover:text-orange-600 rounded-lg text-xs font-bold transition-all cursor-pointer text-gray-600 bg-white"
                     id="switch-to-candidate-portal"
@@ -540,8 +601,13 @@ export default function App() {
                   <button
                     onClick={() => {
                       setPortal('recruiter');
-                      setRecruiterView('login');
                       setUserRole('recruiter');
+                      localStorage.setItem('jobsner_portal', 'recruiter');
+                      if (isRecruiterLoggedIn) {
+                        setRecruiterView('dashboard');
+                      } else {
+                        setRecruiterView('login');
+                      }
                     }}
                     className="mt-6 w-full py-3 bg-slate-950 hover:bg-slate-900 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2"
                   >
@@ -592,8 +658,13 @@ export default function App() {
                   <button
                     onClick={() => {
                       setPortal('candidate');
-                      setView('login');
                       setUserRole('candidate');
+                      localStorage.setItem('jobsner_portal', 'candidate');
+                      if (isCandidateLoggedIn) {
+                        setView('dashboard');
+                      } else {
+                        setView('login');
+                      }
                     }}
                     className="mt-6 w-full py-3 bg-orange-600 hover:bg-orange-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2"
                   >
@@ -627,8 +698,13 @@ export default function App() {
                         <button
                           onClick={() => {
                             setPortal('recruiter');
-                            setRecruiterView('login');
                             setUserRole('recruiter');
+                            localStorage.setItem('jobsner_portal', 'recruiter');
+                            if (isRecruiterLoggedIn) {
+                              setRecruiterView('dashboard');
+                            } else {
+                              setRecruiterView('login');
+                            }
                           }}
                           className="text-xs font-bold text-gray-500 hover:text-orange-600 transition-colors cursor-pointer"
                         >
@@ -745,8 +821,13 @@ export default function App() {
                         }}
                         onSwitchToCandidate={() => {
                           setPortal('candidate');
-                          setView('login');
                           setUserRole('candidate');
+                          localStorage.setItem('jobsner_portal', 'candidate');
+                          if (isCandidateLoggedIn) {
+                            setView('dashboard');
+                          } else {
+                            setView('login');
+                          }
                         }}
                       />
                       <div className="max-w-md mx-auto text-center mt-4">
@@ -776,8 +857,13 @@ export default function App() {
                         onNavigateToLogin={() => setRecruiterView('login')}
                         onSwitchToCandidate={() => {
                           setPortal('candidate');
-                          setView('login');
                           setUserRole('candidate');
+                          localStorage.setItem('jobsner_portal', 'candidate');
+                          if (isCandidateLoggedIn) {
+                            setView('dashboard');
+                          } else {
+                            setView('login');
+                          }
                         }}
                       />
                     </motion.div>

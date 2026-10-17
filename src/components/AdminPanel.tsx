@@ -207,21 +207,43 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose, onJobPo
 
   useEffect(() => {
     if (isOpen) {
-      // Always require fresh credential entry whenever Admin Panel opens
-      setIsAdminAuth(false);
-      setAuthUsername('');
-      setAuthPassword('');
-      setAuthError(null);
-      sessionStorage.removeItem('jobsner_admin_token');
+      const existingToken = sessionStorage.getItem('jobsner_admin_token');
+      if (existingToken) {
+        setAuthLoading(true);
+        fetch('/api/admin/verify-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: existingToken })
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.valid) {
+              setIsAdminAuth(true);
+              fetchRecruiters();
+            } else {
+              sessionStorage.removeItem('jobsner_admin_token');
+              setIsAdminAuth(false);
+            }
+          })
+          .catch(() => {
+            // Network error: don't clear token, allow retry
+          })
+          .finally(() => {
+            setAuthLoading(false);
+          });
+      } else {
+        setIsAdminAuth(false);
+        setAuthUsername('');
+        setAuthPassword('');
+        setAuthError(null);
+      }
     }
   }, [isOpen]);
 
   const handleClosePanel = () => {
-    setIsAdminAuth(false);
     setAuthUsername('');
     setAuthPassword('');
     setAuthError(null);
-    sessionStorage.removeItem('jobsner_admin_token');
     onClose();
   };
 

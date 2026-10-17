@@ -53,6 +53,7 @@ export default function CandidateLogin({ onSuccess, onNavigateToRegister }: Cand
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    localStorage.removeItem('jobsner_explicit_logout');
 
     const cleanDigits = mobile.replace(/\D/g, '');
     if (cleanDigits.length < 10) {
@@ -137,6 +138,7 @@ export default function CandidateLogin({ onSuccess, onNavigateToRegister }: Cand
   // Google Sign-In
   const handleGoogleSignIn = async () => {
     setError(null);
+    localStorage.removeItem('jobsner_explicit_logout');
     setLoading(true);
 
     try {
@@ -187,6 +189,7 @@ export default function CandidateLogin({ onSuccess, onNavigateToRegister }: Cand
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    localStorage.removeItem('jobsner_explicit_logout');
 
     const identifier = (email || mobile).trim();
     if (!identifier || !password) {

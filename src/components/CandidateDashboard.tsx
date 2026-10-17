@@ -670,10 +670,6 @@ export default function CandidateDashboard({
     }
   };
 
-  // Top 3 Recommended Jobs for Carousel / 3-Card Row
-  const recommendedJobsList = React.useMemo(() => {
-    return activeJobs.slice(0, 3);
-  }, [activeJobs]);
 
   return (
     <div className="w-full text-slate-800 pb-24 lg:pb-0" id="candidate-dashboard-container">
@@ -1108,11 +1104,34 @@ export default function CandidateDashboard({
                 </div>
               </div>
 
-              {/* RECOMMENDED JOBS SECTION */}
+              {/* RECOMMENDED JOBS SECTION - Infinite Circular Carousel */}
               <div className="space-y-4">
+                <style>{`
+                  @keyframes jobsCarouselScroll {
+                    0%   { transform: translateX(0); }
+                    100% { transform: translateX(-50%); }
+                  }
+                  .jobs-carousel-track {
+                    display: flex;
+                    gap: 1.25rem;
+                    animation: jobsCarouselScroll 18s linear infinite;
+                    width: max-content;
+                    will-change: transform;
+                  }
+                  .jobs-carousel-track:hover {
+                    animation-play-state: paused;
+                  }
+                  .jobs-carousel-wrap {
+                    overflow: hidden;
+                    mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+                    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+                  }
+                `}</style>
+
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
                     🔥 Recommended Jobs
+                    <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">∞ Live</span>
                   </h3>
                   <button
                     onClick={() => {
@@ -1125,84 +1144,94 @@ export default function CandidateDashboard({
                   </button>
                 </div>
 
-                {/* 3 Recommended Job Cards Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                  {recommendedJobsList.map((job) => {
-                    const isApplied = myApplications.some(a => String(a.jobId) === String(job.id));
-                    const isSaved = savedJobIds.includes(job.id);
+                {activeJobs.length === 0 ? (
+                  <div className="py-10 text-center text-slate-400">
+                    <Briefcase className="w-10 h-10 mx-auto mb-2 opacity-40" />
+                    <p className="text-xs font-bold">Loading jobs...</p>
+                  </div>
+                ) : (
+                  <div className="jobs-carousel-wrap">
+                    {/* Duplicate cards to create seamless loop: original + clone */}
+                    <div className="jobs-carousel-track">
+                      {[...activeJobs, ...activeJobs].map((job, idx) => {
+                        const isApplied = myApplications.some(a => String(a.jobId) === String(job.id));
+                        const isSaved = savedJobIds.includes(job.id);
 
-                    return (
-                      <div
-                        key={job.id}
-                        className="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
-                      >
-                        <div>
-                          {/* Company Logo & Verified Badge */}
-                          <div className="flex items-center justify-between mb-4">
-                            <div className="w-14 h-14 rounded-2xl bg-white border-2 border-slate-100 flex items-center justify-center overflow-hidden p-1.5 shadow-2xs">
-                              {job.companyLogo ? (
-                                <img src={job.companyLogo} alt={job.companyName} className="w-full h-full object-contain" />
-                              ) : (
-                                <Building className="w-7 h-7 text-[#1D61F2]" />
-                              )}
+                        return (
+                          <div
+                            key={`carousel-${job.id}-${idx}`}
+                            className="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between shrink-0"
+                            style={{ width: '280px' }}
+                          >
+                            <div>
+                              {/* Company Logo & Verified Badge */}
+                              <div className="flex items-center justify-between mb-4">
+                                <div className="w-14 h-14 rounded-2xl bg-white border-2 border-slate-100 flex items-center justify-center overflow-hidden p-1.5 shadow-2xs">
+                                  {job.companyLogo ? (
+                                    <img src={job.companyLogo} alt={job.companyName} className="w-full h-full object-contain" />
+                                  ) : (
+                                    <Building className="w-7 h-7 text-[#1D61F2]" />
+                                  )}
+                                </div>
+                                <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                                  <CheckCircle className="w-3 h-3 fill-emerald-500 text-white" /> Verified
+                                </span>
+                              </div>
+
+                              <h4 className="font-black text-slate-900 text-base line-clamp-1">{job.title}</h4>
+                              <p className="text-xs font-bold text-slate-500 mt-0.5">
+                                {job.companyName} • <span className="text-slate-400">{job.employmentType || 'Full Time'}</span>
+                              </p>
+                              <p className="text-xs font-bold text-slate-500 mt-2 flex items-center gap-1">
+                                <MapPin className="w-3.5 h-3.5 text-[#1D61F2]" /> {job.city || 'India'}
+                              </p>
+
+                              <div className="flex flex-wrap gap-1.5 mt-3">
+                                <span className="px-2.5 py-1 bg-blue-50 text-[#1D61F2] text-[10px] font-extrabold rounded-lg">
+                                  {job.category || 'Delivery'}
+                                </span>
+                                <span className="px-2.5 py-1 bg-slate-100 text-slate-700 text-[10px] font-bold rounded-lg">
+                                  {job.experienceRequired ? `${job.experienceRequired}+ yrs` : 'Fresher'}
+                                </span>
+                              </div>
                             </div>
-                            <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-                              <CheckCircle className="w-3 h-3 fill-emerald-500 text-white" /> Verified
-                            </span>
+
+                            <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between">
+                              <div>
+                                <span className="text-[13px] font-black text-slate-900 block">
+                                  ₹{job.minSalary ? `${job.minSalary.toLocaleString()} - ${job.maxSalary?.toLocaleString()}` : '35,000'}/month
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={(e) => handleToggleSaveJob(job.id, e)}
+                                  className="p-2.5 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
+                                >
+                                  <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-[#1D61F2] text-[#1D61F2]' : 'text-slate-400'}`} />
+                                </button>
+
+                                {isApplied ? (
+                                  <span className="px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-black rounded-xl">
+                                    Applied ✓
+                                  </span>
+                                ) : (
+                                  <button
+                                    onClick={() => handleApplyNow(job)}
+                                    disabled={applyingJobId === job.id}
+                                    className="px-5 py-2.5 bg-[#1D61F2] hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer"
+                                  >
+                                    Apply Now
+                                  </button>
+                                )}
+                              </div>
+                            </div>
                           </div>
-
-                          <h4 className="font-black text-slate-900 text-base line-clamp-1">{job.title}</h4>
-                          <p className="text-xs font-bold text-slate-500 mt-0.5">
-                            {job.companyName} • <span className="text-slate-400">{job.employmentType || 'Full Time'}</span>
-                          </p>
-                          <p className="text-xs font-bold text-slate-500 mt-2 flex items-center gap-1">
-                            <MapPin className="w-3.5 h-3.5 text-[#1D61F2]" /> {job.city || 'India'}
-                          </p>
-
-                          <div className="flex flex-wrap gap-1.5 mt-3">
-                            <span className="px-2.5 py-1 bg-blue-50 text-[#1D61F2] text-[10px] font-extrabold rounded-lg">
-                              {job.category || 'Delivery'}
-                            </span>
-                            <span className="px-2.5 py-1 bg-slate-100 text-slate-700 text-[10px] font-bold rounded-lg">
-                              {job.experienceRequired ? `${job.experienceRequired}+ yrs` : 'Fresher'}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between">
-                          <div>
-                            <span className="text-[13px] font-black text-slate-900 block">
-                              ₹{job.minSalary ? `${job.minSalary.toLocaleString()} - ${job.maxSalary?.toLocaleString()}` : '35,000'}/month
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={(e) => handleToggleSaveJob(job.id, e)}
-                              className="p-2.5 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
-                            >
-                              <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-[#1D61F2] text-[#1D61F2]' : 'text-slate-400'}`} />
-                            </button>
-
-                            {isApplied ? (
-                              <span className="px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-black rounded-xl">
-                                Applied ✓
-                              </span>
-                            ) : (
-                              <button
-                                onClick={() => handleApplyNow(job)}
-                                disabled={applyingJobId === job.id}
-                                className="px-5 py-2.5 bg-[#1D61F2] hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer"
-                              >
-                                Apply Now
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* APPLICATION STATUS & JOB FEED TABLE SECTION */}
