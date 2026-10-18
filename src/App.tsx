@@ -363,18 +363,18 @@ export default function App() {
   const isRecruiterLoggedIn = !!recruiter && !!recruiterToken;
 
   return (
-    <div className={`${userRole === null ? 'h-screen max-h-screen overflow-hidden' : 'min-h-screen'} bg-slate-50 flex flex-col font-sans`} id="app-root-container">
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans max-w-full overflow-x-hidden" id="app-root-container">
       {/* Top Navbar Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-30 shrink-0 shadow-xs py-1" id="global-navbar">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-22 sm:h-24 flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 min-h-[60px] sm:h-20 md:h-22 py-1.5 flex items-center justify-between gap-2 sm:gap-4">
           
           {/* Logo brand */}
           <div 
             onClick={handleLogoClick}
-            className="flex items-center gap-3 select-none cursor-pointer group active:scale-95 transition-all" 
+            className="flex items-center gap-2 sm:gap-3 select-none cursor-pointer group active:scale-95 transition-all" 
             id="navbar-brand"
           >
-            <JobsnerLogo size="xl" className="h-16 sm:h-20 md:h-24" />
+            <JobsnerLogo size="xl" className="h-10 sm:h-14 md:h-18" />
             {userRole !== null && userRole !== 'candidate' && (
               <span className="text-[11px] font-bold text-[#1D61F2] uppercase bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-full tracking-wider shrink-0 hidden xs:inline-block ml-1">
                 {portal === 'candidate' ? 'Candidate Portal' : 'Recruiter Portal'}
@@ -534,7 +534,7 @@ export default function App() {
       </header>
 
       {/* Main Content Area */}
-      <main className={`${userRole === null ? 'flex-1 flex flex-col justify-center items-center max-w-6xl w-full mx-auto px-4 py-2 overflow-hidden' : 'flex-1 max-w-[1600px] w-full mx-auto px-3 sm:px-5 lg:px-6 py-6'}`} id="main-content-layout">
+      <main className={`${userRole === null ? 'flex-1 flex flex-col justify-center items-center max-w-5xl w-full mx-auto px-3.5 sm:px-6 py-6 sm:py-10' : 'flex-1 max-w-[1600px] w-full mx-auto px-3 sm:px-5 lg:px-6 py-4 sm:py-6'}`} id="main-content-layout">
         <AnimatePresence mode="wait">
           
           {userRole === null ? (
@@ -544,14 +544,14 @@ export default function App() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.25 }}
-              className="w-full max-w-4xl mx-auto flex flex-col justify-center items-center h-full my-auto"
+              className="w-full max-w-4xl mx-auto flex flex-col justify-center items-center my-auto py-2 sm:py-4"
             >
-              <div className="text-center max-w-2xl mx-auto mb-4 sm:mb-6 flex flex-col items-center">
-                <JobsnerLogo variant="full" size="md" className="mb-2" />
-                <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight leading-tight mb-2">
+              <div className="text-center max-w-2xl mx-auto mb-5 sm:mb-8 flex flex-col items-center">
+                <JobsnerLogo variant="full" size="md" className="mb-2 sm:mb-3" />
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 tracking-tight leading-tight mb-2 sm:mb-3 px-2">
                   Connecting Fleet Owners with Certified Drivers
                 </h1>
-                <p className="text-xs sm:text-sm text-gray-500 font-medium leading-normal max-w-xl">
+                <p className="text-xs sm:text-sm text-gray-500 font-medium leading-relaxed max-w-xl px-2">
                   Jobsner is the leading compliance-first network for logistics and delivery hiring. Tell us who you are to get started.
                 </p>
               </div>
@@ -609,7 +609,8 @@ export default function App() {
                         setRecruiterView('login');
                       }
                     }}
-                    className="mt-6 w-full py-3 bg-slate-950 hover:bg-slate-900 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2"
+                    id="gateway-recruiter-btn"
+                    className="mt-6 w-full min-h-[48px] py-3.5 px-4 bg-slate-950 hover:bg-slate-900 active:scale-[0.98] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2 touch-manipulation"
                   >
                     Post a Job & Sign In
                   </button>
@@ -666,7 +667,8 @@ export default function App() {
                         setView('login');
                       }
                     }}
-                    className="mt-6 w-full py-3 bg-orange-600 hover:bg-orange-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2"
+                    id="gateway-candidate-btn"
+                    className="mt-6 w-full min-h-[48px] py-3.5 px-4 bg-orange-600 hover:bg-orange-700 active:scale-[0.98] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2 touch-manipulation"
                   >
                     Find a Job & Sign In
                   </button>

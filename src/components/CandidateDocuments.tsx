@@ -250,7 +250,7 @@ export default function CandidateDocuments({
   return (
     <div className="w-full max-w-5xl mx-auto" id="documents-section">
       {/* Top Banner Navigation */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8" id="documents-header">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8" id="documents-header">
         <div>
           <button
             onClick={onBackToDashboard}
@@ -259,16 +259,16 @@ export default function CandidateDocuments({
           >
             <ArrowLeft className="w-4 h-4" /> Back to Dashboard
           </button>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Required Documents</h1>
-          <p className="text-sm text-gray-500">Please provide high-resolution copies of your credentials for verification</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Required Documents</h1>
+          <p className="text-xs sm:text-sm text-gray-500">Please provide high-resolution copies of your credentials for verification</p>
         </div>
 
         {/* Dynamic overall progress badge card */}
-        <div className="bg-white border border-gray-150 rounded-xl px-5 py-3.5 flex items-center gap-4 shadow-sm" id="docs-summary-indicator">
+        <div className="bg-white border border-gray-150 rounded-xl px-4 sm:px-5 py-3 sm:py-3.5 flex items-center justify-between sm:justify-start gap-4 shadow-sm w-full sm:w-auto" id="docs-summary-indicator">
           <div>
             <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block">Documents Progress</span>
             <div className="flex items-baseline gap-1.5 mt-0.5">
-              <span className="text-2xl font-extrabold text-gray-900">{progressPercentage}%</span>
+              <span className="text-xl sm:text-2xl font-extrabold text-gray-900">{progressPercentage}%</span>
               <span className="text-xs text-gray-400 font-medium">({uploadedCount}/{totalRequired} files)</span>
             </div>
           </div>
@@ -319,7 +319,7 @@ export default function CandidateDocuments({
       </AnimatePresence>
 
       {/* Documents Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6" id="documents-grid-container">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6" id="documents-grid-container">
         {DOCUMENT_TYPES.map((def) => {
           const uploaded = getDocOfKey(def.key);
           const isUploading = uploadingKey === def.key;
@@ -331,7 +331,7 @@ export default function CandidateDocuments({
               onDragOver={(e) => handleDragOver(e, def.key)}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, def.key, !!uploaded)}
-              className={`bg-white border rounded-2xl p-6 transition-all duration-200 flex flex-col justify-between ${
+              className={`bg-white border rounded-2xl p-4 sm:p-6 transition-all duration-200 flex flex-col justify-between ${
                 isDragging 
                   ? 'border-orange-500 bg-orange-50/20 scale-[1.01] shadow-lg shadow-orange-500/5' 
                   : uploaded 

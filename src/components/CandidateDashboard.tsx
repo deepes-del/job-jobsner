@@ -152,6 +152,26 @@ export default function CandidateDashboard({
   const [carouselDragStart, setCarouselDragStart] = React.useState<number | null>(null);
   const [carouselDragDelta, setCarouselDragDelta] = React.useState(0);
   const [carouselIsDragging, setCarouselIsDragging] = React.useState(false);
+  const [carouselVisibleCount, setCarouselVisibleCount] = React.useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      if (window.innerWidth < 640) return 1;
+      if (window.innerWidth < 1024) return 2;
+    }
+    return 3;
+  });
+
+  React.useEffect(() => {
+    const updateVisible = () => {
+      if (typeof window !== 'undefined') {
+        if (window.innerWidth < 640) setCarouselVisibleCount(1);
+        else if (window.innerWidth < 1024) setCarouselVisibleCount(2);
+        else setCarouselVisibleCount(3);
+      }
+    };
+    updateVisible();
+    window.addEventListener('resize', updateVisible);
+    return () => window.removeEventListener('resize', updateVisible);
+  }, []);
 
   // Instant Fast Apply States
   const [jobForInstantApply, setJobForInstantApply] = React.useState<any | null>(null);
@@ -1112,8 +1132,8 @@ export default function CandidateDashboard({
 
               {/* RECOMMENDED JOBS SECTION - Manual Swipe Carousel */}
               {(() => {
-                const VISIBLE = 3;
                 const totalJobs = activeJobs.length;
+                const VISIBLE = Math.max(1, Math.min(carouselVisibleCount, totalJobs || 1));
 
                 const goTo = (idx: number) => {
                   if (totalJobs === 0) return;
@@ -1147,10 +1167,10 @@ export default function CandidateDashboard({
                 return (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                      <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
                         🔥 Recommended Jobs
                       </h3>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 sm:gap-3">
                         {totalJobs > 0 && (
                           <span className="text-[10px] font-bold text-slate-400">
                             {carouselIndex + 1} / {totalJobs}
@@ -1174,11 +1194,11 @@ export default function CandidateDashboard({
                         <p className="text-xs font-bold">Loading jobs...</p>
                       </div>
                     ) : (
-                      <div className="relative select-none">
+                      <div className="relative select-none px-2 sm:px-0">
                         {/* Left Arrow */}
                         <button
                           onClick={() => goTo(carouselIndex - 1)}
-                          className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-9 h-9 bg-white border border-slate-200 rounded-full shadow-md flex items-center justify-center hover:bg-[#1D61F2] hover:text-white hover:border-[#1D61F2] transition-all cursor-pointer"
+                          className="absolute -left-1 sm:-left-3.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-9 sm:h-9 bg-white border border-slate-200 rounded-full shadow-md flex items-center justify-center hover:bg-[#1D61F2] hover:text-white hover:border-[#1D61F2] transition-all cursor-pointer"
                           aria-label="Previous"
                         >
                           <ChevronRight className="w-4 h-4 rotate-180" />
@@ -1194,7 +1214,7 @@ export default function CandidateDashboard({
                           style={{ cursor: carouselIsDragging ? 'grabbing' : 'grab' }}
                         >
                           <div
-                            className="grid gap-5"
+                            className="grid gap-4 sm:gap-5"
                             style={{
                               gridTemplateColumns: `repeat(${Math.min(VISIBLE, totalJobs)}, 1fr)`,
                               transform: carouselIsDragging ? `translateX(${carouselDragDelta * 0.3}px)` : 'translateX(0)',
@@ -1207,45 +1227,45 @@ export default function CandidateDashboard({
                               return (
                                 <div
                                   key={`carousel-${job.id}-${carouselIndex}-${idx}`}
-                                  className="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
+                                  className="bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
                                 >
                                   <div>
-                                    <div className="flex items-center justify-between mb-4">
-                                      <div className="w-14 h-14 rounded-2xl bg-white border-2 border-slate-100 flex items-center justify-center overflow-hidden p-1.5 shadow-2xs">
+                                    <div className="flex items-center justify-between mb-3 sm:mb-4">
+                                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white border-2 border-slate-100 flex items-center justify-center overflow-hidden p-1 shadow-2xs">
                                         {job.companyLogo ? (
                                           <img src={job.companyLogo} alt={job.companyName} className="w-full h-full object-contain" />
                                         ) : (
-                                          <Building className="w-7 h-7 text-[#1D61F2]" />
+                                          <Building className="w-6 h-6 sm:w-7 sm:h-7 text-[#1D61F2]" />
                                         )}
                                       </div>
                                       <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
                                         <CheckCircle className="w-3 h-3 fill-emerald-500 text-white" /> Verified
                                       </span>
                                     </div>
-                                    <h4 className="font-black text-slate-900 text-base line-clamp-1">{job.title}</h4>
-                                    <p className="text-xs font-bold text-slate-500 mt-0.5">
+                                    <h4 className="font-black text-slate-900 text-sm sm:text-base line-clamp-1">{job.title}</h4>
+                                    <p className="text-xs font-bold text-slate-500 mt-0.5 truncate">
                                       {job.companyName} • <span className="text-slate-400">{job.employmentType || 'Full Time'}</span>
                                     </p>
-                                    <p className="text-xs font-bold text-slate-500 mt-2 flex items-center gap-1">
-                                      <MapPin className="w-3.5 h-3.5 text-[#1D61F2]" /> {job.city || 'India'}
+                                    <p className="text-xs font-bold text-slate-500 mt-2 flex items-center gap-1 truncate">
+                                      <MapPin className="w-3.5 h-3.5 text-[#1D61F2] shrink-0" /> {job.city || 'India'}
                                     </p>
                                     <div className="flex flex-wrap gap-1.5 mt-3">
                                       <span className="px-2.5 py-1 bg-blue-50 text-[#1D61F2] text-[10px] font-extrabold rounded-lg">{job.category || 'Delivery'}</span>
                                       <span className="px-2.5 py-1 bg-slate-100 text-slate-700 text-[10px] font-bold rounded-lg">{job.experienceRequired ? `${job.experienceRequired}+ yrs` : 'Fresher'}</span>
                                     </div>
                                   </div>
-                                  <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between">
-                                    <span className="text-[13px] font-black text-slate-900">
-                                      ₹{job.minSalary ? `${job.minSalary.toLocaleString()} - ${job.maxSalary?.toLocaleString()}` : '35,000'}/month
+                                  <div className="mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                                    <span className="text-xs sm:text-[13px] font-black text-slate-900">
+                                      ₹{job.minSalary ? `${job.minSalary.toLocaleString()} - ${job.maxSalary?.toLocaleString()}` : '35,000'}/mo
                                     </span>
                                     <div className="flex items-center gap-2">
-                                      <button onClick={(e) => { e.stopPropagation(); handleToggleSaveJob(job.id, e); }} className="p-2.5 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
-                                        <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-[#1D61F2] text-[#1D61F2]' : 'text-slate-400'}`} />
+                                      <button onClick={(e) => { e.stopPropagation(); handleToggleSaveJob(job.id, e); }} className="p-2 sm:p-2.5 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer" title="Save Job">
+                                        <Bookmark className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isSaved ? 'fill-[#1D61F2] text-[#1D61F2]' : 'text-slate-400'}`} />
                                       </button>
                                       {isApplied ? (
-                                        <span className="px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-black rounded-xl">Applied ✓</span>
+                                        <span className="px-3 sm:px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-black rounded-xl">Applied ✓</span>
                                       ) : (
-                                        <button onClick={(e) => { e.stopPropagation(); handleApplyNow(job); }} disabled={applyingJobId === job.id} className="px-5 py-2.5 bg-[#1D61F2] hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer">
+                                        <button onClick={(e) => { e.stopPropagation(); handleApplyNow(job); }} disabled={applyingJobId === job.id} className="px-4 sm:px-5 py-2 sm:py-2.5 bg-[#1D61F2] hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer">
                                           Apply Now
                                         </button>
                                       )}
@@ -1260,7 +1280,7 @@ export default function CandidateDashboard({
                         {/* Right Arrow */}
                         <button
                           onClick={() => goTo(carouselIndex + 1)}
-                          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-9 h-9 bg-white border border-slate-200 rounded-full shadow-md flex items-center justify-center hover:bg-[#1D61F2] hover:text-white hover:border-[#1D61F2] transition-all cursor-pointer"
+                          className="absolute -right-1 sm:-right-3.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-9 sm:h-9 bg-white border border-slate-200 rounded-full shadow-md flex items-center justify-center hover:bg-[#1D61F2] hover:text-white hover:border-[#1D61F2] transition-all cursor-pointer"
                           aria-label="Next"
                         >
                           <ChevronRight className="w-4 h-4" />
@@ -1330,25 +1350,25 @@ export default function CandidateDashboard({
                 </div>
 
                 {/* Filter Controls Bar */}
-                <div className="flex flex-col md:flex-row items-center gap-3">
-                  <div className="relative flex-1 w-full">
+                <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2.5 sm:gap-3 w-full">
+                  <div className="relative flex-1 w-full min-w-0">
                     <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
                       type="text"
-                      placeholder="Search jobs..."
+                      placeholder="Search jobs by title, company, or city..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:bg-white"
+                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:bg-white transition-colors"
                       id="jobs-search-input"
                     />
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+                  <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5 w-full md:w-auto">
                     {/* Location Dropdown */}
                     <select
                       value={selectedCity}
                       onChange={(e) => setSelectedCity(e.target.value)}
-                      className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none"
+                      className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none truncate"
                     >
                       <option value="All">Location (All)</option>
                       {Array.from(new Set(activeJobs.map(j => j.city).filter(Boolean))).map(c => (
@@ -1360,7 +1380,7 @@ export default function CandidateDashboard({
                     <select
                       value={selectedEmpType}
                       onChange={(e) => setSelectedEmpType(e.target.value)}
-                      className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none"
+                      className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none truncate"
                     >
                       <option value="All">Job Type (All)</option>
                       <option value="Full Time">Full Time</option>
@@ -1372,7 +1392,7 @@ export default function CandidateDashboard({
                     <select
                       value={sortOrder}
                       onChange={(e) => setSortOrder(e.target.value)}
-                      className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none"
+                      className="col-span-2 sm:col-span-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none truncate"
                     >
                       <option value="newest">Newest First</option>
                       <option value="oldest">Oldest First</option>
@@ -1431,7 +1451,7 @@ export default function CandidateDashboard({
                             </div>
                           </div>
 
-                          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 shrink-0 justify-between">
+                          <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 shrink-0 justify-between sm:justify-end w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
                             <div className="text-left sm:text-right">
                               <span className="text-xs font-black text-slate-900 block">
                                 ₹{job.minSalary ? `${job.minSalary.toLocaleString()} - ${job.maxSalary?.toLocaleString()}` : (job.salary || '35,000')}/month

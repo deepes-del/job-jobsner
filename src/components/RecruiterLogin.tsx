@@ -264,7 +264,7 @@ export default function RecruiterLogin({
 
   return (
     <div className="max-w-md w-full mx-auto" id="recruiter-login-container">
-      <div className="bg-white border border-gray-150 rounded-3xl p-8 shadow-xl shadow-gray-100/40">
+      <div className="bg-white border border-gray-150 rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-xl shadow-gray-100/40">
         
         {/* Portal Info Badge */}
         <div className="flex justify-between items-center mb-6">

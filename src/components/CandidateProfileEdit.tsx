@@ -332,11 +332,11 @@ export default function CandidateProfileEdit({
       </AnimatePresence>
 
       {/* 2. HERO PROFILE BANNER CARD */}
-      <div className="bg-gradient-to-br from-orange-50/70 via-white to-orange-50/30 border border-orange-100/80 rounded-2xl p-6 sm:p-8 shadow-xs relative overflow-hidden">
+      <div className="bg-gradient-to-br from-orange-50/70 via-white to-orange-50/30 border border-orange-100/80 rounded-2xl p-4 sm:p-6 md:p-8 shadow-xs relative overflow-hidden">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
           
           {/* Candidate Info with Large Avatar */}
-          <div className="flex items-start sm:items-center gap-5">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 sm:gap-5">
             {/* Avatar with Camera Trigger */}
             <div className="relative shrink-0">
               <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-orange-500 border-2 border-white shadow-md flex items-center justify-center text-white text-3xl font-black overflow-hidden">
@@ -366,28 +366,28 @@ export default function CandidateProfileEdit({
 
             {/* Name & Contact Details */}
             <div className="space-y-1.5">
-              <div className="flex flex-wrap items-center gap-2.5">
-                <h2 className="text-2xl font-black text-slate-900 tracking-tight">{fullName || 'Sathya'}</h2>
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-2.5">
+                <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">{fullName || 'Sathya'}</h2>
                 <span className="text-xs font-bold text-slate-600 bg-white/90 border border-gray-200 px-2.5 py-0.5 rounded-lg shadow-2xs">
                   {recentCategory}
                 </span>
               </div>
 
               {/* Tag Pills */}
-              <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-600 pt-1">
-                <span className="flex items-center gap-1.5 bg-white border border-gray-200 px-3 py-1 rounded-lg shadow-2xs">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 text-xs font-medium text-slate-600 pt-1">
+                <span className="flex items-center gap-1.5 bg-white border border-gray-200 px-2.5 sm:px-3 py-1 rounded-lg shadow-2xs">
                   <Phone className="w-3.5 h-3.5 text-slate-400" />
                   <strong className="text-slate-800">{mobile || '7892939485'}</strong>
                 </span>
-                <span className="flex items-center gap-1.5 bg-white border border-gray-200 px-3 py-1 rounded-lg shadow-2xs">
+                <span className="flex items-center gap-1.5 bg-white border border-gray-200 px-2.5 sm:px-3 py-1 rounded-lg shadow-2xs">
                   <MapPin className="w-3.5 h-3.5 text-slate-400" />
                   <span>{locality || '100 Feet Road'}</span>
                 </span>
-                <span className="flex items-center gap-1.5 bg-white border border-gray-200 px-3 py-1 rounded-lg shadow-2xs">
+                <span className="flex items-center gap-1.5 bg-white border border-gray-200 px-2.5 sm:px-3 py-1 rounded-lg shadow-2xs">
                   <Briefcase className="w-3.5 h-3.5 text-slate-400" />
                   <span>{experience || 'Less than 1 year'}</span>
                 </span>
-                <span className="flex items-center gap-1.5 bg-white border border-gray-200 px-3 py-1 rounded-lg shadow-2xs">
+                <span className="flex items-center gap-1.5 bg-white border border-gray-200 px-2.5 sm:px-3 py-1 rounded-lg shadow-2xs">
                   <GraduationCap className="w-3.5 h-3.5 text-slate-400" />
                   <span>{education || 'Below 10th'}</span>
                 </span>
@@ -396,7 +396,7 @@ export default function CandidateProfileEdit({
           </div>
 
           {/* Quick Stat Tiles on Right */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 shrink-0">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3 shrink-0 w-full md:w-auto">
             {/* Contacted Jobs / Applied */}
             <button
               onClick={() => onNavigateTab ? onNavigateTab('applications') : onCancel()}

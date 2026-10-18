@@ -274,7 +274,7 @@ export default function CandidateLogin({ onSuccess, onNavigateToRegister }: Cand
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -15 }}
       transition={{ duration: 0.3 }}
-      className="w-full max-w-md mx-auto bg-white border border-gray-100 rounded-3xl shadow-xl shadow-gray-100/50 p-8"
+      className="w-full max-w-md mx-auto bg-white border border-gray-100 rounded-2xl sm:rounded-3xl shadow-xl shadow-gray-100/50 p-4 sm:p-8"
       id="candidate-login-card"
     >
       {/* Header */}

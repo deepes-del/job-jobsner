@@ -192,7 +192,7 @@ export default function RecruiterRegistration({
         <ArrowLeft className="w-4 h-4" /> Back to Recruiter Login
       </button>
 
-      <div className="bg-white border border-gray-150 rounded-3xl p-8 shadow-xl shadow-gray-100/40">
+      <div className="bg-white border border-gray-150 rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-xl shadow-gray-100/40">
         
         {/* Header portal info */}
         <div className="flex justify-between items-center mb-6">
@@ -209,11 +209,11 @@ export default function RecruiterRegistration({
         </div>
 
         {/* Title */}
-        <div className="mb-8 flex items-center gap-4">
+        <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-3 sm:gap-4">
           <JobsnerLogo variant="icon" size="lg" />
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Register Recruiter Company</h2>
-            <p className="text-sm text-gray-400 mt-0.5">Join the Jobsner freight delivery network to recruit compliance-verified drivers.</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Register Recruiter Company</h2>
+            <p className="text-xs sm:text-sm text-gray-400 mt-0.5">Join the Jobsner freight delivery network to recruit compliance-verified drivers.</p>
           </div>
         </div>
 

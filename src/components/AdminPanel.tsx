@@ -502,46 +502,46 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose, onJobPo
       <div className="bg-slate-950 border border-slate-800 text-slate-100 rounded-2xl w-full max-w-7xl h-[94vh] flex flex-col shadow-2xl overflow-hidden font-sans">
         
         {/* Top Header Bar */}
-        <div className="px-6 py-4 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <img 
               src="/logo.png" 
               alt="Jobsner Logo" 
-              className="w-10 h-10 rounded-full object-cover shadow-lg border-2 border-white/30 bg-white select-none shrink-0" 
+              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover shadow-lg border-2 border-white/30 bg-white select-none shrink-0" 
             />
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-white tracking-tight">Jobsner Central Admin Panel</h2>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                <h2 className="text-sm sm:text-lg font-bold text-white tracking-tight truncate">Jobsner Central Admin Panel</h2>
+                <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
                   SYSTEM READY
                 </span>
               </div>
-              <p className="text-xs text-slate-400">Recruiter onboarding & 1:3 random candidate allocation engine</p>
+              <p className="text-[10px] sm:text-xs text-slate-400 truncate">Recruiter onboarding & 1:3 random candidate allocation engine</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <button
               onClick={() => {
                 fetchRecruiters();
                 if (selectedJobId) fetchAllocationsForJob(selectedJobId);
               }}
-              className="p-2 text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-800 rounded-lg border border-slate-700/60 transition"
+              className="p-1.5 sm:p-2 text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-800 rounded-lg border border-slate-700/60 transition"
               title="Refresh all admin data"
             >
               <RefreshCw className="w-4 h-4" />
             </button>
             <button
               onClick={handleAdminLogout}
-              className="px-3 py-2 text-xs font-semibold text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 rounded-lg border border-red-500/30 transition flex items-center gap-1.5"
+              className="px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-semibold text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 rounded-lg border border-red-500/30 transition flex items-center gap-1.5"
               title="Log Out Admin"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span>Log Out</span>
+              <span className="hidden xs:inline">Log Out</span>
             </button>
             <button
               onClick={handleClosePanel}
-              className="p-2 text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-800 rounded-lg border border-slate-700/60 transition"
+              className="p-1.5 sm:p-2 text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-800 rounded-lg border border-slate-700/60 transition"
               title="Close Admin Panel"
             >
               <X className="w-5 h-5" />
@@ -549,10 +549,38 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose, onJobPo
           </div>
         </div>
 
+        {/* Mobile Horizontal Tabs (md:hidden) */}
+        <div className="md:hidden flex items-center gap-1.5 p-2 bg-slate-950 border-b border-slate-800 overflow-x-auto shrink-0 select-none">
+          {[
+            { id: 1, label: '1. Recruiter', icon: UserPlus },
+            { id: 2, label: '2. Allocation', icon: Users },
+            { id: 3, label: '3. Candidate Pool', icon: FileSpreadsheet },
+            { id: 4, label: '4. Slot 4', icon: Layers },
+            { id: 5, label: '5. Slot 5', icon: Settings },
+          ].map((tab) => {
+            const IconComp = tab.icon;
+            const active = activeSection === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveSection(tab.id as any)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+                  active
+                    ? 'bg-orange-500 text-white font-bold shadow-xs'
+                    : 'bg-slate-900 text-slate-300 hover:text-white'
+                }`}
+              >
+                <IconComp className="w-3.5 h-3.5" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
         {/* Main Body with Sidebar Navigation */}
-        <div className="flex flex-1 overflow-hidden">
-          {/* Sidebar Nav (5 Sections) */}
-          <div className="w-64 bg-slate-950/60 border-r border-slate-800 p-3 flex flex-col justify-between select-none">
+        <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+          {/* Sidebar Nav (Desktop / Tablet) */}
+          <div className="hidden md:flex md:w-64 bg-slate-950/60 border-r border-slate-800 p-3 flex-col justify-between select-none shrink-0">
             <div className="space-y-1.5">
               <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
                 Core Modules
