@@ -1,6 +1,57 @@
 {
   "candidates": [
     {
+      "id": "cb67fde6-0622-4429-9343-52860c50b35b",
+      "mobile": "6362876662",
+      "fullName": "Raj Anagawadi",
+      "email": "y.s.anagawadi@gmail.com",
+      "salt": "8f34253aa34fabe3a42d79005337a078",
+      "hash": "3d17f66996051b02a8a59aaead256fc19a4edb121fb01f6ab1212ff89474cecc3bbdcfdf5135ac601ff531fb5ef571ef3f420e6698b914f5c068c5a173261cb9",
+      "profile": {
+        "fullName": "Raj Anagawadi",
+        "profilePhoto": "",
+        "bikeAvailable": "No",
+        "languagesKnown": [],
+        "drivingLicenseAvailable": "No"
+      },
+      "nickname": null,
+      "recent_category": null,
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
+    },
+    {
+      "id": "cand_91edceba-fd8",
+      "mobile": "8095469806",
+      "fullName": "bindu",
+      "email": "savibidu1234@gmail.com",
+      "salt": "daa0d96a24e5fb7d99751a0aa94b96e3",
+      "hash": "da40602b0f1c840ad6963c9a1e030ab8f170f835d4c7574877d0ac5324708f8e",
+      "profile": {
+        "fullName": "bindu",
+        "profilePhoto": ""
+      },
+      "nickname": "bindu",
+      "recent_category": null,
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
+    },
+    {
+      "id": "c0506287-18fb-47d5-92df-37e0546332d1",
+      "mobile": "8095460806",
+      "fullName": "qasd",
+      "email": "q871574883@gmail.com",
+      "salt": "01f75ff0a24f24135d6706bed360464d",
+      "hash": "0fd9f9116d47e1b6e01ea219ef39f4a085fb9f1a55f003fc7e4b6d7dba48842a59a56cc2a936607234ba8a3789a3493cbdb8717eeeada8bde50bf43331ad9982",
+      "profile": {
+        "fullName": "qasd",
+        "profilePhoto": "",
+        "bikeAvailable": "No",
+        "languagesKnown": [],
+        "drivingLicenseAvailable": "No"
+      },
+      "nickname": null,
+      "recent_category": null,
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
+    },
+    {
       "id": "cand_2901dba8-e71",
       "mobile": "9739542938",
       "fullName": "Roopa ",
@@ -12,7 +63,8 @@
         "profilePhoto": ""
       },
       "nickname": "shreyu",
-      "recent_category": null
+      "recent_category": null,
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
     },
     {
       "id": "8182a5ee-2273-4e52-840c-46a8a146bdbd",
@@ -29,54 +81,8 @@
         "drivingLicenseAvailable": "No"
       },
       "nickname": null,
-      "recent_category": null
-    },
-    {
-      "id": "33402022-43b8-48ea-be87-35719c52c0a7",
-      "mobile": "9877124052",
-      "fullName": "Deepesh Manju",
-      "email": "deepesh_9877124052@test.com",
-      "salt": "e331fd0c1023cf1b0b55957c733ca959",
-      "hash": "46509d67116806f0f28058b3347efdad841e1883dabb2c59196f3af691616cac7ea87659af18615ad299b3e2abb6f884f76a89ed40879732dec9355dd040f797",
-      "profile": {
-        "age": 25,
-        "gender": "Male",
-        "pincode": "560001",
-        "fullName": "Deepesh Manju",
-        "profilePhoto": "",
-        "bikeAvailable": "No",
-        "languagesKnown": [],
-        "recentCategory": "Delivery Jobs",
-        "drivingLicenseAvailable": "No"
-      },
-      "nickname": null,
-      "recent_category": "Delivery Jobs"
-    },
-    {
-      "id": "cand_373a283f-4dd",
-      "mobile": "7760556554",
-      "fullName": "Basawasagar ",
-      "email": "basawasagardhannure80@gmail.com",
-      "salt": "49ebe60ec8f8ea88239574715aa19e87",
-      "hash": "1120887bba31e3eca603283a1f7b03bdc07f4057586229871920b4c805dc9a37",
-      "profile": {
-        "city": "",
-        "name": "Basawasagar ",
-        "email": "basawasagardhannure80@gmail.com",
-        "hasDl": false,
-        "state": "",
-        "mobile": "7760556554",
-        "hasBike": false,
-        "fullName": "Basawasagar ",
-        "nickname": "basawasagar ",
-        "full_name": "Basawasagar ",
-        "experience": 0,
-        "profilePhoto": "",
-        "recentCategory": "Last-Mile Delivery",
-        "recent_category": "Last-Mile Delivery"
-      },
-      "nickname": "basawasagar ",
-      "recent_category": "Last-Mile Delivery"
+      "recent_category": null,
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
     },
     {
       "id": "cand_68f25cc2-5b7",
@@ -97,44 +103,112 @@
         "drivingLicenseAvailable": "No"
       },
       "nickname": "Mony",
-      "recent_category": "Last-Mile Delivery"
+      "recent_category": "Last-Mile Delivery",
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
     },
     {
-      "id": "b97949b9-d279-4a7f-a544-31243e991f5c",
-      "mobile": "9875075967",
-      "fullName": "Deepesh Manju",
-      "email": "deepesh_9875075967@test.com",
-      "salt": "276e7e4ea13c7f3b533cf7d7e1df54d8",
-      "hash": "a91ecd13349e92248ab549229fcc52c33433b9317478b11c89fc08c6d33f06ece8b0774bac97b736b1b4b04aa67121d53305b62140e59601a454fa882272bd5b",
+      "id": "cand_c0e6c191-2f6",
+      "mobile": "9632576968",
+      "fullName": "Sreekanth",
+      "email": "psrikanth3377@gmail.com",
+      "salt": "c048ca7cafa2e7fad730a507c89e5196",
+      "hash": "71e87133522fcd3e88365db8b042ef5e3214206073f657fac6fc7966b8ef1a3b",
       "profile": {
-        "fullName": "Deepesh Manju",
+        "city": "",
+        "name": "Sreekanth",
+        "email": "psrikanth3377@gmail.com",
+        "hasDl": false,
+        "state": "",
+        "mobile": "9632576968",
+        "hasBike": false,
+        "fullName": "Sreekanth",
+        "nickname": "Sree",
+        "full_name": "Sreekanth",
+        "experience": 3,
+        "profilePhoto": "",
+        "recentCategory": "",
+        "recent_category": ""
+      },
+      "nickname": "Sree",
+      "recent_category": null,
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
+    },
+    {
+      "id": "71241266-9744-4406-9166-7636cc511acd",
+      "mobile": "7332859432",
+      "fullName": "rejhfd",
+      "email": null,
+      "salt": "0da8803a6ef3ed29ba8cc79ae6b44663",
+      "hash": "c17ba4ee7fa15677a659922c9013766fb9aa0c6fa429d03b2ba4800e7b77d51cb445d29d0061e3a7157927be77a1ce1f37b0a4c0b290ffa68d735103139d797d",
+      "profile": {
+        "city": "brngu",
+        "fullName": "rejhfd",
+        "education": "Graduate",
+        "profilePhoto": "",
+        "languagesKnown": [
+          "Hindi",
+          "English"
+        ]
+      },
+      "nickname": null,
+      "recent_category": null,
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
+    },
+    {
+      "id": "9a23749c-a4ae-4669-bc19-bc60f1d99b95",
+      "mobile": "7337850344",
+      "fullName": "uygh",
+      "email": "deepesh.manjljnu2003@email.com",
+      "salt": "bafaf58c7bcad3964f4d149065dc00be",
+      "hash": "343f94593313f90d32605ac3049489149af0e260c419e06184e61ad72db7340a",
+      "profile": {
+        "age": 45,
+        "city": "",
+        "name": "uygh",
+        "email": "deepesh.manjljnu2003@email.com",
+        "hasDl": false,
+        "state": "",
+        "gender": "Male",
+        "mobile": "7337850344",
+        "hasBike": false,
+        "pincode": "560067",
+        "fullName": "uygh",
+        "nickname": "deepu",
+        "full_name": "uygh",
+        "photoFile": "",
+        "experience": 3,
         "profilePhoto": "",
         "bikeAvailable": "No",
         "languagesKnown": [],
+        "recentCategory": "Last-Mile Delivery",
+        "recent_category": "Last-Mile Delivery",
         "drivingLicenseAvailable": "No"
       },
-      "nickname": null,
-      "recent_category": null
+      "nickname": "deepu",
+      "recent_category": "Last-Mile Delivery",
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
     },
     {
-      "id": "745c94da-746d-4852-81c5-0cf5fdb25aef",
-      "mobile": "7337850324",
-      "fullName": "xverfd",
-      "email": "deepesh.mreanju2003@email.com",
-      "salt": "f3a02085ccb394b67eec1dd04aa4d309",
-      "hash": "fc8640f478e68a5a69f38b26f09be89c0eacb4ab4e39f0ff626d13900af2ee576a7ace9e1876f76622019cb28547cff5c92da09d693aff6d9f8f1a4f07489ea3",
+      "id": "8d8f4a06-5b36-45f4-84b6-1ac8509a53ea",
+      "mobile": "8392727498",
+      "fullName": "qasd",
+      "email": "q87fxd157883@gmail.com",
+      "salt": "1a81e3c14924ede6ce4d0aefa7ac959d",
+      "hash": "ae85f314baac08f70023ef2405a6bd012298a3248ff532ff98e3476b7be428122df443e404998c2bdd8b990e045e0bce8f3492638ab8bc7be82f8f314b711a12",
       "profile": {
         "age": 34,
         "gender": "Male",
-        "pincode": "560067",
-        "fullName": "xverfd",
+        "pincode": "563324",
+        "fullName": "qasd",
         "profilePhoto": "",
         "bikeAvailable": "No",
         "languagesKnown": [],
+        "recentCategory": "Last-Mile Delivery",
         "drivingLicenseAvailable": "No"
       },
-      "nickname": "xverfd",
-      "recent_category": null
+      "nickname": null,
+      "recent_category": "Last-Mile Delivery",
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
     },
     {
       "id": "cand_b72584a1-a27",
@@ -148,18 +222,19 @@
         "profilePhoto": ""
       },
       "nickname": "sunil",
-      "recent_category": null
+      "recent_category": null,
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
     },
     {
-      "id": "723cea9a-beca-4917-bb35-550b2bc95474",
-      "mobile": "9876592333",
-      "fullName": "Vikram Lead Pilot",
-      "email": "",
-      "salt": "acf3b576e4865537981cb4bdfb30e48e",
-      "hash": "8f2644cb86a8589e7584e46da68068c96ac57a1ad3352aced94b5a80ec5936ef4bf37572e01e01221896d616097697276aa1dd018233f228e8c4d573d2777819",
+      "id": "a413f6a4-4d2f-40b0-8abc-c4efd87853ad",
+      "mobile": "9876539780",
+      "fullName": "Vikram Logistics Pilot",
+      "email": null,
+      "salt": "30db84de19ce3694c24183839172762a",
+      "hash": "9affcf01a0bcc2bcee65907ff5f5cba84da1d414eeb8ab9764493f963bebfc42b8b805ff0e844f3d7d3993db8f411cbbc6da7970af77889b93acb67ba3ac88d4",
       "profile": {
-        "city": "Bangalore North",
-        "fullName": "Vikram Lead Pilot",
+        "city": "Bangalore South",
+        "fullName": "Vikram Logistics Pilot",
         "education": "Diploma in Logistics",
         "profilePhoto": "",
         "languagesKnown": [
@@ -168,24 +243,45 @@
         ]
       },
       "nickname": null,
-      "recent_category": null
+      "recent_category": null,
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
     },
     {
-      "id": "7696d38f-7dc0-41ce-a0f3-d315b189a9f0",
-      "mobile": "9832245089",
-      "fullName": "Test Candidate",
-      "email": "",
-      "salt": "c074378300e9c0ac68a4a4d4da391022",
-      "hash": "61e0cfbb7dc809b67e72bc148a7caa4ba468f26d9ca76f32295981d419439fe47a3ad504b82c3deb8f2bb4c2e764958bd3e46915f2e72256ec8c0d7175ff605c",
+      "id": "f177cf06-4cb4-4f11-b3ea-d1cc67c48d98",
+      "mobile": "7337856921",
+      "fullName": "gff",
+      "email": null,
+      "salt": "646d00f9d89e80bf7f9b11ebc3ad1f49",
+      "hash": "bea01c37005fc7e3c0f7d60182ac83cb725d8f12a65d786529f3874a2e27f5d3410c8cf81eb1f47fae9fb7738a6100c462b9306fa7840c78e5c8a0b11ae66922",
       "profile": {
-        "fullName": "Test Candidate",
-        "profilePhoto": "https://jjzzauslbtfgpllxhagm.supabase.co/storage/v1/object/public/avatars/7696d38f-7dc0-41ce-a0f3-d315b189a9f0-photo-1789032259032.jpg",
-        "bikeAvailable": "No",
-        "languagesKnown": [],
-        "drivingLicenseAvailable": "No"
+        "city": "chnnasandra",
+        "fullName": "gff",
+        "education": "Graduate",
+        "profilePhoto": "",
+        "languagesKnown": [
+          "Hindi",
+          "English"
+        ]
       },
       "nickname": null,
-      "recent_category": null
+      "recent_category": null,
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
+    },
+    {
+      "id": "cand_5690a706-9a2",
+      "mobile": "7204509152",
+      "fullName": "lichtai deepu",
+      "email": "light.aiautomations@gmail.com",
+      "salt": "96ccb8226fcd3742cfe4bf56e1f18d74",
+      "hash": "ad012e5843a7e6aa7c13ab8b388c4feec054f6104b70dc811059381872d07d26",
+      "profile": {
+        "fullName": "lichtai deepu",
+        "profilePhoto": "https://lh3.googleusercontent.com/a/ACg8ocKy3TXimCpqrICJ1HzQsErZo4nusdkCimt660gQ5cwyBy9fnQ=s96-c",
+        "recentCategory": "Last-Mile Delivery"
+      },
+      "nickname": "lichtai",
+      "recent_category": "Last-Mile Delivery",
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
     },
     {
       "id": "cand_c4b2a1d1-71b",
@@ -223,7 +319,8 @@
         "drivingLicenseAvailable": "Yes"
       },
       "nickname": "deepu",
-      "recent_category": "Delivery Jobs"
+      "recent_category": "Delivery Jobs",
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
     },
     {
       "id": "361b3ea1-8d00-45ed-8e62-7f58f39476ea",
@@ -240,155 +337,14 @@
         "drivingLicenseAvailable": "No"
       },
       "nickname": null,
-      "recent_category": null
-    },
-    {
-      "id": "8890aa40-811d-446f-b95d-b43071d1fdd5",
-      "mobile": "5582728282",
-      "fullName": "Angesh",
-      "email": "test@gmail.com",
-      "salt": "2cd33f651b18c099cb35edcb933abb16",
-      "hash": "2bcc6ae7aed36fada23bb17b27ac0950edde46f23121331b5484ddb0f1366d1b6b26372f72e4193e1f1a30e1228b3cb08f5803a90cdf50f1061165f497aa15ed",
-      "profile": {
-        "fullName": "Angesh",
-        "profilePhoto": "",
-        "bikeAvailable": "No",
-        "languagesKnown": [],
-        "recentCategory": "Last-Mile Delivery",
-        "drivingLicenseAvailable": "No"
-      },
-      "nickname": null,
-      "recent_category": "Last-Mile Delivery"
-    },
-    {
-      "id": "cand_51a09217-4f5",
-      "mobile": "8095469805",
-      "fullName": "deepesh",
-      "email": "traderday200000003@gmail.com",
-      "salt": "8a55c3f394ab9af9d2938c3e5243ec51",
-      "hash": "bba34cbd1d931559da648211332124785c940a35bace1f8eb266f6ca50c370c6",
-      "profile": {
-        "age": 34,
-        "gender": "Male",
-        "pincode": "334323",
-        "fullName": "deepesh",
-        "profilePhoto": "",
-        "bikeAvailable": "No",
-        "languagesKnown": [],
-        "drivingLicenseAvailable": "No"
-      },
-      "nickname": "hello",
-      "recent_category": "Last-Mile Delivery"
-    },
-    {
-      "id": "a413f6a4-4d2f-40b0-8abc-c4efd87853ad",
-      "mobile": "9876539780",
-      "fullName": "Vikram Logistics Pilot",
-      "email": "",
-      "salt": "30db84de19ce3694c24183839172762a",
-      "hash": "9affcf01a0bcc2bcee65907ff5f5cba84da1d414eeb8ab9764493f963bebfc42b8b805ff0e844f3d7d3993db8f411cbbc6da7970af77889b93acb67ba3ac88d4",
-      "profile": {
-        "city": "Bangalore South",
-        "fullName": "Vikram Logistics Pilot",
-        "education": "Diploma in Logistics",
-        "profilePhoto": "",
-        "languagesKnown": [
-          "Hindi",
-          "English"
-        ]
-      },
-      "nickname": null,
-      "recent_category": null
-    },
-    {
-      "id": "169311a3-9f73-4d00-bf61-00354f3a2748",
-      "mobile": "9876546216",
-      "fullName": "Vikram Logistics Pilot",
-      "email": "",
-      "salt": "1ebc164432092696e9983f1a62f09f8f",
-      "hash": "160a7644c6ca30d1c89513a24cbf75ccd80bc745efafbbdab6cd53ef3a626c3a777464c88b4f128c4c32989ea4fe10827a8fc61303be04d7c4124b6a32b116a9",
-      "profile": {
-        "city": "Bangalore South",
-        "fullName": "Vikram Logistics Pilot",
-        "education": "Diploma in Logistics",
-        "profilePhoto": "",
-        "languagesKnown": [
-          "Hindi",
-          "English"
-        ]
-      },
-      "nickname": null,
-      "recent_category": null
-    },
-    {
-      "id": "cand_c0e6c191-2f6",
-      "mobile": "9632576968",
-      "fullName": "Sreekanth",
-      "email": "psrikanth3377@gmail.com",
-      "salt": "c048ca7cafa2e7fad730a507c89e5196",
-      "hash": "71e87133522fcd3e88365db8b042ef5e3214206073f657fac6fc7966b8ef1a3b",
-      "profile": {
-        "city": "",
-        "name": "Sreekanth",
-        "email": "psrikanth3377@gmail.com",
-        "hasDl": false,
-        "state": "",
-        "mobile": "9632576968",
-        "hasBike": false,
-        "fullName": "Sreekanth",
-        "nickname": "Sree",
-        "full_name": "Sreekanth",
-        "experience": 3,
-        "profilePhoto": "",
-        "recentCategory": "",
-        "recent_category": ""
-      },
-      "nickname": "Sree",
-      "recent_category": null
-    },
-    {
-      "id": "cand_1f750885-792",
-      "mobile": "8095469806",
-      "fullName": "bindu",
-      "email": "binduvani420@gmail.com",
-      "salt": "fe7c11bccac3ef3844509207ee4e2599",
-      "hash": "fb9754c19493cf24c0b62372a9af442ec68844ec7f7d34194fac2908b7e56c75",
-      "profile": {
-        "age": 23,
-        "gender": "Male",
-        "pincode": "560067",
-        "fullName": "bindu",
-        "profilePhoto": "https://jjzzauslbtfgpllxhagm.supabase.co/storage/v1/object/public/avatars/cand_1f750885-792-photo-1789138649535.jpg",
-        "bikeAvailable": "No",
-        "languagesKnown": [],
-        "recentCategory": "Last-Mile Delivery",
-        "drivingLicenseAvailable": "No"
-      },
-      "nickname": "bindu",
-      "recent_category": "Warehouse / Picker&Packer"
-    },
-    {
-      "id": "81db6e9f-011a-411b-b19b-1748fd6f7ab8",
-      "mobile": "9875525758",
-      "fullName": "Deepesh Manju",
-      "email": "",
-      "salt": "5496357404e46feaffa0ce2093fd19b0",
-      "hash": "a4fc39342f5a98afd3e6e0a02c45d14bbc2483d57d272c2a74e28c439470df8782c89449036c1caa6c213e33fa20dd6a213fe5683bb080081dbdf102569b5397",
-      "profile": {
-        "fullName": "Deepesh Manju",
-        "profilePhoto": "",
-        "bikeAvailable": "No",
-        "languagesKnown": [],
-        "drivingLicenseAvailable": "No"
-      },
-      "nickname": null,
-      "recent_category": null
+      "recent_category": null,
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
     },
     {
       "id": "2380b844-3bc9-4707-b73a-971ed6cf5347",
       "mobile": "9875954389",
       "fullName": "Deepesh Manju",
-      "email": "",
+      "email": null,
       "salt": "97ca6f831a98acca445d5bcdbab7de30",
       "hash": "140f611334262e4c69df35ee2cfd7befd8b8ebdade16601e93a9b9b1125bc115d88f5851f502d9c73bb9da3ff3c38deea12110d497eb4a26b6e0831c288ce8a8",
       "profile": {
@@ -399,7 +355,30 @@
         "drivingLicenseAvailable": "No"
       },
       "nickname": null,
-      "recent_category": null
+      "recent_category": null,
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
+    },
+    {
+      "id": "JWBLagfTAbcFPV7igsRtd5x5Md82",
+      "mobile": "0000000000",
+      "fullName": "criminaldepartment",
+      "email": "hello12345dee@gmail.com",
+      "salt": "",
+      "hash": "",
+      "profile": {
+        "age": 45,
+        "gender": "Male",
+        "pincode": "453321",
+        "fullName": "criminaldepartment",
+        "profilePhoto": "https://lh3.googleusercontent.com/a/ACg8ocJToqNErB6NXdnLv3FCngJH2d8ujpDXvoDVl_6vyquRD3ZWiw=s96-c",
+        "bikeAvailable": "No",
+        "languagesKnown": [],
+        "recentCategory": "Delivery Jobs",
+        "drivingLicenseAvailable": "No"
+      },
+      "nickname": null,
+      "recent_category": "Warehouse / Picker&Packer",
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
     },
     {
       "id": "cand_25cb91b6-6b7",
@@ -426,7 +405,8 @@
         "recent_category": "Last-Mile Delivery"
       },
       "nickname": "Sathya-G ",
-      "recent_category": "Last-Mile Delivery"
+      "recent_category": "Last-Mile Delivery",
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
     },
     {
       "id": "cand_32719341-dff",
@@ -440,106 +420,8 @@
         "profilePhoto": ""
       },
       "nickname": "yogi",
-      "recent_category": null
-    },
-    {
-      "id": "JWBLagfTAbcFPV7igsRtd5x5Md82",
-      "mobile": "0000000000",
-      "fullName": "criminaldepartment",
-      "email": "hello12345dee@gmail.com",
-      "salt": "",
-      "hash": "",
-      "profile": {
-        "age": 45,
-        "gender": "Male",
-        "pincode": "453321",
-        "fullName": "criminaldepartment",
-        "profilePhoto": "https://lh3.googleusercontent.com/a/ACg8ocJToqNErB6NXdnLv3FCngJH2d8ujpDXvoDVl_6vyquRD3ZWiw=s96-c",
-        "bikeAvailable": "No",
-        "languagesKnown": [],
-        "recentCategory": "Delivery Jobs",
-        "drivingLicenseAvailable": "No"
-      },
-      "nickname": null,
-      "recent_category": "Warehouse / Picker&Packer"
-    },
-    {
-      "id": "71241266-9744-4406-9166-7636cc511acd",
-      "mobile": "7332859432",
-      "fullName": "rejhfd",
-      "email": "",
-      "salt": "0da8803a6ef3ed29ba8cc79ae6b44663",
-      "hash": "c17ba4ee7fa15677a659922c9013766fb9aa0c6fa429d03b2ba4800e7b77d51cb445d29d0061e3a7157927be77a1ce1f37b0a4c0b290ffa68d735103139d797d",
-      "profile": {
-        "city": "brngu",
-        "fullName": "rejhfd",
-        "education": "Graduate",
-        "profilePhoto": "",
-        "languagesKnown": [
-          "Hindi",
-          "English"
-        ]
-      },
-      "nickname": null,
-      "recent_category": null
-    },
-    {
-      "id": "8d8f4a06-5b36-45f4-84b6-1ac8509a53ea",
-      "mobile": "8392727498",
-      "fullName": "qasd",
-      "email": "q87fxd157883@gmail.com",
-      "salt": "1a81e3c14924ede6ce4d0aefa7ac959d",
-      "hash": "ae85f314baac08f70023ef2405a6bd012298a3248ff532ff98e3476b7be428122df443e404998c2bdd8b990e045e0bce8f3492638ab8bc7be82f8f314b711a12",
-      "profile": {
-        "age": 34,
-        "gender": "Male",
-        "pincode": "563324",
-        "fullName": "qasd",
-        "profilePhoto": "",
-        "bikeAvailable": "No",
-        "languagesKnown": [],
-        "recentCategory": "Last-Mile Delivery",
-        "drivingLicenseAvailable": "No"
-      },
-      "nickname": null,
-      "recent_category": "Last-Mile Delivery"
-    },
-    {
-      "id": "cb67fde6-0622-4429-9343-52860c50b35b",
-      "mobile": "6362876662",
-      "fullName": "Raj Anagawadi",
-      "email": "y.s.anagawadi@gmail.com",
-      "salt": "8f34253aa34fabe3a42d79005337a078",
-      "hash": "3d17f66996051b02a8a59aaead256fc19a4edb121fb01f6ab1212ff89474cecc3bbdcfdf5135ac601ff531fb5ef571ef3f420e6698b914f5c068c5a173261cb9",
-      "profile": {
-        "fullName": "Raj Anagawadi",
-        "profilePhoto": "",
-        "bikeAvailable": "No",
-        "languagesKnown": [],
-        "drivingLicenseAvailable": "No"
-      },
-      "nickname": null,
-      "recent_category": null
-    },
-    {
-      "id": "f177cf06-4cb4-4f11-b3ea-d1cc67c48d98",
-      "mobile": "7337856921",
-      "fullName": "gff",
-      "email": "",
-      "salt": "646d00f9d89e80bf7f9b11ebc3ad1f49",
-      "hash": "bea01c37005fc7e3c0f7d60182ac83cb725d8f12a65d786529f3874a2e27f5d3410c8cf81eb1f47fae9fb7738a6100c462b9306fa7840c78e5c8a0b11ae66922",
-      "profile": {
-        "city": "chnnasandra",
-        "fullName": "gff",
-        "education": "Graduate",
-        "profilePhoto": "",
-        "languagesKnown": [
-          "Hindi",
-          "English"
-        ]
-      },
-      "nickname": null,
-      "recent_category": null
+      "recent_category": null,
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
     },
     {
       "id": "6851e5ec-0e8c-4e77-8bcc-1f4dc9e124b0",
@@ -556,86 +438,151 @@
         "drivingLicenseAvailable": "No"
       },
       "nickname": null,
-      "recent_category": null
+      "recent_category": null,
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
     },
     {
-      "id": "cand_91edceba-fd8",
-      "mobile": "8095469806",
-      "fullName": "bindu",
-      "email": "savibidu1234@gmail.com",
-      "salt": "daa0d96a24e5fb7d99751a0aa94b96e3",
-      "hash": "da40602b0f1c840ad6963c9a1e030ab8f170f835d4c7574877d0ac5324708f8e",
+      "id": "81db6e9f-011a-411b-b19b-1748fd6f7ab8",
+      "mobile": "9875525758",
+      "fullName": "Deepesh Manju",
+      "email": null,
+      "salt": "5496357404e46feaffa0ce2093fd19b0",
+      "hash": "a4fc39342f5a98afd3e6e0a02c45d14bbc2483d57d272c2a74e28c439470df8782c89449036c1caa6c213e33fa20dd6a213fe5683bb080081dbdf102569b5397",
       "profile": {
-        "fullName": "bindu",
-        "profilePhoto": ""
-      },
-      "nickname": "bindu",
-      "recent_category": null
-    },
-    {
-      "id": "9a23749c-a4ae-4669-bc19-bc60f1d99b95",
-      "mobile": "7337850344",
-      "fullName": "uygh",
-      "email": "deepesh.manjljnu2003@email.com",
-      "salt": "bafaf58c7bcad3964f4d149065dc00be",
-      "hash": "343f94593313f90d32605ac3049489149af0e260c419e06184e61ad72db7340a",
-      "profile": {
-        "age": 45,
-        "city": "",
-        "name": "uygh",
-        "email": "deepesh.manjljnu2003@email.com",
-        "hasDl": false,
-        "state": "",
-        "gender": "Male",
-        "mobile": "7337850344",
-        "hasBike": false,
-        "pincode": "560067",
-        "fullName": "uygh",
-        "nickname": "deepu",
-        "full_name": "uygh",
-        "photoFile": "",
-        "experience": 3,
-        "profilePhoto": "",
-        "bikeAvailable": "No",
-        "languagesKnown": [],
-        "recentCategory": "Last-Mile Delivery",
-        "recent_category": "Last-Mile Delivery",
-        "drivingLicenseAvailable": "No"
-      },
-      "nickname": "deepu",
-      "recent_category": "Last-Mile Delivery"
-    },
-    {
-      "id": "c0506287-18fb-47d5-92df-37e0546332d1",
-      "mobile": "8095460806",
-      "fullName": "qasd",
-      "email": "q871574883@gmail.com",
-      "salt": "01f75ff0a24f24135d6706bed360464d",
-      "hash": "0fd9f9116d47e1b6e01ea219ef39f4a085fb9f1a55f003fc7e4b6d7dba48842a59a56cc2a936607234ba8a3789a3493cbdb8717eeeada8bde50bf43331ad9982",
-      "profile": {
-        "fullName": "qasd",
+        "fullName": "Deepesh Manju",
         "profilePhoto": "",
         "bikeAvailable": "No",
         "languagesKnown": [],
         "drivingLicenseAvailable": "No"
       },
       "nickname": null,
-      "recent_category": null
+      "recent_category": null,
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
     },
     {
-      "id": "cand_5690a706-9a2",
-      "mobile": "7204509152",
-      "fullName": "lichtai deepu",
-      "email": "light.aiautomations@gmail.com",
-      "salt": "96ccb8226fcd3742cfe4bf56e1f18d74",
-      "hash": "ad012e5843a7e6aa7c13ab8b388c4feec054f6104b70dc811059381872d07d26",
+      "id": "33402022-43b8-48ea-be87-35719c52c0a7",
+      "mobile": "9877124052",
+      "fullName": "Deepesh Manju",
+      "email": "deepesh_9877124052@test.com",
+      "salt": "e331fd0c1023cf1b0b55957c733ca959",
+      "hash": "46509d67116806f0f28058b3347efdad841e1883dabb2c59196f3af691616cac7ea87659af18615ad299b3e2abb6f884f76a89ed40879732dec9355dd040f797",
       "profile": {
-        "fullName": "lichtai deepu",
-        "profilePhoto": "https://lh3.googleusercontent.com/a/ACg8ocKy3TXimCpqrICJ1HzQsErZo4nusdkCimt660gQ5cwyBy9fnQ=s96-c",
-        "recentCategory": "Last-Mile Delivery"
+        "age": 25,
+        "gender": "Male",
+        "pincode": "560001",
+        "fullName": "Deepesh Manju",
+        "profilePhoto": "",
+        "bikeAvailable": "No",
+        "languagesKnown": [],
+        "recentCategory": "Delivery Jobs",
+        "drivingLicenseAvailable": "No"
       },
-      "nickname": "lichtai",
-      "recent_category": "Last-Mile Delivery"
+      "nickname": null,
+      "recent_category": "Delivery Jobs",
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
+    },
+    {
+      "id": "8890aa40-811d-446f-b95d-b43071d1fdd5",
+      "mobile": "5582728282",
+      "fullName": "Angesh",
+      "email": "test@gmail.com",
+      "salt": "2cd33f651b18c099cb35edcb933abb16",
+      "hash": "2bcc6ae7aed36fada23bb17b27ac0950edde46f23121331b5484ddb0f1366d1b6b26372f72e4193e1f1a30e1228b3cb08f5803a90cdf50f1061165f497aa15ed",
+      "profile": {
+        "fullName": "Angesh",
+        "profilePhoto": "",
+        "bikeAvailable": "No",
+        "languagesKnown": [],
+        "recentCategory": "Last-Mile Delivery",
+        "drivingLicenseAvailable": "No"
+      },
+      "nickname": null,
+      "recent_category": "Last-Mile Delivery",
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
+    },
+    {
+      "id": "cand_51a09217-4f5",
+      "mobile": "8095469805",
+      "fullName": "deepesh",
+      "email": "traderday200000003@gmail.com",
+      "salt": "8a55c3f394ab9af9d2938c3e5243ec51",
+      "hash": "bba34cbd1d931559da648211332124785c940a35bace1f8eb266f6ca50c370c6",
+      "profile": {
+        "age": 34,
+        "gender": "Male",
+        "pincode": "334323",
+        "fullName": "deepesh",
+        "profilePhoto": "",
+        "bikeAvailable": "No",
+        "languagesKnown": [],
+        "drivingLicenseAvailable": "No"
+      },
+      "nickname": "hello",
+      "recent_category": "Last-Mile Delivery",
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
+    },
+    {
+      "id": "169311a3-9f73-4d00-bf61-00354f3a2748",
+      "mobile": "9876546216",
+      "fullName": "Vikram Logistics Pilot",
+      "email": null,
+      "salt": "1ebc164432092696e9983f1a62f09f8f",
+      "hash": "160a7644c6ca30d1c89513a24cbf75ccd80bc745efafbbdab6cd53ef3a626c3a777464c88b4f128c4c32989ea4fe10827a8fc61303be04d7c4124b6a32b116a9",
+      "profile": {
+        "city": "Bangalore South",
+        "fullName": "Vikram Logistics Pilot",
+        "education": "Diploma in Logistics",
+        "profilePhoto": "",
+        "languagesKnown": [
+          "Hindi",
+          "English"
+        ]
+      },
+      "nickname": null,
+      "recent_category": null,
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
+    },
+    {
+      "id": "745c94da-746d-4852-81c5-0cf5fdb25aef",
+      "mobile": "7337850324",
+      "fullName": "xverfd",
+      "email": "deepesh.mreanju2003@email.com",
+      "salt": "f3a02085ccb394b67eec1dd04aa4d309",
+      "hash": "fc8640f478e68a5a69f38b26f09be89c0eacb4ab4e39f0ff626d13900af2ee576a7ace9e1876f76622019cb28547cff5c92da09d693aff6d9f8f1a4f07489ea3",
+      "profile": {
+        "age": 34,
+        "gender": "Male",
+        "pincode": "560067",
+        "fullName": "xverfd",
+        "profilePhoto": "",
+        "bikeAvailable": "No",
+        "languagesKnown": [],
+        "drivingLicenseAvailable": "No"
+      },
+      "nickname": "xverfd",
+      "recent_category": null,
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
+    },
+    {
+      "id": "723cea9a-beca-4917-bb35-550b2bc95474",
+      "mobile": "9876592333",
+      "fullName": "Vikram Lead Pilot",
+      "email": null,
+      "salt": "acf3b576e4865537981cb4bdfb30e48e",
+      "hash": "8f2644cb86a8589e7584e46da68068c96ac57a1ad3352aced94b5a80ec5936ef4bf37572e01e01221896d616097697276aa1dd018233f228e8c4d573d2777819",
+      "profile": {
+        "city": "Bangalore North",
+        "fullName": "Vikram Lead Pilot",
+        "education": "Diploma in Logistics",
+        "profilePhoto": "",
+        "languagesKnown": [
+          "Hindi",
+          "English"
+        ]
+      },
+      "nickname": null,
+      "recent_category": null,
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
     },
     {
       "id": "2a2edb04-ccd4-49af-bf9f-0ee5a02cbd83",
@@ -652,13 +599,14 @@
         "drivingLicenseAvailable": "No"
       },
       "nickname": null,
-      "recent_category": null
+      "recent_category": null,
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
     },
     {
       "id": "1558a02c-b2e4-439c-97d8-1ee2504ed06a",
       "mobile": "9876572077",
       "fullName": "Vikram Lead Pilot",
-      "email": "",
+      "email": null,
       "salt": "aadcded726ad7fb20991da494158845a",
       "hash": "b43e497578491cecdf14b362a8fc49cda039a2d4b73201ef30e6f9e710ff747b0b81a13fa0d7f02a4bd2e17c2c94bd578d9eacf62715ae49e16b31efb068707d",
       "profile": {
@@ -672,13 +620,36 @@
         ]
       },
       "nickname": null,
-      "recent_category": null
+      "recent_category": null,
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
+    },
+    {
+      "id": "cand_1f750885-792",
+      "mobile": "8095469806",
+      "fullName": "bindu",
+      "email": "binduvani420@gmail.com",
+      "salt": "fe7c11bccac3ef3844509207ee4e2599",
+      "hash": "fb9754c19493cf24c0b62372a9af442ec68844ec7f7d34194fac2908b7e56c75",
+      "profile": {
+        "age": 23,
+        "gender": "Male",
+        "pincode": "560067",
+        "fullName": "bindu",
+        "profilePhoto": "https://jjzzauslbtfgpllxhagm.supabase.co/storage/v1/object/public/avatars/cand_1f750885-792-photo-1789138649535.jpg",
+        "bikeAvailable": "No",
+        "languagesKnown": [],
+        "recentCategory": "Last-Mile Delivery",
+        "drivingLicenseAvailable": "No"
+      },
+      "nickname": "bindu",
+      "recent_category": "Warehouse / Picker&Packer",
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
     },
     {
       "id": "a7c4c9ab-68d8-481d-a207-be5017ecd676",
       "mobile": "9876569091",
       "fullName": "Vikram Lead Pilot",
-      "email": "",
+      "email": null,
       "salt": "fc20e6bd273573a52e0e23a948dd018d",
       "hash": "2d222d57ff3cc239cc9fbbfffc52915db2595db0067ada0b44e98e4bb477f8712c4e9ef37d05c35b4a8591a397c454b59fc119da27aa39742a1dae26e218f95f",
       "profile": {
@@ -692,7 +663,71 @@
         ]
       },
       "nickname": null,
-      "recent_category": null
+      "recent_category": null,
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
+    },
+    {
+      "id": "cand_373a283f-4dd",
+      "mobile": "7760556554",
+      "fullName": "Basawasagar ",
+      "email": "basawasagardhannure80@gmail.com",
+      "salt": "49ebe60ec8f8ea88239574715aa19e87",
+      "hash": "1120887bba31e3eca603283a1f7b03bdc07f4057586229871920b4c805dc9a37",
+      "profile": {
+        "city": "",
+        "name": "Basawasagar ",
+        "email": "basawasagardhannure80@gmail.com",
+        "hasDl": false,
+        "state": "",
+        "mobile": "7760556554",
+        "hasBike": false,
+        "fullName": "Basawasagar ",
+        "nickname": "basawasagar ",
+        "full_name": "Basawasagar ",
+        "experience": 0,
+        "profilePhoto": "",
+        "recentCategory": "Last-Mile Delivery",
+        "recent_category": "Last-Mile Delivery"
+      },
+      "nickname": "basawasagar ",
+      "recent_category": "Last-Mile Delivery",
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
+    },
+    {
+      "id": "b97949b9-d279-4a7f-a544-31243e991f5c",
+      "mobile": "9875075967",
+      "fullName": "Deepesh Manju",
+      "email": "deepesh_9875075967@test.com",
+      "salt": "276e7e4ea13c7f3b533cf7d7e1df54d8",
+      "hash": "a91ecd13349e92248ab549229fcc52c33433b9317478b11c89fc08c6d33f06ece8b0774bac97b736b1b4b04aa67121d53305b62140e59601a454fa882272bd5b",
+      "profile": {
+        "fullName": "Deepesh Manju",
+        "profilePhoto": "",
+        "bikeAvailable": "No",
+        "languagesKnown": [],
+        "drivingLicenseAvailable": "No"
+      },
+      "nickname": null,
+      "recent_category": null,
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
+    },
+    {
+      "id": "7696d38f-7dc0-41ce-a0f3-d315b189a9f0",
+      "mobile": "9832245089",
+      "fullName": "Test Candidate",
+      "email": null,
+      "salt": "c074378300e9c0ac68a4a4d4da391022",
+      "hash": "61e0cfbb7dc809b67e72bc148a7caa4ba468f26d9ca76f32295981d419439fe47a3ad504b82c3deb8f2bb4c2e764958bd3e46915f2e72256ec8c0d7175ff605c",
+      "profile": {
+        "fullName": "Test Candidate",
+        "profilePhoto": "https://jjzzauslbtfgpllxhagm.supabase.co/storage/v1/object/public/avatars/7696d38f-7dc0-41ce-a0f3-d315b189a9f0-photo-1789032259032.jpg",
+        "bikeAvailable": "No",
+        "languagesKnown": [],
+        "drivingLicenseAvailable": "No"
+      },
+      "nickname": null,
+      "recent_category": null,
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
     },
     {
       "id": "775f5d90-8235-4de9-b899-8a030ada2970",
@@ -712,7 +747,8 @@
         "drivingLicenseAvailable": "No"
       },
       "nickname": null,
-      "recent_category": null
+      "recent_category": null,
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
     }
   ],
   "tokens": {
@@ -771,15 +807,6 @@
     }
   },
   "documents": [
-    {
-      "id": "66f1404f-c546-453b-b238-fa7dd0c7bc1a",
-      "candidateId": "BwINZW2H6VdMFkBuQJzPDLwesgB2",
-      "documentType": "photo",
-      "fileUrl": "https://jjzzauslbtfgpllxhagm.supabase.co/storage/v1/object/public/avatars/BwINZW2H6VdMFkBuQJzPDLwesgB2-photo-1788701680395.jpg",
-      "fileName": "1000476113.jpg",
-      "uploadDate": "2026-09-06T13:34:40.779Z",
-      "verificationStatus": "Pending"
-    },
     {
       "id": "e1702ea1-a841-424b-8122-671b9bbf5368",
       "candidateId": "6851e5ec-0e8c-4e77-8bcc-1f4dc9e124b0",
@@ -887,9 +914,60 @@
       "fileName": "images (10).jpg",
       "uploadDate": "2026-10-10T10:58:32.922Z",
       "verificationStatus": "Pending"
+    },
+    {
+      "id": "66f1404f-c546-453b-b238-fa7dd0c7bc1a",
+      "candidateId": "BwINZW2H6VdMFkBuQJzPDLwesgB2",
+      "documentType": "photo",
+      "fileUrl": "https://jjzzauslbtfgpllxhagm.supabase.co/storage/v1/object/public/avatars/BwINZW2H6VdMFkBuQJzPDLwesgB2-photo-1788701680395.jpg",
+      "fileName": "1000476113.jpg",
+      "uploadDate": "2026-09-06T13:34:40.779Z",
+      "verificationStatus": "Pending"
     }
   ],
   "recruiters": [
+    {
+      "id": "rec_969ec30b-343f-48b5-aa6e-2e0dfbb75729",
+      "companyName": "Delhivery Test Logistics",
+      "companyLogo": "",
+      "companyWebsite": "https://delhivery.com",
+      "recruiterName": "Test Recruiter 4402",
+      "designation": "Operations Lead",
+      "mobile": "9838019692",
+      "email": "recruiter.4402@delhivery-test.com",
+      "salt": "544391647149325156ae0e3e73f4fa45",
+      "hash": "e24ea91322d12dc6b7c2e4afdf1e63a6df80f9451d3a195f7e748266933bc20cfd539ec35cb29714b392f172c45a47d71fb4f352f145c22792c6e2211caf0e38",
+      "address": "",
+      "city": "Gurugram",
+      "state": "Haryana",
+      "pincode": "",
+      "status": "Approved",
+      "createdAt": "2026-10-19T05:44:04.573Z",
+      "updatedAt": "2026-10-19T05:44:04.573Z",
+      "nickname": "Test Recruiter 4402",
+      "password_updated_at": "2026-10-19T05:44:05.623605+00:00"
+    },
+    {
+      "id": "rec_cd8bbe2b-ef95-4c6b-b7e1-612f7e259d6e",
+      "companyName": "Delhivery Test Logistics",
+      "companyLogo": "",
+      "companyWebsite": "https://delhivery.com",
+      "recruiterName": "Test Recruiter 9686",
+      "designation": "Operations Lead",
+      "mobile": "9845964525",
+      "email": "recruiter.9686@delhivery-test.com",
+      "salt": "10161f2993ff9fb4d1385fcabbf19d31",
+      "hash": "0b07cdb201cd178ba31d85840288687c2cf142955fe8f4e4a099cb2259ffea5729f3c9a7d9df75a0f9624c8defb4aa41f4d8e01091253e0a9868fe56b5139772",
+      "address": "",
+      "city": "Gurugram",
+      "state": "Haryana",
+      "pincode": "",
+      "status": "Approved",
+      "createdAt": "2026-10-19T05:40:04.801Z",
+      "updatedAt": "2026-10-19T05:40:04.801Z",
+      "nickname": "Test Recruiter 9686",
+      "password_updated_at": "2026-10-19T05:40:06.139333+00:00"
+    },
     {
       "id": "591160ad-315c-4795-bf3a-7661be570915",
       "companyName": "Multifix Carrier",
@@ -908,7 +986,50 @@
       "status": "Approved",
       "createdAt": "2026-10-09T14:00:05.798Z",
       "updatedAt": "2026-10-09T14:00:05.798Z",
-      "nickname": null
+      "nickname": null,
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
+    },
+    {
+      "id": "b237d1dc-ae19-4b6b-9088-d0e42fcbfd2b",
+      "companyName": "Oyster Pearl",
+      "companyLogo": "",
+      "companyWebsite": "https://Oysterpearl.com",
+      "recruiterName": "Mohan",
+      "designation": "Manager",
+      "mobile": "8431088118",
+      "email": "mohan@oysterpearl.in",
+      "salt": "2278bc5992091233ad1af4adfeff80ce",
+      "hash": "eba9248747bb94c8a848831ad75457f4ef4ce40b64b8ed1dfffeb563e02c903c16fc1894d1d4dce1666aef0efe4188433cd6ab976d4012d6987c00e77ac16131",
+      "address": "No 55 HBR Layout Banaswadi Kalayan Nagar",
+      "city": "Bangalore",
+      "state": "Karnataka",
+      "pincode": "560041",
+      "status": "Approved",
+      "createdAt": "2026-10-15T02:28:16.983Z",
+      "updatedAt": "2026-10-15T02:28:16.983Z",
+      "nickname": null,
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
+    },
+    {
+      "id": "rec_09d17113-5090-4d46-9897-463f1cd433b4",
+      "companyName": "Zepto",
+      "companyLogo": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQUXF4p5v_j6bbMFOUqisG9LmCAkMXOF3NmAZ9HdQ09Aw&s=10",
+      "companyWebsite": "https://zepto.com",
+      "recruiterName": "Ramesh kumar",
+      "designation": "HR & Talent Acquisition Lead",
+      "mobile": "8152097827",
+      "email": "kambalisunil0@gmail.com",
+      "salt": "938d7a1f85bb18c805991742dc30b076",
+      "hash": "63418f65de48640883feb68e5ae4ff50e2575da0639abc364ae6df8a3fde8e3122942a9494a8422d78cd01661e594cbf3f7c6c72f609310cd103fcce0e216cdd",
+      "address": "Logistics Hub, Sector 18",
+      "city": "bengaluru",
+      "state": "Karnataka",
+      "pincode": "560067",
+      "status": "Approved",
+      "createdAt": "2026-10-19T04:59:09.919Z",
+      "updatedAt": "2026-10-19T04:59:09.919Z",
+      "nickname": "Ramesh kumar",
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
     },
     {
       "id": "9042b7cd-3e37-45d3-ab41-6f84f752e764",
@@ -928,7 +1049,8 @@
       "status": "Approved",
       "createdAt": "2026-09-22T09:50:10.256Z",
       "updatedAt": "2026-09-22T09:50:10.256Z",
-      "nickname": null
+      "nickname": null,
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
     },
     {
       "id": "rec_d405829a-ee9",
@@ -949,7 +1071,28 @@
       "createdAt": "2026-09-02T11:45:51.233Z",
       "updatedAt": "2026-10-09T13:38:21.972Z",
       "nickname": "deepu",
-      "firebaseUid": "KiPy0e87BSQwiEDAm4qSGwWL24w1"
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
+    },
+    {
+      "id": "rec_2a9091bd-e0e3-4534-89ac-abe8ccb2a8d8",
+      "companyName": "Blinkit Commerce Hub",
+      "companyLogo": "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=150&auto=format&fit=crop&q=80",
+      "companyWebsite": "https://blinkitcommercehub.com",
+      "recruiterName": "Talent Partner 8744",
+      "designation": "Operations Hiring Lead",
+      "mobile": "9850637363",
+      "email": "recruiter.8744@jobsner-fleet.com",
+      "salt": "f4e532c42ec4c577e31443c0edec9441",
+      "hash": "1816286a3d4b765edd4143c5f1999ce1f2ee4608e12f9c9feef89029a7f154e499b48b069c73c4c1d23c68a09e8bc9c77debaea9468551ac872b14b2e6061a1e",
+      "address": "Tower B, Industrial Area Phase 2",
+      "city": "Noida",
+      "state": "Uttar Pradesh",
+      "pincode": "110020",
+      "status": "Approved",
+      "createdAt": "2026-10-19T05:05:43.112Z",
+      "updatedAt": "2026-10-19T05:05:43.112Z",
+      "nickname": "Talent Partner 8744",
+      "password_updated_at": "2026-10-19T05:05:43.222753+00:00"
     },
     {
       "id": "1237562d-2b15-4147-a5d3-f5731ffb6281",
@@ -969,7 +1112,8 @@
       "status": "Approved",
       "createdAt": "2026-09-05T12:39:18.284Z",
       "updatedAt": "2026-09-05T12:39:18.284Z",
-      "nickname": null
+      "nickname": null,
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
     },
     {
       "id": "rec_09e95a6f-ca4",
@@ -989,7 +1133,8 @@
       "status": "Approved",
       "createdAt": "2026-09-02T11:45:51.233Z",
       "updatedAt": "2026-09-02T11:45:51.233Z",
-      "nickname": "Moha"
+      "nickname": "Moha",
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
     },
     {
       "id": "2f66dc31-ed85-4114-b976-3e4107814d47",
@@ -1009,27 +1154,8 @@
       "status": "Approved",
       "createdAt": "2026-09-04T04:38:26.399Z",
       "updatedAt": "2026-09-04T04:38:26.399Z",
-      "nickname": null
-    },
-    {
-      "id": "b237d1dc-ae19-4b6b-9088-d0e42fcbfd2b",
-      "companyName": "Oyster Pearl",
-      "companyLogo": "",
-      "companyWebsite": "https://Oysterpearl.com",
-      "recruiterName": "Mohan",
-      "designation": "Manager",
-      "mobile": "8431088118",
-      "email": "mohan@oysterpearl.in",
-      "salt": "2278bc5992091233ad1af4adfeff80ce",
-      "hash": "eba9248747bb94c8a848831ad75457f4ef4ce40b64b8ed1dfffeb563e02c903c16fc1894d1d4dce1666aef0efe4188433cd6ab976d4012d6987c00e77ac16131",
-      "address": "No 55 HBR Layout Banaswadi Kalayan Nagar",
-      "city": "Bangalore",
-      "state": "Karnataka",
-      "pincode": "560041",
-      "status": "Approved",
-      "createdAt": "2026-10-15T02:28:16.983Z",
-      "updatedAt": "2026-10-15T02:28:16.983Z",
-      "nickname": null
+      "nickname": null,
+      "password_updated_at": "2026-10-19T05:05:07.252876+00:00"
     }
   ],
   "recruiterTokens": {
@@ -1067,14 +1193,78 @@
     "26628a1374844d85cfd05d4ee50b25f737aed89281bb409f6e72ac5242cb964c": "60b9293f-2fcc-4efa-8c14-5d136f79f7dc",
     "06909dfa015dd73302425875bd4c80c1e98af2979b1a303d5868bb2c305c612b": "60b9293f-2fcc-4efa-8c14-5d136f79f7dc",
     "d6bec14c22f8bb4f507c80a9c948f40c4a35a0191a772c14352973d7cec639a7": "60b9293f-2fcc-4efa-8c14-5d136f79f7dc",
-    "rectok_rec_d405829a-ee9_1791803079452_7dde7407e67b2f31bf0b5edaefa34594": "rec_d405829a-ee9"
+    "rectok_rec_d405829a-ee9_1791803079452_7dde7407e67b2f31bf0b5edaefa34594": "rec_d405829a-ee9",
+    "rectok_rec_969ec30b-343f-48b5-aa6e-2e0dfbb75729_1792388645344_537f6b6cc002c26e39e5aee584123038": "rec_969ec30b-343f-48b5-aa6e-2e0dfbb75729"
   },
   "jobs": [
+    {
+      "id": "d7f64c8b-932b-44db-b2c7-0622c738cdf6",
+      "recruiterId": "rec_969ec30b-343f-48b5-aa6e-2e0dfbb75729",
+      "companyName": "Delhivery Test Logistics",
+      "companyLogo": "",
+      "title": "Express Delivery Partner 4402",
+      "category": "Delivery Jobs",
+      "openings": 20,
+      "employmentType": "Full Time",
+      "state": "Haryana",
+      "city": "Gurugram",
+      "area": "Cyber City Hub",
+      "workLocation": "Cyber City Hub, Gurugram",
+      "minSalary": 22000,
+      "maxSalary": 32000,
+      "salaryType": "Per Month",
+      "shift": "Flexible Shift",
+      "experienceRequired": 0,
+      "educationRequired": "10th Pass or below",
+      "genderPreference": "Any",
+      "ageLimitMin": 18,
+      "ageLimitMax": 45,
+      "bikeRequired": "Yes",
+      "drivingLicenseRequired": "Yes",
+      "immediateJoining": "Yes",
+      "description": "Urgent delivery partner requirement for high volume e-commerce deliveries in Cyber City.",
+      "responsibilities": "Deliver orders safely within assigned hub radius.",
+      "benefits": "Fuel reimbursement, performance bonuses, joining bonus of Rs 3,000.",
+      "status": "Published",
+      "applicationsCount": 0,
+      "viewsCount": 0,
+      "createdAt": "2026-10-19T05:44:45.338Z",
+      "updatedAt": "2026-10-19T05:44:45.338Z",
+      "jobId": "d7f64c8b-932b-44db-b2c7-0622c738cdf6",
+      "job_id": "d7f64c8b-932b-44db-b2c7-0622c738cdf6",
+      "recruiter_id": "rec_969ec30b-343f-48b5-aa6e-2e0dfbb75729",
+      "company_name": "Delhivery Test Logistics",
+      "company_logo": "",
+      "job_title": "Express Delivery Partner 4402",
+      "jobTitle": "Express Delivery Partner 4402",
+      "job_category": "Delivery Jobs",
+      "no_of_openings": 20,
+      "vacancies": 20,
+      "open_positions": 20,
+      "employment_type": "Full Time",
+      "work_location": "Cyber City Hub, Gurugram",
+      "min_salary": 22000,
+      "max_salary": 32000,
+      "salary_type": "Per Month",
+      "experience_required": 0,
+      "education_required": "10th Pass or below",
+      "gender_preference": "Any",
+      "age_limit_min": 18,
+      "age_limit_max": 45,
+      "bike_required": "Yes",
+      "driving_license_required": "Yes",
+      "immediate_joining": "Yes",
+      "job_description": "Urgent delivery partner requirement for high volume e-commerce deliveries in Cyber City.",
+      "applications_count": 0,
+      "views_count": 0,
+      "created_at": "2026-10-19T05:44:45.338Z",
+      "updated_at": "2026-10-19T05:44:45.338Z"
+    },
     {
       "id": "3a6c663d-637f-4a19-8c9c-ea186985ffc9",
       "recruiterId": "ecb93a9d-5350-4b78-8a29-f364ce312956",
       "companyName": "Apex Fleet Logistics",
-      "companyLogo": "",
+      "companyLogo": null,
       "title": "Senior Delivery Driver",
       "category": "Delivery Jobs",
       "openings": 5,
@@ -1104,34 +1294,7 @@
       "createdAt": "2026-09-05T12:39:32.624Z",
       "updatedAt": "2026-10-09T14:41:38.339Z",
       "open_positions": 5,
-      "vacancies": 5,
-      "jobId": "3a6c663d-637f-4a19-8c9c-ea186985ffc9",
-      "job_id": "3a6c663d-637f-4a19-8c9c-ea186985ffc9",
-      "recruiter_id": "ecb93a9d-5350-4b78-8a29-f364ce312956",
-      "company_name": "Apex Fleet Logistics",
-      "company_logo": "",
-      "job_title": "Senior Delivery Driver",
-      "jobTitle": "Senior Delivery Driver",
-      "job_category": "Delivery Jobs",
-      "no_of_openings": 5,
-      "employment_type": "Full Time",
-      "work_location": "Koramangala, Bangalore",
-      "min_salary": 25000,
-      "max_salary": 30000,
-      "salary_type": "Per Month",
-      "experience_required": 1,
-      "education_required": "10th Pass or below",
-      "gender_preference": "Any",
-      "age_limit_min": 18,
-      "age_limit_max": 40,
-      "bike_required": "Yes",
-      "driving_license_required": "Yes",
-      "immediate_joining": "Yes",
-      "job_description": "Deliver parcels safely.",
-      "applications_count": 3,
-      "views_count": 1,
-      "created_at": "2026-09-05T12:39:32.624Z",
-      "updated_at": "2026-10-09T14:41:38.339Z"
+      "vacancies": 5
     },
     {
       "id": "cdd06f13-6165-4c3a-8501-44e34a8ddcb4",
@@ -1167,34 +1330,7 @@
       "createdAt": "2026-10-13T11:48:39.340Z",
       "updatedAt": "2026-10-14T16:59:53.382Z",
       "open_positions": 20,
-      "vacancies": 20,
-      "jobId": "cdd06f13-6165-4c3a-8501-44e34a8ddcb4",
-      "job_id": "cdd06f13-6165-4c3a-8501-44e34a8ddcb4",
-      "recruiter_id": "591160ad-315c-4795-bf3a-7661be570915",
-      "company_name": "Multifix Carrier",
-      "company_logo": "https://jjzzauslbtfgpllxhagm.supabase.co/storage/v1/object/public/avatars/job-591160ad-315c-4795-bf3a-7661be570915-1791892118585.jpg",
-      "job_title": "Picker and Packer",
-      "jobTitle": "Picker and Packer",
-      "job_category": "Last-Mile Delivery",
-      "no_of_openings": 20,
-      "employment_type": "Full Time",
-      "work_location": "BTM Layout",
-      "min_salary": 15000,
-      "max_salary": 25000,
-      "salary_type": "Monthly",
-      "experience_required": 0,
-      "education_required": "10th Pass",
-      "gender_preference": "Any",
-      "age_limit_min": 18,
-      "age_limit_max": 50,
-      "bike_required": "No",
-      "driving_license_required": "No",
-      "immediate_joining": "No",
-      "job_description": "We are hiring Picker & Packer staff for grocery warehouses and dark stores. Your job is to pick products, pack orders, and prepare them for delivery. Freshers can apply.",
-      "applications_count": 1,
-      "views_count": 0,
-      "created_at": "2026-10-13T11:48:39.340Z",
-      "updated_at": "2026-10-14T16:59:53.382Z"
+      "vacancies": 20
     },
     {
       "id": "de1b3ed8-90ef-491e-9e84-bc2a4ca2475d",
@@ -1230,34 +1366,7 @@
       "createdAt": "2026-10-08T14:27:52.182Z",
       "updatedAt": "2026-10-13T00:53:42.451Z",
       "open_positions": 10,
-      "vacancies": 10,
-      "jobId": "de1b3ed8-90ef-491e-9e84-bc2a4ca2475d",
-      "job_id": "de1b3ed8-90ef-491e-9e84-bc2a4ca2475d",
-      "recruiter_id": "f9180c80-d7a2-4bab-8607-7fa31dee6fe5",
-      "company_name": "Apex Speed Delivery 1789032392353",
-      "company_logo": "https://jjzzauslbtfgpllxhagm.supabase.co/storage/v1/object/public/avatars/job-f9180c80-d7a2-4bab-8607-7fa31dee6fe5-1791469671821.jpg",
-      "job_title": "zomato delivery",
-      "jobTitle": "zomato delivery",
-      "job_category": "Delivery Jobs",
-      "no_of_openings": 10,
-      "employment_type": "Flexible",
-      "work_location": "hopeforam , bengalluru",
-      "min_salary": 35000,
-      "max_salary": 40000,
-      "salary_type": "Weekly",
-      "experience_required": 1,
-      "education_required": "12th Pass",
-      "gender_preference": "Male",
-      "age_limit_min": 18,
-      "age_limit_max": 45,
-      "bike_required": "Yes",
-      "driving_license_required": "Yes",
-      "immediate_joining": "Yes",
-      "job_description": "delivery experience needed",
-      "applications_count": 3,
-      "views_count": 0,
-      "created_at": "2026-10-08T14:27:52.182Z",
-      "updated_at": "2026-10-13T00:53:42.451Z"
+      "vacancies": 10
     },
     {
       "id": "b3048c04-773b-478e-8b2c-12445c2ee8af",
@@ -1293,40 +1402,13 @@
       "createdAt": "2026-10-10T07:27:35.648Z",
       "updatedAt": "2026-10-13T00:53:48.454Z",
       "open_positions": 1,
-      "vacancies": 1,
-      "jobId": "b3048c04-773b-478e-8b2c-12445c2ee8af",
-      "job_id": "b3048c04-773b-478e-8b2c-12445c2ee8af",
-      "recruiter_id": "rec_d405829a-ee9",
-      "company_name": "lichtai",
-      "company_logo": "https://jjzzauslbtfgpllxhagm.supabase.co/storage/v1/object/public/avatars/job-rec_d405829a-ee9-1791617255113.jpg",
-      "job_title": "swiggy",
-      "jobTitle": "swiggy",
-      "job_category": "Last-Mile Delivery",
-      "no_of_openings": 1,
-      "employment_type": "Full Time",
-      "work_location": "near vajpaee road",
-      "min_salary": 30000,
-      "max_salary": 45000,
-      "salary_type": "Monthly",
-      "experience_required": 2,
-      "education_required": "12th Pass",
-      "gender_preference": "Any",
-      "age_limit_min": 18,
-      "age_limit_max": 45,
-      "bike_required": "Yes",
-      "driving_license_required": "Yes",
-      "immediate_joining": "Yes",
-      "job_description": "good",
-      "applications_count": 9,
-      "views_count": 0,
-      "created_at": "2026-10-10T07:27:35.648Z",
-      "updated_at": "2026-10-13T00:53:48.454Z"
+      "vacancies": 1
     },
     {
       "id": "924bf675-2c95-4cf4-b57b-15f6978404ef",
       "recruiterId": "b237d1dc-ae19-4b6b-9088-d0e42fcbfd2b",
       "companyName": "Oyster Pearl",
-      "companyLogo": "",
+      "companyLogo": null,
       "title": "Delivery Associate",
       "category": "Last-Mile Delivery",
       "openings": 30,
@@ -1356,34 +1438,7 @@
       "createdAt": "2026-10-15T02:36:05.411Z",
       "updatedAt": "2026-10-15T02:36:05.411Z",
       "open_positions": 30,
-      "vacancies": 30,
-      "jobId": "924bf675-2c95-4cf4-b57b-15f6978404ef",
-      "job_id": "924bf675-2c95-4cf4-b57b-15f6978404ef",
-      "recruiter_id": "b237d1dc-ae19-4b6b-9088-d0e42fcbfd2b",
-      "company_name": "Oyster Pearl",
-      "company_logo": "",
-      "job_title": "Delivery Associate",
-      "jobTitle": "Delivery Associate",
-      "job_category": "Last-Mile Delivery",
-      "no_of_openings": 30,
-      "employment_type": "Full Time",
-      "work_location": "K R Puram",
-      "min_salary": 25000,
-      "max_salary": 35000,
-      "salary_type": "Monthly",
-      "experience_required": 0,
-      "education_required": "10th Pass",
-      "gender_preference": "Male",
-      "age_limit_min": 18,
-      "age_limit_max": 45,
-      "bike_required": "Yes",
-      "driving_license_required": "Yes",
-      "immediate_joining": "Yes",
-      "job_description": "We are hiring Delivery Associates in K.R. Puram, Bangalore. Candidates must have a bike and a valid driving licence. Freshers can apply. Immediate joining available.",
-      "applications_count": 0,
-      "views_count": 0,
-      "created_at": "2026-10-15T02:36:05.411Z",
-      "updated_at": "2026-10-15T02:36:05.411Z"
+      "vacancies": 30
     },
     {
       "id": "659e973a-7aae-4be1-a9b2-a94c2ec0f0c4",
@@ -1419,34 +1474,7 @@
       "createdAt": "2026-10-12T12:12:30.538Z",
       "updatedAt": "2026-10-13T00:54:02.476Z",
       "open_positions": 50,
-      "vacancies": 50,
-      "jobId": "659e973a-7aae-4be1-a9b2-a94c2ec0f0c4",
-      "job_id": "659e973a-7aae-4be1-a9b2-a94c2ec0f0c4",
-      "recruiter_id": "591160ad-315c-4795-bf3a-7661be570915",
-      "company_name": "Multifix Carrier",
-      "company_logo": "https://jjzzauslbtfgpllxhagm.supabase.co/storage/v1/object/public/avatars/job-591160ad-315c-4795-bf3a-7661be570915-1791807149803.jpg",
-      "job_title": "Delivery boy",
-      "jobTitle": "Delivery boy",
-      "job_category": "Last-Mile Delivery",
-      "no_of_openings": 50,
-      "employment_type": "Flexible",
-      "work_location": "HSR layout",
-      "min_salary": 15000,
-      "max_salary": 20000,
-      "salary_type": "Monthly",
-      "experience_required": 0,
-      "education_required": "10th Pass",
-      "gender_preference": "Any",
-      "age_limit_min": 18,
-      "age_limit_max": 65,
-      "bike_required": "No",
-      "driving_license_required": "No",
-      "immediate_joining": "Yes",
-      "job_description": "Looking for dilivery boys who wants to join immediately for Swiggy as an executive",
-      "applications_count": 2,
-      "views_count": 0,
-      "created_at": "2026-10-12T12:12:30.538Z",
-      "updated_at": "2026-10-13T00:54:02.476Z"
+      "vacancies": 50
     },
     {
       "id": "a4c68d19-8bab-4ffd-a864-ab14238dfae0",
@@ -1482,34 +1510,7 @@
       "createdAt": "2026-10-13T11:24:09.429Z",
       "updatedAt": "2026-10-13T11:24:09.429Z",
       "open_positions": 30,
-      "vacancies": 30,
-      "jobId": "a4c68d19-8bab-4ffd-a864-ab14238dfae0",
-      "job_id": "a4c68d19-8bab-4ffd-a864-ab14238dfae0",
-      "recruiter_id": "591160ad-315c-4795-bf3a-7661be570915",
-      "company_name": "Multifix Carrier",
-      "company_logo": "https://jjzzauslbtfgpllxhagm.supabase.co/storage/v1/object/public/avatars/job-591160ad-315c-4795-bf3a-7661be570915-1791890648845.jpg",
-      "job_title": "Hiring Delivery Executives",
-      "jobTitle": "Hiring Delivery Executives",
-      "job_category": "Delivery Jobs",
-      "no_of_openings": 30,
-      "employment_type": "Flexible",
-      "work_location": "BTM Layout",
-      "min_salary": 35000,
-      "max_salary": 60000,
-      "salary_type": "Monthly",
-      "experience_required": 0,
-      "education_required": "10th Pass",
-      "gender_preference": "Any",
-      "age_limit_min": 18,
-      "age_limit_max": 65,
-      "bike_required": "No",
-      "driving_license_required": "No",
-      "immediate_joining": "No",
-      "job_description": "Hiring Food Delivery Executives for food and grocery delivery. Earn money with order-based incentives, joining bonus, and insurance coverage up to ₹10 lakh.",
-      "applications_count": 0,
-      "views_count": 0,
-      "created_at": "2026-10-13T11:24:09.429Z",
-      "updated_at": "2026-10-13T11:24:09.429Z"
+      "vacancies": 30
     },
     {
       "id": "6599985a-117b-4722-a1d9-75fd38acd82f",
@@ -1545,34 +1546,7 @@
       "createdAt": "2026-10-13T11:40:49.828Z",
       "updatedAt": "2026-10-13T11:40:49.828Z",
       "open_positions": 50,
-      "vacancies": 50,
-      "jobId": "6599985a-117b-4722-a1d9-75fd38acd82f",
-      "job_id": "6599985a-117b-4722-a1d9-75fd38acd82f",
-      "recruiter_id": "591160ad-315c-4795-bf3a-7661be570915",
-      "company_name": "Multifix Carrier",
-      "company_logo": "https://jjzzauslbtfgpllxhagm.supabase.co/storage/v1/object/public/avatars/job-591160ad-315c-4795-bf3a-7661be570915-1791891649403.jpg",
-      "job_title": "Grocery Delivery Partner",
-      "jobTitle": "Grocery Delivery Partner",
-      "job_category": "Delivery Jobs",
-      "no_of_openings": 50,
-      "employment_type": "Part Time",
-      "work_location": "HSR Layout",
-      "min_salary": 25000,
-      "max_salary": 45000,
-      "salary_type": "Monthly",
-      "experience_required": 0,
-      "education_required": "10th Pass",
-      "gender_preference": "Any",
-      "age_limit_min": 18,
-      "age_limit_max": 50,
-      "bike_required": "No",
-      "driving_license_required": "No",
-      "immediate_joining": "No",
-      "job_description": "We are hiring Grocery Delivery Partners to deliver groceries to customers. Earn ₹35,000–₹45,000 per month, with a joining bonus, insurance coverage up to ₹10 lakh, and extra incentives for completing more orders.",
-      "applications_count": 0,
-      "views_count": 0,
-      "created_at": "2026-10-13T11:40:49.828Z",
-      "updated_at": "2026-10-13T11:40:49.828Z"
+      "vacancies": 50
     },
     {
       "id": "a060b16b-81fe-455d-8a49-0b2f5dee295d",
@@ -1608,34 +1582,7 @@
       "createdAt": "2026-10-15T10:55:47.412Z",
       "updatedAt": "2026-10-15T10:55:47.412Z",
       "open_positions": 30,
-      "vacancies": 30,
-      "jobId": "a060b16b-81fe-455d-8a49-0b2f5dee295d",
-      "job_id": "a060b16b-81fe-455d-8a49-0b2f5dee295d",
-      "recruiter_id": "591160ad-315c-4795-bf3a-7661be570915",
-      "company_name": "Multifix Carrier",
-      "company_logo": "https://jjzzauslbtfgpllxhagm.supabase.co/storage/v1/object/public/avatars/job-591160ad-315c-4795-bf3a-7661be570915-1792061746518.jpg",
-      "job_title": "Delivery Executive",
-      "jobTitle": "Delivery Executive",
-      "job_category": "Delivery Jobs",
-      "no_of_openings": 30,
-      "employment_type": "Full Time",
-      "work_location": "Bellandur",
-      "min_salary": 25000,
-      "max_salary": 65000,
-      "salary_type": "Monthly",
-      "experience_required": 0,
-      "education_required": "10th Pass",
-      "gender_preference": "Any",
-      "age_limit_min": 18,
-      "age_limit_max": 50,
-      "bike_required": "No",
-      "driving_license_required": "No",
-      "immediate_joining": "Yes",
-      "job_description": "We are hiring Delivery Executives for grocery, food, and e-commerce deliveries. Earn ₹25,000 to ₹65,000 per month, with an earning potential of ₹35,000 or more based on your working hours, orders completed, and incentives.\n\nFlexible working hours allow you to work according to your availability. Join us and enjoy company-provided insurance coverage up to ₹10 lakh, along with additional incentives on deliveries.\n\nApply now and start earning!",
-      "applications_count": 0,
-      "views_count": 0,
-      "created_at": "2026-10-15T10:55:47.412Z",
-      "updated_at": "2026-10-15T10:55:47.412Z"
+      "vacancies": 30
     }
   ],
   "applications": [
@@ -1730,86 +1677,6 @@
       "lastUpdated": "2026-10-12T10:35:56.665Z"
     },
     {
-      "id": "app_60294b4c-698",
-      "candidateId": "cand_c4b2a1d1-71b",
-      "jobId": "job_ba128b7f-320",
-      "recruiterId": "rec_cb9cc8ee-4dd",
-      "appliedDate": "2026-09-11T18:29:12.613Z",
-      "currentStatus": "Applied",
-      "withdrawStatus": "Active",
-      "lastUpdated": "2026-09-11T18:29:12.613Z"
-    },
-    {
-      "id": "app_6ef83600",
-      "candidateId": "cand_test_99",
-      "jobId": "d03929c4-7ad5-4b27-91e4-c2e357668ecd",
-      "recruiterId": "KiPy0e87BSQwiEDAm4qSGwWL24w1",
-      "appliedDate": "2026-09-10T11:00:00.000Z",
-      "currentStatus": "Applied",
-      "withdrawStatus": "Active",
-      "lastUpdated": "2026-09-10T11:00:00.000Z"
-    },
-    {
-      "id": "d2c9f38f-35a3-4b93-9b5f-fc403e357c6f",
-      "candidateId": "KiPy0e87BSQwiEDAm4qSGwWL24w1",
-      "jobId": "job_626233be-17e",
-      "recruiterId": "rec_cb9cc8ee-4dd",
-      "appliedDate": "2026-09-10T19:03:14.166Z",
-      "currentStatus": "Applied",
-      "withdrawStatus": "Active",
-      "lastUpdated": "2026-09-10T19:03:14.166Z"
-    },
-    {
-      "id": "app_d2513a60-a65",
-      "candidateId": "cand_2162ac57-54d",
-      "jobId": "job_c3f78587-718",
-      "recruiterId": "rec_cb9cc8ee-4dd",
-      "appliedDate": "2026-08-23T10:57:11.479Z",
-      "currentStatus": "Shortlisted",
-      "withdrawStatus": "Active",
-      "lastUpdated": "2026-08-25T18:41:57.340Z"
-    },
-    {
-      "id": "app_a7bbbb92-1a7",
-      "candidateId": "cand_c4b2a1d1-71b",
-      "jobId": "job_626233be-17e",
-      "recruiterId": "rec_cb9cc8ee-4dd",
-      "appliedDate": "2026-09-10T19:03:23.627Z",
-      "currentStatus": "Applied",
-      "withdrawStatus": "Active",
-      "lastUpdated": "2026-09-10T19:03:23.627Z"
-    },
-    {
-      "id": "23d968d6-9b17-4d24-9601-8993943ff689",
-      "candidateId": "JWBLagfTAbcFPV7igsRtd5x5Md82",
-      "jobId": "job_626233be-17e",
-      "recruiterId": "rec_cb9cc8ee-4dd",
-      "appliedDate": "2026-09-10T19:08:20.912Z",
-      "currentStatus": "Applied",
-      "withdrawStatus": "Active",
-      "lastUpdated": "2026-09-10T19:08:20.912Z"
-    },
-    {
-      "id": "app_e75b7082-b6c",
-      "candidateId": "cand_c4b2a1d1-71b",
-      "jobId": "job_f9f5468e-752",
-      "recruiterId": "rec_cb9cc8ee-4dd",
-      "appliedDate": "2026-09-05T15:22:01.676Z",
-      "currentStatus": "Applied",
-      "withdrawStatus": "Active",
-      "lastUpdated": "2026-09-05T15:22:01.676Z"
-    },
-    {
-      "id": "app_43230ff4-cbb",
-      "candidateId": "cand_25cb91b6-6b7",
-      "jobId": "job_e34fa7ab-402",
-      "recruiterId": "rec_d405829a-ee9",
-      "appliedDate": "2026-08-24T16:33:21.598Z",
-      "currentStatus": "Applied",
-      "withdrawStatus": "Active",
-      "lastUpdated": "2026-08-24T16:33:21.598Z"
-    },
-    {
       "id": "911249ab-0a0f-4296-9269-fbc64ad1728a",
       "candidateId": "JWBLagfTAbcFPV7igsRtd5x5Md82",
       "jobId": "523ae263-6f9f-400d-8a37-20cb82c37981",
@@ -1900,14 +1767,14 @@
       "lastUpdated": "2026-08-24T15:30:05.368Z"
     },
     {
-      "id": "app_c93c4bc3-b43",
-      "candidateId": "cand_25cb91b6-6b7",
-      "jobId": "job_b1d35d5e-f6f",
-      "recruiterId": "rec_08cb466f-535",
-      "appliedDate": "2026-08-25T17:24:49.874Z",
+      "id": "06f0e5c3-0e44-4270-93f8-9aeaec882f93",
+      "candidateId": "cand_c4b2a1d1-71b",
+      "jobId": "cdd06f13-6165-4c3a-8501-44e34a8ddcb4",
+      "recruiterId": "591160ad-315c-4795-bf3a-7661be570915",
+      "appliedDate": "2026-10-14T16:59:53.382Z",
       "currentStatus": "Applied",
       "withdrawStatus": "Active",
-      "lastUpdated": "2026-08-25T17:24:49.874Z"
+      "lastUpdated": "2026-10-14T16:59:53.382Z"
     },
     {
       "id": "app_c3729b2e-09a",
@@ -1918,6 +1785,186 @@
       "currentStatus": "Applied",
       "withdrawStatus": "Active",
       "lastUpdated": "2026-09-09T06:50:35.311Z"
+    },
+    {
+      "id": "fd87c5a1-dfc6-4159-bf57-dffc30c62885",
+      "candidateId": "KiPy0e87BSQwiEDAm4qSGwWL24w1",
+      "jobId": "5e1dc04f-c6ca-46cf-b139-48e50bc31c94",
+      "recruiterId": "oPzLyVjsutZ2NEON05t0JU62odI2",
+      "appliedDate": "2026-09-06T12:31:52.193Z",
+      "currentStatus": "Applied",
+      "withdrawStatus": "Active",
+      "lastUpdated": "2026-09-06T12:31:52.193Z"
+    },
+    {
+      "id": "app_959ed489-5e4",
+      "candidateId": "cand_c4b2a1d1-71b",
+      "jobId": "job_22e563ce-1ea",
+      "recruiterId": "rec_1384ae9d-f8b",
+      "appliedDate": "2026-08-24T16:33:46.102Z",
+      "currentStatus": "Applied",
+      "withdrawStatus": "Active",
+      "lastUpdated": "2026-08-24T16:33:46.102Z"
+    },
+    {
+      "id": "1af2a621-983c-46ad-9e78-e9cb2fd6d3e5",
+      "candidateId": "cand_68f25cc2-5b7",
+      "jobId": "de1b3ed8-90ef-491e-9e84-bc2a4ca2475d",
+      "recruiterId": "f9180c80-d7a2-4bab-8607-7fa31dee6fe5",
+      "appliedDate": "2026-10-13T00:53:42.451Z",
+      "currentStatus": "Applied",
+      "withdrawStatus": "Active",
+      "lastUpdated": "2026-10-13T00:53:42.451Z"
+    },
+    {
+      "id": "dc099c18-c2d4-4d63-ab4f-72c1f4615c94",
+      "candidateId": "cand_68f25cc2-5b7",
+      "jobId": "b3048c04-773b-478e-8b2c-12445c2ee8af",
+      "recruiterId": "rec_d405829a-ee9",
+      "appliedDate": "2026-10-13T00:53:48.454Z",
+      "currentStatus": "Applied",
+      "withdrawStatus": "Active",
+      "lastUpdated": "2026-10-13T00:53:48.454Z"
+    },
+    {
+      "id": "app_60294b4c-698",
+      "candidateId": "cand_c4b2a1d1-71b",
+      "jobId": "job_ba128b7f-320",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "appliedDate": "2026-09-11T18:29:12.613Z",
+      "currentStatus": "Applied",
+      "withdrawStatus": "Active",
+      "lastUpdated": "2026-09-11T18:29:12.613Z"
+    },
+    {
+      "id": "app_6ef83600",
+      "candidateId": "cand_test_99",
+      "jobId": "d03929c4-7ad5-4b27-91e4-c2e357668ecd",
+      "recruiterId": "KiPy0e87BSQwiEDAm4qSGwWL24w1",
+      "appliedDate": "2026-09-10T11:00:00.000Z",
+      "currentStatus": "Applied",
+      "withdrawStatus": "Active",
+      "lastUpdated": "2026-09-10T11:00:00.000Z"
+    },
+    {
+      "id": "d2c9f38f-35a3-4b93-9b5f-fc403e357c6f",
+      "candidateId": "KiPy0e87BSQwiEDAm4qSGwWL24w1",
+      "jobId": "job_626233be-17e",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "appliedDate": "2026-09-10T19:03:14.166Z",
+      "currentStatus": "Applied",
+      "withdrawStatus": "Active",
+      "lastUpdated": "2026-09-10T19:03:14.166Z"
+    },
+    {
+      "id": "app_d2513a60-a65",
+      "candidateId": "cand_2162ac57-54d",
+      "jobId": "job_c3f78587-718",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "appliedDate": "2026-08-23T10:57:11.479Z",
+      "currentStatus": "Shortlisted",
+      "withdrawStatus": "Active",
+      "lastUpdated": "2026-08-25T18:41:57.340Z"
+    },
+    {
+      "id": "app_a7bbbb92-1a7",
+      "candidateId": "cand_c4b2a1d1-71b",
+      "jobId": "job_626233be-17e",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "appliedDate": "2026-09-10T19:03:23.627Z",
+      "currentStatus": "Applied",
+      "withdrawStatus": "Active",
+      "lastUpdated": "2026-09-10T19:03:23.627Z"
+    },
+    {
+      "id": "23d968d6-9b17-4d24-9601-8993943ff689",
+      "candidateId": "JWBLagfTAbcFPV7igsRtd5x5Md82",
+      "jobId": "job_626233be-17e",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "appliedDate": "2026-09-10T19:08:20.912Z",
+      "currentStatus": "Applied",
+      "withdrawStatus": "Active",
+      "lastUpdated": "2026-09-10T19:08:20.912Z"
+    },
+    {
+      "id": "app_e75b7082-b6c",
+      "candidateId": "cand_c4b2a1d1-71b",
+      "jobId": "job_f9f5468e-752",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "appliedDate": "2026-09-05T15:22:01.676Z",
+      "currentStatus": "Applied",
+      "withdrawStatus": "Active",
+      "lastUpdated": "2026-09-05T15:22:01.676Z"
+    },
+    {
+      "id": "app_43230ff4-cbb",
+      "candidateId": "cand_25cb91b6-6b7",
+      "jobId": "job_e34fa7ab-402",
+      "recruiterId": "rec_d405829a-ee9",
+      "appliedDate": "2026-08-24T16:33:21.598Z",
+      "currentStatus": "Applied",
+      "withdrawStatus": "Active",
+      "lastUpdated": "2026-08-24T16:33:21.598Z"
+    },
+    {
+      "id": "app_c93c4bc3-b43",
+      "candidateId": "cand_25cb91b6-6b7",
+      "jobId": "job_b1d35d5e-f6f",
+      "recruiterId": "rec_08cb466f-535",
+      "appliedDate": "2026-08-25T17:24:49.874Z",
+      "currentStatus": "Applied",
+      "withdrawStatus": "Active",
+      "lastUpdated": "2026-08-25T17:24:49.874Z"
+    },
+    {
+      "id": "app_c7a663ce-e08",
+      "candidateId": "cand_68f25cc2-5b7",
+      "jobId": "job_1df8352a-d05",
+      "recruiterId": "cand_c4b2a1d1-71b",
+      "appliedDate": "2026-08-18T11:08:38.668Z",
+      "currentStatus": "Applied",
+      "withdrawStatus": "Active",
+      "lastUpdated": "2026-08-18T11:08:38.668Z"
+    },
+    {
+      "id": "app_edeb12ea-4c3",
+      "candidateId": "cand_c4b2a1d1-71b",
+      "jobId": "job_c3f78587-718",
+      "recruiterId": "rec_cb9cc8ee-4dd",
+      "appliedDate": "2026-08-25T17:43:08.523Z",
+      "currentStatus": "Applied",
+      "withdrawStatus": "Active",
+      "lastUpdated": "2026-08-25T17:43:08.523Z"
+    },
+    {
+      "id": "ae406ac0-067a-4a95-9be7-fd90af40a97d",
+      "candidateId": "cand_68f25cc2-5b7",
+      "jobId": "659e973a-7aae-4be1-a9b2-a94c2ec0f0c4",
+      "recruiterId": "591160ad-315c-4795-bf3a-7661be570915",
+      "appliedDate": "2026-10-13T00:54:02.476Z",
+      "currentStatus": "Applied",
+      "withdrawStatus": "Active",
+      "lastUpdated": "2026-10-13T00:54:02.476Z"
+    },
+    {
+      "id": "8ec9667c-a6f3-45e2-bf45-347c04615fef",
+      "candidateId": "cand_5690a706-9a2",
+      "jobId": "b3048c04-773b-478e-8b2c-12445c2ee8af",
+      "recruiterId": "rec_d405829a-ee9",
+      "appliedDate": "2026-10-12T11:10:41.302Z",
+      "currentStatus": "Applied",
+      "withdrawStatus": "Active",
+      "lastUpdated": "2026-10-12T11:10:41.302Z"
+    },
+    {
+      "id": "0c77c661-7936-4c29-9028-3d7ea2ee4e1e",
+      "candidateId": "cand_c4b2a1d1-71b",
+      "jobId": "659e973a-7aae-4be1-a9b2-a94c2ec0f0c4",
+      "recruiterId": "591160ad-315c-4795-bf3a-7661be570915",
+      "appliedDate": "2026-10-12T12:51:13.993Z",
+      "currentStatus": "Applied",
+      "withdrawStatus": "Active",
+      "lastUpdated": "2026-10-12T12:51:13.993Z"
     },
     {
       "id": "ccbb6202-4809-4ef1-9146-eeac59dbf7b3",
@@ -1950,16 +1997,6 @@
       "lastUpdated": "2026-09-09T14:17:04.284Z"
     },
     {
-      "id": "d92edfdf-275c-470b-a256-5f90455b2f2d",
-      "candidateId": "JWBLagfTAbcFPV7igsRtd5x5Md82",
-      "jobId": "de1b3ed8-90ef-491e-9e84-bc2a4ca2475d",
-      "recruiterId": "f9180c80-d7a2-4bab-8607-7fa31dee6fe5",
-      "appliedDate": "2026-10-09T14:41:28.979Z",
-      "currentStatus": "Applied",
-      "withdrawStatus": "Active",
-      "lastUpdated": "2026-10-09T14:41:28.979Z"
-    },
-    {
       "id": "9eb05055-d843-4063-aa1d-4672bf6724cd",
       "candidateId": "cand_1f750885-792",
       "jobId": "job_03779fce-ab8",
@@ -1980,46 +2017,6 @@
       "lastUpdated": "2026-09-10T12:09:53.538Z"
     },
     {
-      "id": "app_c7a663ce-e08",
-      "candidateId": "cand_68f25cc2-5b7",
-      "jobId": "job_1df8352a-d05",
-      "recruiterId": "cand_c4b2a1d1-71b",
-      "appliedDate": "2026-08-18T11:08:38.668Z",
-      "currentStatus": "Applied",
-      "withdrawStatus": "Active",
-      "lastUpdated": "2026-08-18T11:08:38.668Z"
-    },
-    {
-      "id": "fd87c5a1-dfc6-4159-bf57-dffc30c62885",
-      "candidateId": "KiPy0e87BSQwiEDAm4qSGwWL24w1",
-      "jobId": "5e1dc04f-c6ca-46cf-b139-48e50bc31c94",
-      "recruiterId": "oPzLyVjsutZ2NEON05t0JU62odI2",
-      "appliedDate": "2026-09-06T12:31:52.193Z",
-      "currentStatus": "Applied",
-      "withdrawStatus": "Active",
-      "lastUpdated": "2026-09-06T12:31:52.193Z"
-    },
-    {
-      "id": "app_edeb12ea-4c3",
-      "candidateId": "cand_c4b2a1d1-71b",
-      "jobId": "job_c3f78587-718",
-      "recruiterId": "rec_cb9cc8ee-4dd",
-      "appliedDate": "2026-08-25T17:43:08.523Z",
-      "currentStatus": "Applied",
-      "withdrawStatus": "Active",
-      "lastUpdated": "2026-08-25T17:43:08.523Z"
-    },
-    {
-      "id": "app_959ed489-5e4",
-      "candidateId": "cand_c4b2a1d1-71b",
-      "jobId": "job_22e563ce-1ea",
-      "recruiterId": "rec_1384ae9d-f8b",
-      "appliedDate": "2026-08-24T16:33:46.102Z",
-      "currentStatus": "Applied",
-      "withdrawStatus": "Active",
-      "lastUpdated": "2026-08-24T16:33:46.102Z"
-    },
-    {
       "id": "e5976417-2d72-41ad-8331-32f942328c01",
       "candidateId": "BwINZW2H6VdMFkBuQJzPDLwesgB2",
       "jobId": "1ffc85d9-e6f6-4479-afd1-7e42088252e0",
@@ -2038,6 +2035,16 @@
       "currentStatus": "Applied",
       "withdrawStatus": "Active",
       "lastUpdated": "2026-09-11T14:35:38.287Z"
+    },
+    {
+      "id": "d92edfdf-275c-470b-a256-5f90455b2f2d",
+      "candidateId": "JWBLagfTAbcFPV7igsRtd5x5Md82",
+      "jobId": "de1b3ed8-90ef-491e-9e84-bc2a4ca2475d",
+      "recruiterId": "f9180c80-d7a2-4bab-8607-7fa31dee6fe5",
+      "appliedDate": "2026-10-09T14:41:28.979Z",
+      "currentStatus": "Applied",
+      "withdrawStatus": "Active",
+      "lastUpdated": "2026-10-09T14:41:28.979Z"
     },
     {
       "id": "797cbc18-370c-4ed6-8efd-c287f0cdbb0c",
@@ -2468,66 +2475,6 @@
       "currentStatus": "Applied",
       "withdrawStatus": "Active",
       "lastUpdated": "2026-09-26T15:25:46.138Z"
-    },
-    {
-      "id": "06f0e5c3-0e44-4270-93f8-9aeaec882f93",
-      "candidateId": "cand_c4b2a1d1-71b",
-      "jobId": "cdd06f13-6165-4c3a-8501-44e34a8ddcb4",
-      "recruiterId": "591160ad-315c-4795-bf3a-7661be570915",
-      "appliedDate": "2026-10-14T16:59:53.382Z",
-      "currentStatus": "Applied",
-      "withdrawStatus": "Active",
-      "lastUpdated": "2026-10-14T16:59:53.382Z"
-    },
-    {
-      "id": "1af2a621-983c-46ad-9e78-e9cb2fd6d3e5",
-      "candidateId": "cand_68f25cc2-5b7",
-      "jobId": "de1b3ed8-90ef-491e-9e84-bc2a4ca2475d",
-      "recruiterId": "f9180c80-d7a2-4bab-8607-7fa31dee6fe5",
-      "appliedDate": "2026-10-13T00:53:42.451Z",
-      "currentStatus": "Applied",
-      "withdrawStatus": "Active",
-      "lastUpdated": "2026-10-13T00:53:42.451Z"
-    },
-    {
-      "id": "dc099c18-c2d4-4d63-ab4f-72c1f4615c94",
-      "candidateId": "cand_68f25cc2-5b7",
-      "jobId": "b3048c04-773b-478e-8b2c-12445c2ee8af",
-      "recruiterId": "rec_d405829a-ee9",
-      "appliedDate": "2026-10-13T00:53:48.454Z",
-      "currentStatus": "Applied",
-      "withdrawStatus": "Active",
-      "lastUpdated": "2026-10-13T00:53:48.454Z"
-    },
-    {
-      "id": "ae406ac0-067a-4a95-9be7-fd90af40a97d",
-      "candidateId": "cand_68f25cc2-5b7",
-      "jobId": "659e973a-7aae-4be1-a9b2-a94c2ec0f0c4",
-      "recruiterId": "591160ad-315c-4795-bf3a-7661be570915",
-      "appliedDate": "2026-10-13T00:54:02.476Z",
-      "currentStatus": "Applied",
-      "withdrawStatus": "Active",
-      "lastUpdated": "2026-10-13T00:54:02.476Z"
-    },
-    {
-      "id": "8ec9667c-a6f3-45e2-bf45-347c04615fef",
-      "candidateId": "cand_5690a706-9a2",
-      "jobId": "b3048c04-773b-478e-8b2c-12445c2ee8af",
-      "recruiterId": "rec_d405829a-ee9",
-      "appliedDate": "2026-10-12T11:10:41.302Z",
-      "currentStatus": "Applied",
-      "withdrawStatus": "Active",
-      "lastUpdated": "2026-10-12T11:10:41.302Z"
-    },
-    {
-      "id": "0c77c661-7936-4c29-9028-3d7ea2ee4e1e",
-      "candidateId": "cand_c4b2a1d1-71b",
-      "jobId": "659e973a-7aae-4be1-a9b2-a94c2ec0f0c4",
-      "recruiterId": "591160ad-315c-4795-bf3a-7661be570915",
-      "appliedDate": "2026-10-12T12:51:13.993Z",
-      "currentStatus": "Applied",
-      "withdrawStatus": "Active",
-      "lastUpdated": "2026-10-12T12:51:13.993Z"
     }
   ],
   "applicationHistory": [
@@ -2576,6 +2523,41 @@
     }
   ],
   "notifications": [
+    {
+      "id": "9535529d-fc6e-41e6-81c3-a439a24a652d",
+      "title": "🚨 New Job Alert: Express Delivery Partner 4402",
+      "message": "Delhivery Test Logistics is hiring Express Delivery Partner 4402 in Gurugram! Salary: ₹22,000 - ₹32,000/Per Month. Immediate Joining.",
+      "type": "NEW_JOB_POSTED",
+      "targetRole": "CANDIDATE",
+      "target_role": "CANDIDATE",
+      "recipientId": "ALL",
+      "recipient_id": "ALL",
+      "jobId": "d7f64c8b-932b-44db-b2c7-0622c738cdf6",
+      "job_id": "d7f64c8b-932b-44db-b2c7-0622c738cdf6",
+      "applicationId": null,
+      "application_id": null,
+      "candidateId": null,
+      "candidate_id": null,
+      "recruiterId": "rec_969ec30b-343f-48b5-aa6e-2e0dfbb75729",
+      "recruiter_id": "rec_969ec30b-343f-48b5-aa6e-2e0dfbb75729",
+      "metadata": {
+        "jobId": "d7f64c8b-932b-44db-b2c7-0622c738cdf6",
+        "title": "Express Delivery Partner 4402",
+        "companyName": "Delhivery Test Logistics",
+        "city": "Gurugram",
+        "state": "Haryana",
+        "workLocation": "Cyber City Hub, Gurugram",
+        "minSalary": 22000,
+        "maxSalary": 32000,
+        "salaryType": "Per Month",
+        "category": "Delivery Jobs",
+        "employmentType": "Full Time"
+      },
+      "isRead": false,
+      "is_read": false,
+      "createdAt": "2026-10-19T05:44:45.575Z",
+      "created_at": "2026-10-19T05:44:45.575Z"
+    },
     {
       "id": "b1f4e47e-3e00-40b1-b0a2-3a1b71d69bfc",
       "title": "⚡ Urgent Candidates Assigned",

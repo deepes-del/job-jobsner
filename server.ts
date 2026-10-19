@@ -4982,8 +4982,15 @@ app.get('/api/admin/recruiters', async (req, res) => {
   }
 });
 
-// Section 1: Directly register a Fake Recruiter
+// Section 1: Directly register a Recruiter with credentials & secure PBKDF2 hash
 app.post('/api/admin/recruiters', async (req, res) => {
+  const adminToken = (req.headers['authorization']?.replace(/^Bearer\s+/i, '').trim()) || 
+                     (req.headers['x-admin-token'] as string) || 
+                     (req.body?.adminToken);
+  if (adminToken && !verifyAdminSessionToken(adminToken)) {
+    return res.status(401).json({ error: 'Unauthorized: Invalid or expired admin session token.' });
+  }
+
   const { 
     recruiterName, 
     mobile, 
@@ -5016,7 +5023,12 @@ app.post('/api/admin/recruiters', async (req, res) => {
       return res.status(400).json({ error: 'A recruiter with this mobile number already exists.' });
     }
 
-    const { salt, hash } = hashPassword(password || 'Recruiter2026!');
+    // Auto-generate strong temporary password if not provided or use admin-assigned password
+    const rawPassword = (typeof password === 'string' && password.trim().length > 0)
+      ? password.trim()
+      : `Jobsner@${Math.floor(100000 + Math.random() * 900000)}`;
+
+    const { salt, hash } = hashPassword(rawPassword);
     const recruiterId = `rec_${crypto.randomUUID()}`;
 
     const newRecruiter = {
@@ -5056,7 +5068,18 @@ app.post('/api/admin/recruiters', async (req, res) => {
     writeDB(db);
 
     const { salt: _s, hash: _h, ...safeRecruiter } = newRecruiter;
-    res.status(201).json({ message: 'Recruiter registered successfully', recruiter: safeRecruiter });
+    res.status(201).json({ 
+      message: 'Recruiter registered successfully', 
+      recruiter: safeRecruiter,
+      credentials: {
+        recruiterId: safeRecruiter.id,
+        recruiterName: safeRecruiter.recruiterName,
+        companyName: safeRecruiter.companyName,
+        email: safeRecruiter.email,
+        mobile: safeRecruiter.mobile,
+        password: rawPassword
+      }
+    });
   } catch (err: any) {
     console.error('[Admin] Error creating recruiter:', err);
     res.status(500).json({ error: 'Server error registering recruiter' });
@@ -5245,6 +5268,13 @@ app.get('/api/admin/jobs/:jobId/allocations', async (req, res) => {
 
 // Directly post a job under a specific recruiter ID
 app.post('/api/admin/jobs', async (req, res) => {
+  const adminToken = (req.headers['authorization']?.replace(/^Bearer\s+/i, '').trim()) || 
+                     (req.headers['x-admin-token'] as string) || 
+                     (req.body?.adminToken);
+  if (adminToken && !verifyAdminSessionToken(adminToken)) {
+    return res.status(401).json({ error: 'Unauthorized: Invalid or expired admin session token.' });
+  }
+
   const {
     recruiterId,
     title,
@@ -5273,47 +5303,52 @@ app.post('/api/admin/jobs', async (req, res) => {
     status
   } = req.body;
 
-  if (!recruiterId || !title || !category || openings === undefined || !employmentType || !state || !city || !area || minSalary === undefined || maxSalary === undefined || !salaryType || !shift || experienceRequired === undefined || !educationRequired || !genderPreference || ageLimitMin === undefined || ageLimitMax === undefined || !bikeRequired || !drivingLicenseRequired || !immediateJoining || !description || !responsibilities || !benefits || !status) {
-    return res.status(400).json({ error: 'Required fields are missing. Please complete the form.' });
+  if (!recruiterId || !title || !category || !state || !city) {
+    return res.status(400).json({ error: 'Recruiter, Job Title, Category, State, and City are required fields.' });
   }
 
   try {
-    const db = readDB();
-    const recruiter = (db.recruiters || []).find((r: any) => r.id === recruiterId);
+    const allRecruiters = await getLiveRecruiters();
+    const recruiter = allRecruiters.find((r: any) => String(r.id) === String(recruiterId));
     if (!recruiter) {
-      return res.status(404).json({ error: 'Recruiter not found.' });
+      return res.status(404).json({ error: 'Selected recruiter not found. Please select an active recruiter.' });
     }
 
+    const db = readDB();
     db.jobs = db.jobs || [];
+
+    const finalCompanyName = (req.body.companyName && String(req.body.companyName).trim()) || recruiter.companyName || recruiter.company_name || 'Hiring Partner';
+    const finalCompanyLogo = (req.body.companyLogo && String(req.body.companyLogo).trim()) || recruiter.companyLogo || recruiter.company_logo || '';
+
     const newJobRaw = {
       id: crypto.randomUUID(),
-      recruiterId: recruiter.id,
-      companyName: recruiter.companyName,
-      companyLogo: recruiter.companyLogo || '',
-      title: title.trim(),
-      category: category.trim(),
-      openings: Number(openings),
-      employmentType: employmentType.trim(),
-      state: state.trim(),
-      city: city.trim(),
-      area: area.trim(),
-      workLocation: workLocation ? workLocation.trim() : '',
-      minSalary: Number(minSalary),
-      maxSalary: Number(maxSalary),
-      salaryType: salaryType.trim(),
-      shift: shift.trim(),
-      experienceRequired: Number(experienceRequired),
-      educationRequired: educationRequired.trim(),
-      genderPreference: genderPreference.trim(),
-      ageLimitMin: Number(ageLimitMin),
-      ageLimitMax: Number(ageLimitMax),
-      bikeRequired: bikeRequired.trim(),
-      drivingLicenseRequired: drivingLicenseRequired.trim(),
-      immediateJoining: immediateJoining.trim(),
-      description: description.trim(),
-      responsibilities: responsibilities.trim(),
-      benefits: benefits.trim(),
-      status: status.trim(),
+      recruiterId: String(recruiter.id),
+      companyName: finalCompanyName,
+      companyLogo: finalCompanyLogo,
+      title: String(title).trim(),
+      category: String(category).trim(),
+      openings: Number(openings) || 1,
+      employmentType: (employmentType || 'Full Time').trim(),
+      state: String(state).trim(),
+      city: String(city).trim(),
+      area: (area ? String(area).trim() : ''),
+      workLocation: (workLocation ? String(workLocation).trim() : (area ? `${String(area).trim()}, ${String(city).trim()}` : String(city).trim())),
+      minSalary: minSalary !== undefined && minSalary !== null ? Number(minSalary) : 15000,
+      maxSalary: maxSalary !== undefined && maxSalary !== null ? Number(maxSalary) : 25000,
+      salaryType: (salaryType || 'Per Month').trim(),
+      shift: (shift || 'Day Shift').trim(),
+      experienceRequired: experienceRequired !== undefined && experienceRequired !== null ? Number(experienceRequired) : 0,
+      educationRequired: (educationRequired || '10th Pass or below').trim(),
+      genderPreference: (genderPreference || 'Any').trim(),
+      ageLimitMin: ageLimitMin !== undefined && ageLimitMin !== null ? Number(ageLimitMin) : 18,
+      ageLimitMax: ageLimitMax !== undefined && ageLimitMax !== null ? Number(ageLimitMax) : 45,
+      bikeRequired: (bikeRequired || 'No').trim(),
+      drivingLicenseRequired: (drivingLicenseRequired || 'No').trim(),
+      immediateJoining: (immediateJoining || 'Yes').trim(),
+      description: (description ? String(description).trim() : `Hiring ${title} for ${finalCompanyName} in ${city}. Immediate joining opportunities available.`),
+      responsibilities: (responsibilities ? String(responsibilities).trim() : 'Deliver packages safely and punctually. Adhere to company delivery standards and route guidelines.'),
+      benefits: (benefits ? String(benefits).trim() : 'Performance incentives, accidental insurance, flexible payouts, joining bonus.'),
+      status: (status || 'Published').trim(),
       applicationsCount: 0,
       viewsCount: 0,
       createdAt: new Date().toISOString(),
