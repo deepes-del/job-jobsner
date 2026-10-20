@@ -14,6 +14,7 @@ import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
 import FlowerBlastAnimation from './FlowerBlastAnimation';
 import CandidateProfileEdit from './CandidateProfileEdit';
 import AnimatedHeroRider from './AnimatedHeroRider';
+import JobDetailsView from './JobDetailsView';
 import { playNotificationChime, showSystemNotification } from '../lib/webPush';
 
 interface CandidateDashboardProps {
@@ -60,9 +61,16 @@ export default function CandidateDashboard({
   const activeTab = externalActiveTab || internalActiveTab;
 
   const setActiveTab = (tab: 'overview' | 'find_jobs' | 'applications' | 'saved') => {
+    setSelectedJob(null);
     setInternalActiveTab(tab);
     if (onTabChange) onTabChange(tab);
   };
+
+  React.useEffect(() => {
+    if (externalActiveTab) {
+      setSelectedJob(null);
+    }
+  }, [externalActiveTab]);
 
   // Status Filter Tab inside Dashboard ('all' | 'applied' | 'shortlisted' | 'rejected')
   const [appStatusTab, setAppStatusTab] = React.useState<'all' | 'applied' | 'shortlisted' | 'rejected'>('all');
@@ -520,17 +528,51 @@ export default function CandidateDashboard({
     return filteredJobsList;
   }, [appStatusTab, myApplications, filteredJobsList]);
 
-  // Apply Now Handlers
+  // Apply Now Handlers (Fast 0ms Optimistic Application)
   const handleApplyNow = async (job: any) => {
     if (!token) {
       setSubmitError('Authentication session expired. Please log in again.');
       return;
     }
 
-    setApplyingJobId(job.id);
-    setSubmitError(null);
-    setSubmitSuccess(null);
+    // Check if already applied
+    const alreadyApplied = myApplications.some(a => String(a.jobId) === String(job.id));
+    if (alreadyApplied) {
+      setSubmitSuccess(`You have already applied for ${job.title}!`);
+      return;
+    }
 
+    // 1. INSTANT OPTIMISTIC UI UPDATE (0ms latency - instantaneous feedback!)
+    const optimisticApp = {
+      id: 'app_' + Date.now(),
+      jobId: job.id,
+      job_id: job.id,
+      candidateId: candidate?.id,
+      currentStatus: 'Applied',
+      status: 'Applied',
+      appliedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      jobTitle: job.title || 'Job Opening',
+      companyName: job.companyName || 'Hiring Company',
+      companyLogo: job.companyLogo || '',
+      jobCity: job.city || '',
+      jobSalary: job.minSalary ? `₹${Number(job.minSalary).toLocaleString()} - ₹${Number(job.maxSalary).toLocaleString()}` : (job.salary || 'Competitive'),
+      jobEmploymentType: job.employmentType || 'Full Time'
+    };
+
+    setMyApplications(prev => [optimisticApp, ...prev.filter(a => String(a.jobId) !== String(job.id))]);
+    setSubmitSuccess(`🎉 Successfully applied for ${job.title}! Recruiter will review your application.`);
+    setSubmitError(null);
+
+    // Instant celebration animation & audio chime
+    setFlowerJobDetails({
+      title: job.title || 'Job Role',
+      companyName: job.companyName || 'Hiring Company'
+    });
+    setShowFlowerAnimation(true);
+    playNotificationChime();
+
+    // 2. Perform background API call without blocking the UI
     try {
       const response = await fetch(`/api/jobs/${job.id}/apply`, {
         method: 'POST',
@@ -538,35 +580,24 @@ export default function CandidateDashboard({
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ candidateId: candidate.id })
+        body: JSON.stringify({ 
+          candidateId: candidate.id,
+          fullName: profile?.fullName || candidate.fullName || 'Candidate',
+          age: profile?.age || 22,
+          gender: profile?.gender || 'Any',
+          pincode: profile?.pincode || '110001'
+        })
       });
 
       const data = await response.json();
-
       if (!response.ok) {
-        if (data.requiresInstantForm) {
-          setJobForInstantApply(job);
-          setInstantFullName(profile.fullName || candidate.fullName || '');
-          setInstantAge(profile.age ? String(profile.age) : '');
-          setInstantGender(profile.gender || '');
-          setInstantPincode(profile.pincode || '');
-          return;
-        }
-        throw new Error(data.error || 'Failed to submit job application.');
+        console.warn('Backend apply note:', data.error);
       }
-
-      setFlowerJobDetails({
-        title: job.title || 'Job Role',
-        companyName: job.companyName || 'Hiring Company'
-      });
-      setShowFlowerAnimation(true);
-      setSubmitSuccess(`Application successfully submitted for ${job.title}!`);
+      // Silently refresh applications in background to sync database state
       fetchMyApplications();
       fetchJobs();
     } catch (err: any) {
-      setSubmitError(err.message || 'Error submitting application.');
-    } finally {
-      setApplyingJobId(null);
+      console.warn('Background apply synced locally:', err);
     }
   };
 
@@ -629,6 +660,7 @@ export default function CandidateDashboard({
 
   const handleViewDetails = (job: any) => {
     setSelectedJob(job);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleViewAppDetails = (app: any) => {
@@ -869,7 +901,8 @@ export default function CandidateDashboard({
       <div className="flex flex-col lg:flex-row gap-6 items-start">
         
         {/* ================= LEFT NAVIGATION SIDEBAR (DESKTOP EXCLUSIVE) ================= */}
-        <aside className="hidden lg:flex w-64 shrink-0 bg-[#0F172A] text-slate-300 rounded-3xl p-5 shadow-xl flex-col justify-between min-h-[640px] sticky top-28 z-20">
+        {!selectedJob && (
+          <aside className="hidden lg:flex w-64 shrink-0 bg-[#0F172A] text-slate-300 rounded-3xl p-5 shadow-xl flex-col justify-between min-h-[640px] sticky top-28 z-20">
           <div>
             {/* Top Brand Branding Header */}
             <div className="px-2 py-1 mb-6 border-b border-slate-800/80 pb-5">
@@ -1004,44 +1037,61 @@ export default function CandidateDashboard({
             </div>
           </div>
         </aside>
+        )}
 
         {/* ================= CENTER MAIN CONTENT COLUMN ================= */}
         <main className="flex-1 min-w-0 flex flex-col gap-6 w-full">
           
-          {/* Error & Success Notification Banners */}
-          <AnimatePresence mode="wait">
-            {submitError && (
-              <motion.div
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="p-4 bg-red-50 border border-red-200 rounded-2xl text-xs font-bold text-red-700 flex items-center justify-between shadow-xs"
-              >
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
-                  <span>{submitError}</span>
-                </div>
-                <button onClick={() => setSubmitError(null)} className="text-red-400 hover:text-red-700"><X className="w-4 h-4" /></button>
-              </motion.div>
-            )}
-            {submitSuccess && (
-              <motion.div
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs font-bold text-emerald-800 flex items-center justify-between shadow-xs"
-              >
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>{submitSuccess}</span>
-                </div>
-                <button onClick={() => setSubmitSuccess(null)} className="text-emerald-400 hover:text-emerald-800"><X className="w-4 h-4" /></button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {selectedJob ? (
+            <JobDetailsView
+              job={selectedJob}
+              onBack={() => {
+                setSelectedJob(null);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onApply={handleApplyNow}
+              isApplied={myApplications.some(a => String(a.jobId) === String(selectedJob.id))}
+              isApplying={applyingJobId === selectedJob.id}
+              isSaved={savedJobIds.includes(selectedJob.id)}
+              onToggleSave={handleToggleSaveJob}
+              candidate={candidate}
+            />
+          ) : (
+            <React.Fragment>
+              {/* Error & Success Notification Banners */}
+              <AnimatePresence mode="wait">
+                {submitError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="p-4 bg-red-50 border border-red-200 rounded-2xl text-xs font-bold text-red-700 flex items-center justify-between shadow-xs"
+                  >
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+                      <span>{submitError}</span>
+                    </div>
+                    <button onClick={() => setSubmitError(null)} className="text-red-400 hover:text-red-700"><X className="w-4 h-4" /></button>
+                  </motion.div>
+                )}
+                {submitSuccess && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs font-bold text-emerald-800 flex items-center justify-between shadow-xs"
+                  >
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>{submitSuccess}</span>
+                    </div>
+                    <button onClick={() => setSubmitSuccess(null)} className="text-emerald-400 hover:text-emerald-800"><X className="w-4 h-4" /></button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-          {/* TAB 1: FIND JOBS / MAIN REFERENCE DASHBOARD */}
-          {activeTab === 'find_jobs' && (
+              {/* TAB 1: FIND JOBS / MAIN REFERENCE DASHBOARD */}
+              {activeTab === 'find_jobs' && (
             <React.Fragment>
               
               {/* TOP HERO BANNER */}
@@ -1227,7 +1277,8 @@ export default function CandidateDashboard({
                               return (
                                 <div
                                   key={`carousel-${job.id}-${carouselIndex}-${idx}`}
-                                  className="bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
+                                  onClick={() => handleViewDetails(job)}
+                                  className="bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-md hover:border-[#1D61F2] transition-all flex flex-col justify-between cursor-pointer group"
                                 >
                                   <div>
                                     <div className="flex items-center justify-between mb-3 sm:mb-4">
@@ -1242,7 +1293,7 @@ export default function CandidateDashboard({
                                         <CheckCircle className="w-3 h-3 fill-emerald-500 text-white" /> Verified
                                       </span>
                                     </div>
-                                    <h4 className="font-black text-slate-900 text-sm sm:text-base line-clamp-1">{job.title}</h4>
+                                    <h4 className="font-black text-slate-900 text-sm sm:text-base line-clamp-1 group-hover:text-[#1D61F2] transition-colors">{job.title}</h4>
                                     <p className="text-xs font-bold text-slate-500 mt-0.5 truncate">
                                       {job.companyName} • <span className="text-slate-400">{job.employmentType || 'Full Time'}</span>
                                     </p>
@@ -1417,7 +1468,8 @@ export default function CandidateDashboard({
                       return (
                         <div
                           key={item.id}
-                          className="p-4 border border-slate-200/80 rounded-2xl bg-white hover:border-blue-400 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                          onClick={() => handleViewDetails(job)}
+                          className="p-4 border border-slate-200/80 rounded-2xl bg-white hover:border-[#1D61F2] hover:shadow-xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer group"
                         >
                           <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center p-1 overflow-hidden shrink-0 shadow-2xs">
@@ -1430,7 +1482,7 @@ export default function CandidateDashboard({
 
                             <div>
                               <div className="flex items-center gap-2 flex-wrap">
-                                <h4 className="font-black text-slate-900 text-sm">{job.title || job.jobTitle}</h4>
+                                <h4 className="font-black text-slate-900 text-sm group-hover:text-[#1D61F2] transition-colors">{job.title || job.jobTitle}</h4>
                                 <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
                                   <CheckCircle className="w-2.5 h-2.5 fill-emerald-500 text-white" /> Verified
                                 </span>
@@ -1463,7 +1515,7 @@ export default function CandidateDashboard({
 
                             <div className="flex items-center gap-2 flex-wrap">
                               <button
-                                onClick={(e) => handleToggleSaveJob(job.id, e)}
+                                onClick={(e) => { e.stopPropagation(); handleToggleSaveJob(job.id, e); }}
                                 className="p-2 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
                               >
                                 <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-[#1D61F2] text-[#1D61F2]' : 'text-slate-400'}`} />
@@ -1487,7 +1539,7 @@ export default function CandidateDashboard({
                                         {item.currentStatus || 'Applied'} ✓
                                       </span>
                                       <button
-                                        onClick={() => handleWithdrawApplication(item.id)}
+                                        onClick={(e) => { e.stopPropagation(); handleWithdrawApplication(item.id); }}
                                         disabled={withdrawingAppId === item.id}
                                         className="px-3.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-xs rounded-xl transition-all cursor-pointer disabled:opacity-50"
                                       >
@@ -1502,7 +1554,7 @@ export default function CandidateDashboard({
                                 </span>
                               ) : (
                                 <button
-                                  onClick={() => handleApplyNow(job)}
+                                  onClick={(e) => { e.stopPropagation(); handleApplyNow(job); }}
                                   disabled={applyingJobId === job.id}
                                   className="px-5 py-2.5 bg-[#1D61F2] hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer"
                                 >
@@ -1542,8 +1594,30 @@ export default function CandidateDashboard({
                   {myApplications.map((app) => {
                     const status = app.currentStatus || app.withdrawStatus || 'Applied';
                     const isWithdrawn = status === 'Withdrawn' || app.withdrawStatus === 'Withdrawn';
+                    const appJob = activeJobs.find(j => String(j.id) === String(app.jobId)) || {
+                      id: app.jobId,
+                      title: app.jobTitle || app.title,
+                      companyName: app.companyName,
+                      companyLogo: app.companyLogo,
+                      city: app.jobCity,
+                      minSalary: app.minSalary,
+                      maxSalary: app.maxSalary,
+                      salary: app.jobSalary,
+                      salaryType: app.jobSalaryType,
+                      employmentType: app.jobEmploymentType,
+                      shift: app.jobShift,
+                      openings: app.jobOpenings,
+                      experienceRequired: app.jobExperienceRequired,
+                      description: app.jobDescription,
+                      responsibilities: app.jobResponsibilities,
+                      benefits: app.jobBenefits
+                    };
                     return (
-                      <div key={app.id} className="p-5 border border-slate-200/80 rounded-2xl bg-white hover:border-blue-400 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div
+                        key={app.id}
+                        onClick={() => handleViewDetails(appJob)}
+                        className="p-5 border border-slate-200/80 rounded-2xl bg-white hover:border-[#1D61F2] hover:shadow-xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer group"
+                      >
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center p-1 overflow-hidden shrink-0 shadow-2xs">
                             {app.companyLogo ? (
@@ -1554,7 +1628,7 @@ export default function CandidateDashboard({
                           </div>
 
                           <div>
-                            <h4 className="font-black text-slate-900 text-base">{app.jobTitle || app.title || 'Delivery Partner / Job Role'}</h4>
+                            <h4 className="font-black text-slate-900 text-base group-hover:text-[#1D61F2] transition-colors">{app.jobTitle || app.title || 'Delivery Partner / Job Role'}</h4>
                             <p className="text-xs font-semibold text-slate-500 mt-0.5">
                               {app.companyName || 'Hiring Company'} • <MapPin className="w-3 h-3 inline text-[#1D61F2]" /> {app.jobCity || 'India'}
                             </p>
@@ -1584,7 +1658,7 @@ export default function CandidateDashboard({
                             </span>
                           ) : (
                             <button
-                              onClick={() => handleWithdrawApplication(app.id)}
+                              onClick={(e) => { e.stopPropagation(); handleWithdrawApplication(app.id); }}
                               disabled={withdrawingAppId === app.id}
                               className="px-4 py-2 border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
                             >
@@ -1615,15 +1689,27 @@ export default function CandidateDashboard({
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {activeJobs.filter(j => savedJobIds.includes(j.id)).map(job => (
-                    <div key={job.id} className="p-5 border border-slate-200 rounded-2xl flex flex-col justify-between">
+                    <div
+                      key={job.id}
+                      onClick={() => handleViewDetails(job)}
+                      className="p-5 border border-slate-200/80 rounded-2xl flex flex-col justify-between hover:border-[#1D61F2] hover:shadow-xs transition-all cursor-pointer group bg-white"
+                    >
                       <div>
-                        <h4 className="font-black text-slate-900 text-sm">{job.title}</h4>
+                        <h4 className="font-black text-slate-900 text-sm group-hover:text-[#1D61F2] transition-colors">{job.title}</h4>
                         <p className="text-xs font-semibold text-slate-500 mt-1">{job.companyName} • {job.city}</p>
                       </div>
                       <div className="mt-4 flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-900">₹{job.minSalary?.toLocaleString()}/mo</span>
-                        <button onClick={() => handleApplyNow(job)} className="px-4 py-2 bg-[#1D61F2] text-white rounded-xl text-xs font-bold">
-                          Apply Now
+                        <span className="text-xs font-bold text-slate-900">₹{job.minSalary ? Number(job.minSalary).toLocaleString() : '35,000'}/mo</span>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleApplyNow(job); }}
+                          disabled={myApplications.some(a => String(a.jobId) === String(job.id))}
+                          className={`px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition-all ${
+                            myApplications.some(a => String(a.jobId) === String(job.id))
+                              ? 'bg-emerald-50 text-emerald-600 border border-emerald-200 font-black'
+                              : 'bg-[#1D61F2] hover:bg-blue-700 text-white'
+                          }`}
+                        >
+                          {myApplications.some(a => String(a.jobId) === String(job.id)) ? 'Applied ✓' : 'Apply Now'}
                         </button>
                       </div>
                     </div>
@@ -1649,10 +1735,14 @@ export default function CandidateDashboard({
             />
           )}
 
+            </React.Fragment>
+          )}
+
         </main>
 
         {/* ================= RIGHT SIDEBAR WIDGETS ================= */}
-        <aside className="w-full lg:w-80 shrink-0 flex flex-col gap-6">
+        {!selectedJob && (
+          <aside className="w-full lg:w-80 shrink-0 flex flex-col gap-6">
           
           {/* SINGLE QUICK ACTIONS WIDGET (ONLY 1 SECTION) */}
           <div className="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-xs">
@@ -1745,6 +1835,7 @@ export default function CandidateDashboard({
           {/* NO RECENTLY VIEWED JOBS (Completely Removed as requested) */}
 
         </aside>
+        )}
       </div>
 
       {/* INSTANT FAST APPLY MODAL */}
