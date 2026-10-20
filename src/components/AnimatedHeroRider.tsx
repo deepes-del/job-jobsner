@@ -31,7 +31,7 @@ export const AnimatedHeroRider: React.FC<AnimatedHeroRiderProps> = ({
           scale: [0.95, 1.1, 1.02],
         }}
         transition={{ duration: 2.5, repeat: Infinity, repeatType: 'reverse' }}
-        className="absolute w-72 h-72 sm:w-96 sm:h-96 bg-blue-400/30 rounded-full blur-3xl -z-10 pointer-events-none"
+        className="absolute w-48 h-48 sm:w-96 sm:h-96 bg-blue-400/30 rounded-full blur-2xl sm:blur-3xl -z-10 pointer-events-none"
       />
 
       {/* Main Animated Assembly: Rider + Scooter moving down the road */}
@@ -55,7 +55,7 @@ export const AnimatedHeroRider: React.FC<AnimatedHeroRiderProps> = ({
             initial={{ opacity: 0, scale: 0.4, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 15, delay: 0.2 }}
-            className="absolute -top-10 right-4 sm:right-8 z-30 bg-white text-[#1D61F2] px-3.5 py-1.5 rounded-2xl shadow-xl font-black text-xs sm:text-sm flex items-center gap-1.5 border-2 border-blue-200"
+            className="absolute -top-7 sm:-top-10 right-2 sm:right-8 z-30 bg-white text-[#1D61F2] px-2 sm:px-3.5 py-1 sm:py-1.5 rounded-xl sm:rounded-2xl shadow-xl font-black text-[10px] sm:text-xs flex items-center gap-1 sm:gap-1.5 border border-blue-200"
           >
             <span>On Time Delivery!</span>
             <motion.span
@@ -64,7 +64,7 @@ export const AnimatedHeroRider: React.FC<AnimatedHeroRiderProps> = ({
             >
               🚀
             </motion.span>
-            <div className="absolute -bottom-1.5 right-6 w-3 h-3 bg-white rotate-45 border-r-2 border-b-2 border-blue-200" />
+            <div className="absolute -bottom-1.5 right-4 sm:right-6 w-2.5 sm:w-3 h-2.5 sm:h-3 bg-white rotate-45 border-r border-b border-blue-200" />
           </motion.div>
         )}
 
@@ -74,11 +74,11 @@ export const AnimatedHeroRider: React.FC<AnimatedHeroRiderProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: [0.3, 0.9, 0.3], x: [-10, -80] }}
             transition={{ duration: 0.35, repeat: Infinity, ease: 'linear' }}
-            className="absolute -left-12 top-1/3 flex flex-col gap-2 z-0 pointer-events-none"
+            className="absolute -left-8 sm:-left-12 top-1/3 flex flex-col gap-1.5 sm:gap-2 z-0 pointer-events-none"
           >
-            <div className="w-16 sm:w-24 h-1 bg-white/80 rounded-full" />
-            <div className="w-10 sm:w-16 h-1 bg-blue-200/70 rounded-full ml-4" />
-            <div className="w-20 sm:w-28 h-1 bg-white/90 rounded-full -ml-2" />
+            <div className="w-12 sm:w-24 h-0.5 sm:h-1 bg-white/80 rounded-full" />
+            <div className="w-8 sm:w-16 h-0.5 sm:h-1 bg-blue-200/70 rounded-full ml-2 sm:ml-4" />
+            <div className="w-14 sm:w-28 h-0.5 sm:h-1 bg-white/90 rounded-full -ml-1 sm:-ml-2" />
           </motion.div>
         )}
 
@@ -86,22 +86,22 @@ export const AnimatedHeroRider: React.FC<AnimatedHeroRiderProps> = ({
         <img
           src={imageSrc}
           alt="Animated Delivery Rider"
-          className="h-48 sm:h-56 lg:h-64 w-auto object-contain filter drop-shadow-2xl scale-110 sm:scale-125"
+          className="h-32 xs:h-40 sm:h-56 lg:h-64 w-auto object-contain filter drop-shadow-2xl scale-105 sm:scale-125"
         />
 
         {/* Ground Contact Wheel Shadow */}
-        <div className="w-4/5 h-3 bg-slate-950/30 rounded-full blur-xs mt-1" />
+        <div className="w-4/5 h-2.5 sm:h-3 bg-slate-950/30 rounded-full blur-xs mt-1" />
       </motion.div>
 
       {/* Moving Road Track under Rider */}
-      <div className="relative w-full h-3 mt-1 overflow-hidden rounded-full bg-blue-900/40 border-t border-white/20 flex items-center">
+      <div className="relative w-full h-2.5 sm:h-3 mt-1 overflow-hidden rounded-full bg-blue-900/40 border-t border-white/20 flex items-center">
         <motion.div
           animate={{ x: [0, -80] }}
           transition={{ duration: 0.6, repeat: Infinity, ease: 'linear' }}
-          className="flex items-center gap-6 w-[200%] shrink-0"
+          className="flex items-center gap-4 sm:gap-6 w-[200%] shrink-0"
         >
           {Array.from({ length: 16 }).map((_, i) => (
-            <div key={i} className="w-8 h-1 bg-white/70 rounded-full shrink-0 shadow-xs" />
+            <div key={i} className="w-6 sm:w-8 h-0.5 sm:h-1 bg-white/70 rounded-full shrink-0 shadow-xs" />
           ))}
         </motion.div>
       </div>

@@ -365,18 +365,18 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans max-w-full overflow-x-hidden" id="app-root-container">
       {/* Top Navbar Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-30 shrink-0 shadow-xs py-1" id="global-navbar">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 min-h-[60px] sm:h-20 md:h-22 py-1.5 flex items-center justify-between gap-2 sm:gap-4">
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-30 shrink-0 shadow-xs py-0 sm:py-1" id="global-navbar">
+        <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 h-12 sm:h-20 md:h-22 flex items-center justify-between gap-1.5 sm:gap-4">
           
           {/* Logo brand */}
           <div 
             onClick={handleLogoClick}
-            className="flex items-center gap-2 sm:gap-3 select-none cursor-pointer group active:scale-95 transition-all" 
+            className="flex items-center gap-1.5 sm:gap-3 select-none cursor-pointer group active:scale-95 transition-all" 
             id="navbar-brand"
           >
-            <JobsnerLogo size="xl" className="h-10 sm:h-14 md:h-18" />
+            <JobsnerLogo size="xl" className="h-7 sm:h-14 md:h-18" />
             {userRole !== null && userRole !== 'candidate' && (
-              <span className="text-[11px] font-bold text-[#1D61F2] uppercase bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-full tracking-wider shrink-0 hidden xs:inline-block ml-1">
+              <span className="text-[10px] sm:text-[11px] font-bold text-[#1D61F2] uppercase bg-blue-50 border border-blue-100 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full tracking-wider shrink-0 hidden xs:inline-block ml-1">
                 {portal === 'candidate' ? 'Candidate Portal' : 'Recruiter Portal'}
               </span>
             )}
@@ -417,30 +417,30 @@ export default function App() {
           ) : null}
 
           {/* Right Controls: Notifications + User Profile Badge (Matching Reference Image) */}
-          <div className="flex items-center gap-3 sm:gap-4" id="navbar-controls">
+          <div className="flex items-center gap-1.5 sm:gap-4" id="navbar-controls">
             {isCandidateLoggedIn && portal === 'candidate' && candidate ? (
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1.5 sm:gap-4">
                 {/* Notification Bell */}
                 <button 
                   onClick={() => setIsNotificationModalOpen(true)}
-                  className="relative cursor-pointer p-2 hover:bg-gray-100 rounded-full text-slate-700 transition-colors border-none bg-transparent" 
+                  className="relative cursor-pointer p-1.5 sm:p-2 hover:bg-gray-100 rounded-full text-slate-700 transition-colors border-none bg-transparent" 
                   title="View Notifications"
                   id="header-notification-bell"
                 >
-                  <Bell className="w-5 h-5 text-slate-700" />
-                  <span className="absolute top-1 right-1 w-4 h-4 bg-[#1D61F2] text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-xs">
+                  <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-slate-700" />
+                  <span className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-[#1D61F2] text-white text-[9px] sm:text-[10px] font-black rounded-full flex items-center justify-center shadow-xs">
                     3
                   </span>
                 </button>
 
                 {/* Profile Badge & Logout Control */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2">
                   <div 
                     onClick={() => setCandidateActiveTab('overview')} 
-                    className="flex items-center gap-2.5 pl-3 border-l border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
+                    className="flex items-center gap-1.5 sm:gap-2.5 pl-1.5 sm:pl-3 border-l border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
                     title="View Profile"
                   >
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-sky-400 to-blue-600 overflow-hidden border-2 border-white shadow-xs shrink-0 flex items-center justify-center text-white font-extrabold text-xs">
+                    <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-gradient-to-tr from-sky-400 to-blue-600 overflow-hidden border border-white shadow-xs shrink-0 flex items-center justify-center text-white font-extrabold text-[10px] sm:text-xs">
                       {candidate.profile?.profilePhoto ? (
                         <img src={candidate.profile.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
                       ) : (
@@ -458,11 +458,11 @@ export default function App() {
                   </div>
                   <button
                     onClick={handleCandidateLogout}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/60 rounded-xl text-xs font-extrabold transition-all cursor-pointer shadow-2xs ml-1"
+                    className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/60 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-extrabold transition-all cursor-pointer shadow-2xs ml-0.5 sm:ml-1"
                     title="Log Out of Candidate Account"
                     id="header-candidate-logout-btn"
                   >
-                    <LogOut className="w-3.5 h-3.5" />
+                    <LogOut className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     <span className="hidden sm:inline">Log Out</span>
                   </button>
                 </div>
@@ -484,7 +484,7 @@ export default function App() {
                       setRecruiterView('login');
                     }
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 hover:border-orange-500 hover:text-orange-600 rounded-lg text-xs font-bold transition-all cursor-pointer text-gray-600 bg-white"
+                  className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 border border-gray-200 hover:border-orange-500 hover:text-orange-600 rounded-lg text-xs font-bold transition-all cursor-pointer text-gray-600 bg-white"
                   id="switch-to-recruiter-portal"
                 >
                   <Briefcase className="w-3.5 h-3.5" /> For Employers
@@ -492,18 +492,18 @@ export default function App() {
               </div>
             ) : (
               isRecruiterLoggedIn ? (
-                <div className="flex items-center gap-2 sm:gap-2.5">
+                <div className="flex items-center gap-1.5 sm:gap-2.5">
                   <span className={`w-2.5 h-2.5 rounded-full animate-pulse shrink-0 ${recruiter?.status === 'Approved' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                   <span className="hidden sm:inline text-xs font-semibold text-gray-700 truncate max-w-[200px]">
                     {recruiter?.recruiterName} ({recruiter?.companyName})
                   </span>
                   <button
                     onClick={handleRecruiterLogout}
-                    className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/70 rounded-xl text-xs font-extrabold transition-all cursor-pointer shadow-2xs ml-1"
+                    className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/70 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-extrabold transition-all cursor-pointer shadow-2xs ml-0.5 sm:ml-1"
                     title="Log Out of Recruiter Account"
                     id="header-recruiter-logout-btn"
                   >
-                    <LogOut className="w-3.5 h-3.5" />
+                    <LogOut className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     <span>Log Out</span>
                   </button>
                 </div>
