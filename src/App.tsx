@@ -427,8 +427,8 @@ export default function App() {
                   title="View Notifications"
                   id="header-notification-bell"
                 >
-                  <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-slate-700" />
-                  <span className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-[#1D61F2] text-white text-[9px] sm:text-[10px] font-black rounded-full flex items-center justify-center shadow-xs">
+                  <Bell className="w-5 h-5 text-slate-700" />
+                  <span className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-4 h-4 bg-[#1D61F2] text-white text-[9px] sm:text-[10px] font-black rounded-full flex items-center justify-center shadow-xs">
                     3
                   </span>
                 </button>
@@ -441,7 +441,7 @@ export default function App() {
                     className="flex items-center gap-1.5 sm:gap-2.5 sm:pl-3 sm:border-l sm:border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
                     title="View Profile"
                   >
-                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-tr from-sky-400 to-blue-600 overflow-hidden border-2 border-white shadow-sm shrink-0 flex items-center justify-center text-white font-extrabold text-[11px] sm:text-xs">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-sky-400 to-blue-600 overflow-hidden border-2 border-white shadow-sm shrink-0 flex items-center justify-center text-white font-extrabold text-[12px] sm:text-xs">
                       {candidate.profile?.profilePhoto ? (
                         <img src={candidate.profile.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
                       ) : (

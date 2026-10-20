@@ -55,7 +55,7 @@ export const AnimatedHeroRider: React.FC<AnimatedHeroRiderProps> = ({
             initial={{ opacity: 0, scale: 0.4, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 15, delay: 0.2 }}
-            className="absolute -top-7 sm:-top-10 right-2 sm:right-8 z-30 bg-white text-[#1D61F2] px-2 sm:px-3.5 py-1 sm:py-1.5 rounded-xl sm:rounded-2xl shadow-xl font-black text-[10px] sm:text-xs flex items-center gap-1 sm:gap-1.5 border border-blue-200"
+            className="absolute -top-9 sm:-top-10 right-1 sm:right-8 z-30 bg-white text-[#1D61F2] px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 rounded-xl sm:rounded-2xl shadow-xl font-black text-[11px] sm:text-xs flex items-center gap-1 sm:gap-1.5 border border-blue-200 whitespace-nowrap"
           >
             <span>On Time Delivery!</span>
             <motion.span
@@ -86,7 +86,7 @@ export const AnimatedHeroRider: React.FC<AnimatedHeroRiderProps> = ({
         <img
           src={imageSrc}
           alt="Animated Delivery Rider"
-          className="h-28 sm:h-56 lg:h-64 w-auto object-contain filter drop-shadow-2xl sm:scale-125"
+          className="h-36 sm:h-56 lg:h-64 w-auto object-contain filter drop-shadow-2xl sm:scale-125"
         />
 
         {/* Ground Contact Wheel Shadow */}

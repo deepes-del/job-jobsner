@@ -1076,28 +1076,28 @@ export default function CandidateDashboard({
             <React.Fragment>
               
               {/* TOP HERO BANNER */}
-              <div className="w-full bg-gradient-to-r from-[#0052D4] via-[#2B63FF] to-[#4379FF] rounded-2xl sm:rounded-3xl px-3 py-3 sm:p-7 lg:p-8 text-white shadow-xl relative overflow-hidden flex flex-row items-center justify-between gap-2 border border-blue-400/20 min-h-[158px] sm:min-h-[225px]">
+              <div className="w-full bg-gradient-to-r from-[#0052D4] via-[#2B63FF] to-[#4379FF] rounded-2xl sm:rounded-3xl px-3 py-4 sm:p-7 lg:p-8 text-white shadow-xl relative overflow-visible flex flex-row items-center justify-between gap-2 border border-blue-400/20 min-h-[190px] sm:min-h-[225px]">
                 {/* Ambient Background Glow Effects */}
                 <div className="absolute -left-12 -top-12 w-48 h-48 sm:w-64 sm:h-64 bg-blue-400/25 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute right-0 bottom-0 w-60 h-60 sm:w-80 sm:h-80 bg-indigo-500/30 rounded-full blur-3xl pointer-events-none" />
 
-                <div className="relative z-10 flex-1 max-w-[57%] sm:max-w-lg space-y-1 sm:space-y-2.5">
-                  <div className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-[8px] sm:text-[11px] font-extrabold border border-white/20">
+                <div className="relative z-10 flex-1 max-w-[54%] sm:max-w-lg space-y-1.5 sm:space-y-2.5">
+                  <div className="inline-flex items-center gap-1 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-[9px] sm:text-[11px] font-extrabold border border-white/20">
                     <Sparkles className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-yellow-300" /> #1 Delivery Hiring Platform
                   </div>
-                  <h1 className="text-[18px] leading-tight sm:text-3xl lg:text-4xl font-black text-white tracking-tight">
+                  <h1 className="text-[22px] leading-tight sm:text-3xl lg:text-4xl font-black text-white tracking-tight">
                     Better Jobs<br /><span>Brighter Future</span>
                   </h1>
-                  <p className="text-blue-100 text-[9px] sm:text-xs font-medium leading-snug max-w-[185px] sm:max-w-sm line-clamp-2 sm:line-clamp-none">
+                  <p className="text-blue-100 text-[10px] sm:text-xs font-medium leading-snug max-w-[200px] sm:max-w-sm line-clamp-2 sm:line-clamp-none">
                     Find top talent &amp; verified job opportunities faster with Jobsner!
                   </p>
-                  <div className="pt-0.5 sm:pt-2">
+                  <div className="pt-1 sm:pt-2">
                     <button
                       onClick={() => {
                         const el = document.getElementById('jobs-search-input');
                         if (el) el.focus();
                       }}
-                      className="bg-white text-[#1D61F2] hover:bg-blue-50 font-black px-3.5 sm:px-6 py-1.5 sm:py-2.5 rounded-full text-[11px] sm:text-sm transition-all shadow-md inline-flex items-center gap-1.5 cursor-pointer active:scale-95"
+                      className="bg-white text-[#1D61F2] hover:bg-blue-50 font-black px-4 sm:px-6 py-2 sm:py-2.5 rounded-full text-[11px] sm:text-sm transition-all shadow-md inline-flex items-center gap-1.5 cursor-pointer active:scale-95"
                     >
                       Search Jobs →
                     </button>
@@ -1112,7 +1112,7 @@ export default function CandidateDashboard({
                 </div>
 
                 {/* Right Graphic in Hero Banner - Animated Rider Moving on Road (SIDE BY SIDE ON MOBILE) */}
-                <div className="relative z-10 shrink-0 w-[43%] sm:w-auto max-w-[175px] sm:max-w-[340px] lg:max-w-[400px] flex items-center justify-center sm:justify-end pointer-events-none">
+                <div className="relative z-10 shrink-0 w-[46%] sm:w-auto max-w-[190px] sm:max-w-[340px] lg:max-w-[400px] flex items-center justify-center sm:justify-end pointer-events-none">
                   <AnimatedHeroRider className="w-full" />
                 </div>
               </div>
