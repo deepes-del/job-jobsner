@@ -374,7 +374,7 @@ export default function App() {
             className="flex items-center gap-1.5 sm:gap-3 select-none cursor-pointer group active:scale-95 transition-all" 
             id="navbar-brand"
           >
-            <JobsnerLogo size="xl" className="h-7 sm:h-14 md:h-18" />
+            <JobsnerLogo size="xl" className="h-10 sm:h-14 md:h-18" />
             {userRole !== null && userRole !== 'candidate' && (
               <span className="text-[10px] sm:text-[11px] font-bold text-[#1D61F2] uppercase bg-blue-50 border border-blue-100 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full tracking-wider shrink-0 hidden xs:inline-block ml-1">
                 {portal === 'candidate' ? 'Candidate Portal' : 'Recruiter Portal'}
@@ -435,12 +435,13 @@ export default function App() {
 
                 {/* Profile Badge & Logout Control */}
                 <div className="flex items-center gap-1.5 sm:gap-2">
+                  {/* Profile Circle — visible on all sizes */}
                   <div 
                     onClick={() => setCandidateActiveTab('overview')} 
-                    className="flex items-center gap-1.5 sm:gap-2.5 pl-1.5 sm:pl-3 border-l border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
+                    className="flex items-center gap-1.5 sm:gap-2.5 sm:pl-3 sm:border-l sm:border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
                     title="View Profile"
                   >
-                    <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-gradient-to-tr from-sky-400 to-blue-600 overflow-hidden border border-white shadow-xs shrink-0 flex items-center justify-center text-white font-extrabold text-[10px] sm:text-xs">
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-tr from-sky-400 to-blue-600 overflow-hidden border-2 border-white shadow-sm shrink-0 flex items-center justify-center text-white font-extrabold text-[11px] sm:text-xs">
                       {candidate.profile?.profilePhoto ? (
                         <img src={candidate.profile.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
                       ) : (
@@ -456,14 +457,15 @@ export default function App() {
                       </span>
                     </div>
                   </div>
+                  {/* Logout button — hidden on mobile, visible on sm+ */}
                   <button
                     onClick={handleCandidateLogout}
-                    className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/60 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-extrabold transition-all cursor-pointer shadow-2xs ml-0.5 sm:ml-1"
+                    className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/60 rounded-xl text-xs font-extrabold transition-all cursor-pointer shadow-2xs ml-1"
                     title="Log Out of Candidate Account"
                     id="header-candidate-logout-btn"
                   >
-                    <LogOut className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                    <span className="hidden sm:inline">Log Out</span>
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Log Out</span>
                   </button>
                 </div>
               </div>

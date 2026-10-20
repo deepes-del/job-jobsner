@@ -31,7 +31,7 @@ export const AnimatedHeroRider: React.FC<AnimatedHeroRiderProps> = ({
           scale: [0.95, 1.1, 1.02],
         }}
         transition={{ duration: 2.5, repeat: Infinity, repeatType: 'reverse' }}
-        className="absolute w-48 h-48 sm:w-96 sm:h-96 bg-blue-400/30 rounded-full blur-2xl sm:blur-3xl -z-10 pointer-events-none"
+        className="absolute w-28 h-28 sm:w-96 sm:h-96 bg-blue-400/30 rounded-full blur-2xl sm:blur-3xl -z-10 pointer-events-none"
       />
 
       {/* Main Animated Assembly: Rider + Scooter moving down the road */}
@@ -86,11 +86,11 @@ export const AnimatedHeroRider: React.FC<AnimatedHeroRiderProps> = ({
         <img
           src={imageSrc}
           alt="Animated Delivery Rider"
-          className="h-32 xs:h-40 sm:h-56 lg:h-64 w-auto object-contain filter drop-shadow-2xl scale-105 sm:scale-125"
+          className="h-28 sm:h-56 lg:h-64 w-auto object-contain filter drop-shadow-2xl sm:scale-125"
         />
 
         {/* Ground Contact Wheel Shadow */}
-        <div className="w-4/5 h-2.5 sm:h-3 bg-slate-950/30 rounded-full blur-xs mt-1" />
+        <div className="w-4/5 h-1.5 sm:h-3 bg-slate-950/30 rounded-full blur-xs mt-0.5 sm:mt-1" />
       </motion.div>
 
       {/* Moving Road Track under Rider */}

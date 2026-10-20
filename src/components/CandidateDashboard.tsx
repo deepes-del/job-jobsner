@@ -740,25 +740,6 @@ export default function CandidateDashboard({
         onComplete={() => setShowFlowerAnimation(false)}
       />
 
-      {/* ================= MOBILE NAVIGATION TRIGGER BAR (lg:hidden) ================= */}
-      <div className="lg:hidden w-full mb-4">
-        <div className="bg-[#0F172A] text-white p-3 sm:p-3.5 rounded-2xl flex items-center justify-between shadow-md">
-          <button
-            onClick={() => setIsMobileDrawerOpen(true)}
-            className="flex items-center gap-2 px-3 py-1.5 bg-[#1D61F2] hover:bg-blue-600 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-xs active:scale-95"
-          >
-            <Menu className="w-4 h-4" />
-            <span>Navigation Menu</span>
-          </button>
-
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] sm:text-[11px] font-bold text-slate-300 uppercase tracking-wider px-2.5 py-1 bg-slate-800 rounded-lg">
-              {activeTab === 'find_jobs' ? 'Jobs' : activeTab === 'applications' ? 'Applications' : activeTab === 'saved' ? 'Saved Jobs' : 'Profile'}
-            </span>
-          </div>
-        </div>
-      </div>
-
       {/* ================= MOBILE SLIDE-OVER DRAWER OVERLAY (lg:hidden) ================= */}
       <AnimatePresence>
         {isMobileDrawerOpen && (
@@ -1095,96 +1076,103 @@ export default function CandidateDashboard({
             <React.Fragment>
               
               {/* TOP HERO BANNER */}
-              <div className="w-full bg-gradient-to-r from-[#0A3BB6] via-[#1D61F2] to-[#4F46E5] rounded-3xl p-4 sm:p-8 lg:p-10 text-white shadow-xl relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 min-h-[200px] sm:min-h-[220px] border border-blue-400/20">
+              <div className="w-full bg-gradient-to-r from-[#0052D4] via-[#2B63FF] to-[#4379FF] rounded-2xl sm:rounded-3xl px-3 py-3 sm:p-7 lg:p-8 text-white shadow-xl relative overflow-hidden flex flex-row items-center justify-between gap-2 border border-blue-400/20 min-h-[158px] sm:min-h-[225px]">
                 {/* Ambient Background Glow Effects */}
-                <div className="absolute -left-12 -top-12 w-64 h-64 bg-blue-400/25 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute right-0 bottom-0 w-80 h-80 bg-indigo-500/30 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -left-12 -top-12 w-48 h-48 sm:w-64 sm:h-64 bg-blue-400/25 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute right-0 bottom-0 w-60 h-60 sm:w-80 sm:h-80 bg-indigo-500/30 rounded-full blur-3xl pointer-events-none" />
 
-                <div className="relative z-10 max-w-lg space-y-2.5 sm:space-y-3 w-full sm:w-auto">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-white/15 backdrop-blur-md text-blue-100 text-[10px] sm:text-[11px] font-extrabold border border-white/20">
-                    <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-yellow-300" /> #1 Delivery Hiring Platform
+                <div className="relative z-10 flex-1 max-w-[57%] sm:max-w-lg space-y-1 sm:space-y-2.5">
+                  <div className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-[8px] sm:text-[11px] font-extrabold border border-white/20">
+                    <Sparkles className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-yellow-300" /> #1 Delivery Hiring Platform
                   </div>
-                  <h1 className="text-xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight">
-                    Better Jobs<br /><span className="text-blue-100">Brighter Future</span>
+                  <h1 className="text-[18px] leading-tight sm:text-3xl lg:text-4xl font-black text-white tracking-tight">
+                    Better Jobs<br /><span>Brighter Future</span>
                   </h1>
-                  <p className="text-blue-100 text-xs sm:text-sm font-medium leading-relaxed max-w-sm">
-                    Find top talent & verified job opportunities faster with Jobsner!
+                  <p className="text-blue-100 text-[9px] sm:text-xs font-medium leading-snug max-w-[185px] sm:max-w-sm line-clamp-2 sm:line-clamp-none">
+                    Find top talent &amp; verified job opportunities faster with Jobsner!
                   </p>
-                  <div className="pt-1 sm:pt-2">
+                  <div className="pt-0.5 sm:pt-2">
                     <button
                       onClick={() => {
                         const el = document.getElementById('jobs-search-input');
                         if (el) el.focus();
                       }}
-                      className="bg-white text-[#1D61F2] hover:bg-blue-50 font-extrabold px-5 sm:px-7 py-2 sm:py-3 rounded-full text-xs sm:text-sm transition-all shadow-lg inline-flex items-center gap-1.5 sm:gap-2 cursor-pointer active:scale-95 hover:scale-105"
+                      className="bg-white text-[#1D61F2] hover:bg-blue-50 font-black px-3.5 sm:px-6 py-1.5 sm:py-2.5 rounded-full text-[11px] sm:text-sm transition-all shadow-md inline-flex items-center gap-1.5 cursor-pointer active:scale-95"
                     >
                       Search Jobs →
                     </button>
                   </div>
+
+                  {/* Slider Indicators (Matching Reference Image) */}
+                  <div className="flex items-center gap-1.5 pt-1 sm:pt-2">
+                    <span className="w-4 sm:w-6 h-1 sm:h-1.5 bg-white rounded-full opacity-90" />
+                    <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-white/40 rounded-full" />
+                    <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-white/40 rounded-full" />
+                  </div>
                 </div>
 
-                {/* Right Graphic in Hero Banner - Animated Rider Moving on Road (NOW VISIBLE ON MOBILE) */}
-                <div className="relative z-10 shrink-0 flex items-center justify-center sm:justify-end pointer-events-none opacity-100 sm:pr-2 w-full sm:w-auto max-w-[220px] xs:max-w-[260px] sm:max-w-[340px] lg:max-w-[400px]">
+                {/* Right Graphic in Hero Banner - Animated Rider Moving on Road (SIDE BY SIDE ON MOBILE) */}
+                <div className="relative z-10 shrink-0 w-[43%] sm:w-auto max-w-[175px] sm:max-w-[340px] lg:max-w-[400px] flex items-center justify-center sm:justify-end pointer-events-none">
                   <AnimatedHeroRider className="w-full" />
                 </div>
               </div>
 
-              {/* 3 DASHBOARD STAT CARDS ROW (SMALLER CARDS SIDE BY SIDE ON MOBILE) */}
-              <div className="grid grid-cols-3 gap-2 sm:gap-5 w-full">
+              {/* 3 DASHBOARD STAT CARDS ROW (MATCHING REFERENCE IMAGE) */}
+              <div className="grid grid-cols-3 gap-2.5 sm:gap-4 w-full">
                 {/* Stat 1: Total Applications */}
-                <div className="bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl p-2.5 sm:p-6 shadow-xs flex flex-col justify-between hover:shadow-md transition-all">
+                <div className="bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-xs flex flex-col justify-between hover:shadow-md transition-all">
                   <div className="flex items-center justify-between gap-1 mb-1">
-                    <span className="text-[9px] sm:text-xs font-extrabold text-slate-500 uppercase tracking-wider truncate">
-                      Applications
+                    <span className="text-[9px] sm:text-xs font-black text-slate-400 uppercase tracking-wider truncate">
+                      APPLICATIONS
                     </span>
-                    <div className="w-6 h-6 sm:w-12 sm:h-12 rounded-lg sm:rounded-2xl bg-blue-50 text-[#1D61F2] flex items-center justify-center shrink-0 shadow-2xs">
-                      <Briefcase className="w-3.5 h-3.5 sm:w-6 sm:h-6" />
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-blue-50 text-[#1D61F2] flex items-center justify-center shrink-0">
+                      <Briefcase className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </div>
                   </div>
                   <div>
-                    <div className="flex items-baseline gap-1 sm:gap-2 pt-0.5 sm:pt-1">
-                      <span className="text-base sm:text-3xl lg:text-4xl font-black text-slate-900 leading-none">{totalApplicationsCount}</span>
-                      <span className="text-[8px] sm:text-xs font-black text-emerald-600 bg-emerald-50 px-1 sm:px-2 py-0.5 rounded-full">↑20%</span>
+                    <div className="flex items-baseline gap-1.5 pt-1">
+                      <span className="text-xl sm:text-2xl font-black text-slate-900 leading-none">{totalApplicationsCount}</span>
+                      <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100">+20%</span>
                     </div>
-                    <span className="text-[8px] sm:text-[10px] font-semibold text-slate-400 block pt-0.5 sm:pt-1 truncate">vs 7 days</span>
+                    <span className="text-[9px] sm:text-[10px] text-slate-400 font-medium block mt-1 truncate">vs 7 days</span>
                   </div>
                 </div>
 
                 {/* Stat 2: Profile Views */}
-                <div className="bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl p-2.5 sm:p-6 shadow-xs flex flex-col justify-between hover:shadow-md transition-all">
+                <div className="bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-xs flex flex-col justify-between hover:shadow-md transition-all">
                   <div className="flex items-center justify-between gap-1 mb-1">
-                    <span className="text-[9px] sm:text-xs font-extrabold text-slate-500 uppercase tracking-wider truncate">
-                      Views
+                    <span className="text-[9px] sm:text-xs font-black text-slate-400 uppercase tracking-wider truncate">
+                      VIEWS
                     </span>
-                    <div className="w-6 h-6 sm:w-12 sm:h-12 rounded-lg sm:rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 shadow-2xs">
-                      <Eye className="w-3.5 h-3.5 sm:w-6 sm:h-6" />
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                      <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </div>
                   </div>
                   <div>
-                    <div className="flex items-baseline gap-1 sm:gap-2 pt-0.5 sm:pt-1">
-                      <span className="text-base sm:text-3xl lg:text-4xl font-black text-slate-900 leading-none">{profileViewsCount}</span>
-                      <span className="text-[8px] sm:text-xs font-black text-emerald-600 bg-emerald-50 px-1 sm:px-2 py-0.5 rounded-full">↑16%</span>
+                    <div className="flex items-baseline gap-1.5 pt-1">
+                      <span className="text-xl sm:text-2xl font-black text-slate-900 leading-none">{profileViewsCount}</span>
+                      <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100">+16%</span>
                     </div>
-                    <span className="text-[8px] sm:text-[10px] font-semibold text-slate-400 block pt-0.5 sm:pt-1 truncate">vs 7 days</span>
+                    <span className="text-[9px] sm:text-[10px] text-slate-400 font-medium block mt-1 truncate">vs 7 days</span>
                   </div>
                 </div>
 
                 {/* Stat 3: Shortlisted */}
-                <div className="bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl p-2.5 sm:p-6 shadow-xs flex flex-col justify-between hover:shadow-md transition-all">
+                <div className="bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-xs flex flex-col justify-between hover:shadow-md transition-all">
                   <div className="flex items-center justify-between gap-1 mb-1">
-                    <span className="text-[9px] sm:text-xs font-extrabold text-slate-500 uppercase tracking-wider truncate">
-                      Shortlisted
+                    <span className="text-[9px] sm:text-xs font-black text-slate-400 uppercase tracking-wider truncate">
+                      SHORTLISTED
                     </span>
-                    <div className="w-6 h-6 sm:w-12 sm:h-12 rounded-lg sm:rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 shadow-2xs">
-                      <Star className="w-3.5 h-3.5 sm:w-6 sm:h-6" />
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                      <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </div>
                   </div>
                   <div>
-                    <div className="flex items-baseline gap-1 sm:gap-2 pt-0.5 sm:pt-1">
-                      <span className="text-base sm:text-3xl lg:text-4xl font-black text-slate-900 leading-none">{shortlistedCount}</span>
-                      <span className="text-[8px] sm:text-xs font-black text-emerald-600 bg-emerald-50 px-1 sm:px-2 py-0.5 rounded-full">↑25%</span>
+                    <div className="flex items-baseline gap-1.5 pt-1">
+                      <span className="text-xl sm:text-2xl font-black text-slate-900 leading-none">{shortlistedCount}</span>
+                      <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100">+25%</span>
                     </div>
-                    <span className="text-[8px] sm:text-[10px] font-semibold text-slate-400 block pt-0.5 sm:pt-1 truncate">vs 7 days</span>
+                    <span className="text-[9px] sm:text-[10px] text-slate-400 font-medium block mt-1 truncate">vs 7 days</span>
                   </div>
                 </div>
               </div>

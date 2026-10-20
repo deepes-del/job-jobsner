@@ -17,10 +17,10 @@ const JobsnerLogo: React.FC<JobsnerLogoProps> = ({
 }) => {
   const heightMap = {
     xs: 'h-10',
-    sm: 'h-14',
+    sm: 'h-12',
     md: 'h-20',
     lg: 'h-24',
-    xl: 'h-20 sm:h-24 md:h-28',
+    xl: 'h-10',
   };
 
   const heightClass = heightMap[size] || heightMap.md;
