@@ -365,8 +365,8 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans max-w-full overflow-x-hidden" id="app-root-container">
       {/* Top Navbar Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-30 shrink-0 shadow-xs py-0 sm:py-1" id="global-navbar">
-        <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 h-12 sm:h-20 md:h-22 flex items-center justify-between gap-1.5 sm:gap-4">
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-30 shrink-0 shadow-xs" id="global-navbar">
+        <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 sm:h-20 md:h-22 flex items-center justify-between gap-1.5 sm:gap-4">
           
           {/* Logo brand */}
           <div 
