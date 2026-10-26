@@ -1615,6 +1615,10 @@ export default function RecruiterDashboard({
                       onChange={(e) => setJobCategory(e.target.value)}
                       className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
                     >
+                      <option value="Drivers">Drivers</option>
+                      <option value="Warehouse">Warehouse</option>
+                      <option value="Picker & Packer">Picker & Packer</option>
+                      <option value="Other Jobs">Other Jobs</option>
                       <option value="Delivery Jobs">Delivery Jobs</option>
                       <option value="Warehouse / Picker&Packer">Warehouse / Picker&Packer</option>
                       <option value="Last-Mile Delivery">Last-Mile Delivery</option>

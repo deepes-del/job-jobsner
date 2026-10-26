@@ -7,7 +7,8 @@ import {
   Search, SlidersHorizontal, ArrowUpDown, Clock, Building, UserCheck, ShieldAlert,
   FileMinus, ExternalLink, ChevronRight, X, Info, RefreshCw,
   RotateCcw, Heart, ThumbsUp, ThumbsDown, ClipboardList, Bookmark,
-  Shield, Store, Car, ChevronDown, Bell, Package, Users, BarChart2, Star, Eye, MessageSquare, Settings, HelpCircle, ArrowUpRight, Menu
+  Shield, Store, Car, ChevronDown, Bell, Package, Users, BarChart2, Star, Eye, MessageSquare, Settings, HelpCircle, ArrowUpRight, Menu,
+  Truck, Warehouse
 } from 'lucide-react';
 import { Candidate, Profile } from '../types';
 import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
@@ -160,6 +161,10 @@ export default function CandidateDashboard({
   const [carouselDragStart, setCarouselDragStart] = React.useState<number | null>(null);
   const [carouselDragDelta, setCarouselDragDelta] = React.useState(0);
   const [carouselIsDragging, setCarouselIsDragging] = React.useState(false);
+  const carouselHasDraggedRef = React.useRef(false);
+  const carouselDragStartX = React.useRef<number | null>(null);
+  const carouselDragStartY = React.useRef<number | null>(null);
+  const carouselIsHorizontal = React.useRef(false);
   const [carouselVisibleCount, setCarouselVisibleCount] = React.useState<number>(() => {
     if (typeof window !== 'undefined') {
       if (window.innerWidth < 640) return 1;
@@ -421,6 +426,34 @@ export default function CandidateDashboard({
     return Math.round((filled / total) * 100);
   }, [profile, candidate, mobile, email, documents]);
 
+  // Dynamic Category Counts
+  const categoryCounts = React.useMemo(() => {
+    let warehouse = 0;
+    let pickerPacker = 0;
+    let drivers = 0;
+    let other = 0;
+
+    activeJobs.forEach(j => {
+      if (!j) return;
+      const s = String(j.status || '').toLowerCase();
+      if (s === 'closed' || s === 'deleted' || s === 'inactive' || s === 'expired' || s === 'rejected') return;
+
+      const cat = (j.category || '').toLowerCase();
+      const title = (j.title || '').toLowerCase();
+      if (cat.includes('picker') || cat.includes('packer') || title.includes('picker') || title.includes('packer') || title.includes('packing')) {
+        pickerPacker++;
+      } else if (cat.includes('warehouse') || title.includes('warehouse') || title.includes('inventory') || title.includes('store')) {
+        warehouse++;
+      } else if (cat.includes('driver') || cat.includes('delivery') || cat.includes('rider') || cat.includes('fleet') || cat.includes('courier') || title.includes('driver') || title.includes('rider') || title.includes('delivery') || title.includes('van') || title.includes('truck')) {
+        drivers++;
+      } else {
+        other++;
+      }
+    });
+
+    return { warehouse, pickerPacker, drivers, other };
+  }, [activeJobs]);
+
   // Client-side dynamic instant-search filtering & sorting
   const filteredJobsList = React.useMemo(() => {
     let result = [...activeJobs];
@@ -437,6 +470,22 @@ export default function CandidateDashboard({
     if (selectedCategory !== 'All') {
       result = result.filter(j => {
         const cat = (j.category || '').toLowerCase();
+        const title = (j.title || '').toLowerCase();
+        if (selectedCategory === 'Warehouse') {
+          return cat.includes('warehouse') || title.includes('warehouse') || title.includes('inventory') || title.includes('store');
+        }
+        if (selectedCategory === 'Picker & Packer' || selectedCategory === 'Picker/Packer') {
+          return cat.includes('picker') || cat.includes('packer') || title.includes('picker') || title.includes('packer') || title.includes('packing') || title.includes('sorting');
+        }
+        if (selectedCategory === 'Drivers') {
+          return cat === 'drivers' || cat.includes('driver') || cat.includes('delivery') || cat.includes('rider') || cat.includes('courier') || cat.includes('fleet') || title.includes('driver') || title.includes('rider') || title.includes('delivery') || title.includes('van') || title.includes('truck') || title.includes('courier');
+        }
+        if (selectedCategory === 'Other Jobs') {
+          const isWh = cat.includes('warehouse') || title.includes('warehouse') || title.includes('inventory');
+          const isPp = cat.includes('picker') || cat.includes('packer') || title.includes('picker') || title.includes('packer');
+          const isDr = cat.includes('driver') || cat.includes('delivery') || cat.includes('rider') || title.includes('driver') || title.includes('rider') || title.includes('delivery');
+          return !isWh && !isPp && !isDr;
+        }
         if (selectedCategory === 'Delivery Jobs') {
           return cat === 'delivery jobs' || cat.includes('delivery') || cat.includes('courier') || cat.includes('trucking');
         }
@@ -1177,7 +1226,131 @@ export default function CandidateDashboard({
                 </div>
               </div>
 
-              {/* RECOMMENDED JOBS SECTION - Manual Swipe Carousel */}
+              {/* 4 JOB CATEGORIES TILES (Warehouse, Picker/Packer, Drivers, Other Jobs) */}
+              <div className="w-full bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-xs">
+                <div className="flex items-center justify-between mb-2 sm:mb-2.5">
+                  <span className="text-[10px] sm:text-xs font-black text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#1D61F2]" />
+                    Job Categories
+                  </span>
+                  {selectedCategory !== 'All' && (
+                    <button
+                      onClick={() => setSelectedCategory('All')}
+                      className="text-[10px] sm:text-xs font-black text-[#1D61F2] hover:underline cursor-pointer"
+                    >
+                      Show All ({activeJobs.length})
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-4 gap-2 sm:gap-3">
+                  {/* Category 1: Warehouse */}
+                  <button
+                    onClick={() => {
+                      setSelectedCategory(selectedCategory === 'Warehouse' ? 'All' : 'Warehouse');
+                    }}
+                    className={`group relative flex flex-col items-center justify-center py-2 sm:py-3 px-1 rounded-xl sm:rounded-2xl border transition-all cursor-pointer ${
+                      selectedCategory === 'Warehouse'
+                        ? 'bg-amber-50/80 border-amber-400 ring-2 ring-amber-400/20 shadow-xs'
+                        : 'bg-slate-50/60 border-slate-100 hover:border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 ${
+                      selectedCategory === 'Warehouse'
+                        ? 'bg-amber-500 text-white shadow-xs'
+                        : 'bg-amber-50 text-amber-600 border border-amber-200/60'
+                    }`}>
+                      <Warehouse className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </div>
+                    <span className="text-[10px] sm:text-xs font-black text-slate-800 mt-1 truncate max-w-full">
+                      Warehouse
+                    </span>
+                    <span className="text-[8px] sm:text-[9px] font-bold text-slate-400 mt-0.5 truncate">
+                      {categoryCounts.warehouse} Jobs
+                    </span>
+                  </button>
+
+                  {/* Category 2: Picker & Packer */}
+                  <button
+                    onClick={() => {
+                      setSelectedCategory(selectedCategory === 'Picker & Packer' ? 'All' : 'Picker & Packer');
+                    }}
+                    className={`group relative flex flex-col items-center justify-center py-2 sm:py-3 px-1 rounded-xl sm:rounded-2xl border transition-all cursor-pointer ${
+                      selectedCategory === 'Picker & Packer'
+                        ? 'bg-purple-50/80 border-purple-400 ring-2 ring-purple-400/20 shadow-xs'
+                        : 'bg-slate-50/60 border-slate-100 hover:border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 ${
+                      selectedCategory === 'Picker & Packer'
+                        ? 'bg-purple-600 text-white shadow-xs'
+                        : 'bg-purple-50 text-purple-600 border border-purple-200/60'
+                    }`}>
+                      <Package className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </div>
+                    <span className="text-[10px] sm:text-xs font-black text-slate-800 mt-1 truncate max-w-full">
+                      Picker/Packer
+                    </span>
+                    <span className="text-[8px] sm:text-[9px] font-bold text-slate-400 mt-0.5 truncate">
+                      {categoryCounts.pickerPacker} Jobs
+                    </span>
+                  </button>
+
+                  {/* Category 3: Drivers */}
+                  <button
+                    onClick={() => {
+                      setSelectedCategory(selectedCategory === 'Drivers' ? 'All' : 'Drivers');
+                    }}
+                    className={`group relative flex flex-col items-center justify-center py-2 sm:py-3 px-1 rounded-xl sm:rounded-2xl border transition-all cursor-pointer ${
+                      selectedCategory === 'Drivers'
+                        ? 'bg-blue-50/80 border-[#1D61F2] ring-2 ring-[#1D61F2]/20 shadow-xs'
+                        : 'bg-slate-50/60 border-slate-100 hover:border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 ${
+                      selectedCategory === 'Drivers'
+                        ? 'bg-[#1D61F2] text-white shadow-xs'
+                        : 'bg-blue-50 text-[#1D61F2] border border-blue-200/60'
+                    }`}>
+                      <Truck className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </div>
+                    <span className="text-[10px] sm:text-xs font-black text-slate-800 mt-1 truncate max-w-full">
+                      Drivers
+                    </span>
+                    <span className="text-[8px] sm:text-[9px] font-bold text-slate-400 mt-0.5 truncate">
+                      {categoryCounts.drivers} Jobs
+                    </span>
+                  </button>
+
+                  {/* Category 4: Other Jobs */}
+                  <button
+                    onClick={() => {
+                      setSelectedCategory(selectedCategory === 'Other Jobs' ? 'All' : 'Other Jobs');
+                    }}
+                    className={`group relative flex flex-col items-center justify-center py-2 sm:py-3 px-1 rounded-xl sm:rounded-2xl border transition-all cursor-pointer ${
+                      selectedCategory === 'Other Jobs'
+                        ? 'bg-emerald-50/80 border-emerald-500 ring-2 ring-emerald-500/20 shadow-xs'
+                        : 'bg-slate-50/60 border-slate-100 hover:border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 ${
+                      selectedCategory === 'Other Jobs'
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'bg-emerald-50 text-emerald-600 border border-emerald-200/60'
+                    }`}>
+                      <Briefcase className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </div>
+                    <span className="text-[10px] sm:text-xs font-black text-slate-800 mt-1 truncate max-w-full">
+                      Other Jobs
+                    </span>
+                    <span className="text-[8px] sm:text-[9px] font-bold text-slate-400 mt-0.5 truncate">
+                      {categoryCounts.other} Jobs
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* RECOMMENDED JOBS SECTION - Smooth Swipe Carousel */}
               {(() => {
                 const totalJobs = activeJobs.length;
                 const VISIBLE = Math.max(1, Math.min(carouselVisibleCount, totalJobs || 1));
@@ -1188,23 +1361,56 @@ export default function CandidateDashboard({
                   setCarouselIndex(next);
                 };
 
-                const onPointerDown = (e: React.PointerEvent) => {
-                  setCarouselDragStart(e.clientX);
+                const handleDragStart = (clientX: number, clientY: number) => {
+                  carouselDragStartX.current = clientX;
+                  carouselDragStartY.current = clientY;
+                  carouselIsHorizontal.current = false;
+                  carouselHasDraggedRef.current = false;
+                  setCarouselDragStart(clientX);
                   setCarouselDragDelta(0);
                   setCarouselIsDragging(true);
-                  (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
                 };
-                const onPointerMove = (e: React.PointerEvent) => {
-                  if (!carouselIsDragging || carouselDragStart === null) return;
-                  setCarouselDragDelta(e.clientX - carouselDragStart);
+
+                const handleDragMove = (clientX: number, clientY: number) => {
+                  if (carouselDragStartX.current === null) return;
+                  const deltaX = clientX - carouselDragStartX.current;
+                  const deltaY = carouselDragStartY.current !== null ? clientY - carouselDragStartY.current : 0;
+
+                  if (!carouselIsHorizontal.current) {
+                    if (Math.abs(deltaX) > 6 && Math.abs(deltaX) > Math.abs(deltaY)) {
+                      carouselIsHorizontal.current = true;
+                    } else if (Math.abs(deltaY) > 8) {
+                      carouselDragStartX.current = null;
+                      setCarouselIsDragging(false);
+                      setCarouselDragDelta(0);
+                      return;
+                    }
+                  }
+
+                  if (carouselIsHorizontal.current) {
+                    if (Math.abs(deltaX) > 8) {
+                      carouselHasDraggedRef.current = true;
+                    }
+                    setCarouselDragDelta(deltaX);
+                  }
                 };
-                const onPointerUp = () => {
-                  if (!carouselIsDragging) return;
+
+                const handleDragEnd = () => {
+                  if (carouselDragStartX.current !== null && carouselIsHorizontal.current) {
+                    if (carouselDragDelta < -35) {
+                      goTo(carouselIndex + 1);
+                    } else if (carouselDragDelta > 35) {
+                      goTo(carouselIndex - 1);
+                    }
+                  }
                   setCarouselIsDragging(false);
-                  if (carouselDragDelta < -60) goTo(carouselIndex + 1);
-                  else if (carouselDragDelta > 60) goTo(carouselIndex - 1);
                   setCarouselDragDelta(0);
-                  setCarouselDragStart(null);
+                  carouselDragStartX.current = null;
+                  carouselDragStartY.current = null;
+                  carouselIsHorizontal.current = false;
+                  setTimeout(() => {
+                    carouselHasDraggedRef.current = false;
+                  }, 80);
                 };
 
                 const displayJobs = totalJobs === 0 ? [] : Array.from({ length: Math.min(VISIBLE, totalJobs) }, (_, i) =>
@@ -1251,21 +1457,37 @@ export default function CandidateDashboard({
                           <ChevronRight className="w-4 h-4 rotate-180" />
                         </button>
 
-                        {/* Cards */}
+                        {/* Cards Carousel Container with multi-touch & pointer swipe */}
                         <div
-                          className="overflow-hidden px-1 py-2"
-                          onPointerDown={onPointerDown}
-                          onPointerMove={onPointerMove}
-                          onPointerUp={onPointerUp}
-                          onPointerLeave={onPointerUp}
-                          style={{ cursor: carouselIsDragging ? 'grabbing' : 'grab' }}
+                          className="overflow-hidden px-1 py-2 touch-pan-y select-none"
+                          onMouseDown={(e) => {
+                            handleDragStart(e.clientX, e.clientY);
+                          }}
+                          onMouseMove={(e) => {
+                            if (carouselIsDragging) handleDragMove(e.clientX, e.clientY);
+                          }}
+                          onMouseUp={handleDragEnd}
+                          onMouseLeave={handleDragEnd}
+                          onTouchStart={(e) => {
+                            if (e.touches[0]) {
+                              handleDragStart(e.touches[0].clientX, e.touches[0].clientY);
+                            }
+                          }}
+                          onTouchMove={(e) => {
+                            if (e.touches[0]) {
+                              handleDragMove(e.touches[0].clientX, e.touches[0].clientY);
+                            }
+                          }}
+                          onTouchEnd={handleDragEnd}
+                          onTouchCancel={handleDragEnd}
+                          style={{ cursor: carouselIsDragging ? 'grabbing' : 'grab', touchAction: 'pan-y' }}
                         >
                           <div
                             className="grid gap-4 sm:gap-5"
                             style={{
                               gridTemplateColumns: `repeat(${Math.min(VISIBLE, totalJobs)}, 1fr)`,
-                              transform: carouselIsDragging ? `translateX(${carouselDragDelta * 0.3}px)` : 'translateX(0)',
-                              transition: carouselIsDragging ? 'none' : 'transform 0.25s ease',
+                              transform: carouselIsDragging ? `translateX(${carouselDragDelta}px)` : 'translateX(0)',
+                              transition: carouselIsDragging ? 'none' : 'transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1)',
                             }}
                           >
                             {displayJobs.map((job, idx) => {
@@ -1274,7 +1496,11 @@ export default function CandidateDashboard({
                               return (
                                 <div
                                   key={`carousel-${job.id}-${carouselIndex}-${idx}`}
-                                  onClick={() => handleViewDetails(job)}
+                                  onClick={() => {
+                                    if (!carouselHasDraggedRef.current) {
+                                      handleViewDetails(job);
+                                    }
+                                  }}
                                   className="bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-md hover:border-[#1D61F2] transition-all flex flex-col justify-between cursor-pointer group"
                                 >
                                   <div>
