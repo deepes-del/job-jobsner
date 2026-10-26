@@ -5101,6 +5101,134 @@ app.get('/api/admin/recruiters/:recruiterId/jobs', async (req, res) => {
   }
 });
 
+// Admin: Edit any job posted by any recruiter
+app.put('/api/admin/jobs/:jobId', async (req, res) => {
+  const { jobId } = req.params;
+  try {
+    const liveJobs = await getLiveJobs();
+    const db = readDB();
+    db.jobs = liveJobs;
+    const index = db.jobs.findIndex((j: any) => String(j.id) === String(jobId));
+
+    if (index === -1) {
+      return res.status(404).json({ error: 'Job opening not found.' });
+    }
+
+    const currentJob = db.jobs[index];
+    const {
+      title,
+      category,
+      openings,
+      employmentType,
+      state,
+      city,
+      area,
+      workLocation,
+      minSalary,
+      maxSalary,
+      salaryType,
+      shift,
+      experienceRequired,
+      educationRequired,
+      genderPreference,
+      ageLimitMin,
+      ageLimitMax,
+      bikeRequired,
+      drivingLicenseRequired,
+      immediateJoining,
+      description,
+      responsibilities,
+      benefits,
+      status
+    } = req.body;
+
+    const updatedJobRaw = {
+      ...currentJob,
+      title: title !== undefined ? String(title).trim() : currentJob.title,
+      category: category !== undefined ? String(category).trim() : currentJob.category,
+      job_category: category !== undefined ? String(category).trim() : (currentJob.job_category || currentJob.category),
+      openings: openings !== undefined ? Number(openings) : currentJob.openings,
+      open_positions: openings !== undefined ? Number(openings) : (currentJob.open_positions || currentJob.openings),
+      vacancies: openings !== undefined ? Number(openings) : (currentJob.vacancies || currentJob.openings),
+      employmentType: employmentType !== undefined ? String(employmentType).trim() : currentJob.employmentType,
+      state: state !== undefined ? String(state).trim() : currentJob.state,
+      city: city !== undefined ? String(city).trim() : currentJob.city,
+      area: area !== undefined ? String(area).trim() : currentJob.area,
+      workLocation: workLocation !== undefined ? String(workLocation).trim() : (area ? `${area}, ${city}` : (currentJob.workLocation || city)),
+      minSalary: minSalary !== undefined ? Number(minSalary) : currentJob.minSalary,
+      maxSalary: maxSalary !== undefined ? Number(maxSalary) : currentJob.maxSalary,
+      salaryType: salaryType !== undefined ? String(salaryType).trim() : currentJob.salaryType,
+      shift: shift !== undefined ? String(shift).trim() : currentJob.shift,
+      experienceRequired: experienceRequired !== undefined ? Number(experienceRequired) : currentJob.experienceRequired,
+      educationRequired: educationRequired !== undefined ? String(educationRequired).trim() : currentJob.educationRequired,
+      genderPreference: genderPreference !== undefined ? String(genderPreference).trim() : currentJob.genderPreference,
+      ageLimitMin: ageLimitMin !== undefined ? Number(ageLimitMin) : currentJob.ageLimitMin,
+      ageLimitMax: ageLimitMax !== undefined ? Number(ageLimitMax) : currentJob.ageLimitMax,
+      bikeRequired: bikeRequired !== undefined ? String(bikeRequired).trim() : currentJob.bikeRequired,
+      drivingLicenseRequired: drivingLicenseRequired !== undefined ? String(drivingLicenseRequired).trim() : currentJob.drivingLicenseRequired,
+      immediateJoining: immediateJoining !== undefined ? String(immediateJoining).trim() : currentJob.immediateJoining,
+      description: description !== undefined ? String(description).trim() : currentJob.description,
+      responsibilities: responsibilities !== undefined ? String(responsibilities).trim() : currentJob.responsibilities,
+      benefits: benefits !== undefined ? String(benefits).trim() : currentJob.benefits,
+      status: status !== undefined ? String(status).trim() : currentJob.status,
+      updatedAt: new Date().toISOString()
+    };
+
+    const updatedJob = normalizeJob(updatedJobRaw);
+    db.jobs[index] = updatedJob;
+    writeDB(db);
+
+    if (isSupabaseConfigured()) {
+      try {
+        const supaRow = toSupabaseJobRow(updatedJob);
+        if (supaRow) {
+          await safeSupabaseUpsert('jobs', [supaRow]);
+        }
+      } catch (supaErr: any) {
+        console.warn('[Supabase Admin Job Update Warning]', supaErr?.message || supaErr);
+      }
+    }
+
+    res.status(200).json({ message: 'Job opening updated successfully by administrator', job: updatedJob });
+  } catch (err: any) {
+    console.error('[Admin Job Update Error]', err);
+    res.status(500).json({ error: 'Failed to update job opening' });
+  }
+});
+
+// Admin: Delete any job posted by any recruiter
+app.delete('/api/admin/jobs/:jobId', async (req, res) => {
+  const { jobId } = req.params;
+  try {
+    const liveJobs = await getLiveJobs();
+    const db = readDB();
+    db.jobs = liveJobs;
+    const index = db.jobs.findIndex((j: any) => String(j.id) === String(jobId));
+
+    if (index === -1) {
+      return res.status(404).json({ error: 'Job opening not found.' });
+    }
+
+    db.jobs.splice(index, 1);
+    writeDB(db);
+
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = getSupabase();
+        const { error } = await supabase.from('jobs').delete().eq('id', jobId);
+        if (error) console.error('[Supabase Admin Job Delete Error]', error.message || error);
+      } catch (supaErr: any) {
+        console.warn('[Supabase Admin Job Delete Warning]', supaErr?.message || supaErr);
+      }
+    }
+
+    res.status(200).json({ message: 'Job opening deleted successfully by administrator' });
+  } catch (err: any) {
+    console.error('[Admin Job Delete Error]', err);
+    res.status(500).json({ error: 'Failed to delete job opening' });
+  }
+});
+
 // Section 2: Candidate Allocation Engine for a Job
 // Every 3 applicants per Job -> 1 random Recruiter Visible, 2 Admin Only, remainder Pending
 app.get('/api/admin/jobs/:jobId/allocations', async (req, res) => {
