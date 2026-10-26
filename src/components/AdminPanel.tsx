@@ -1747,9 +1747,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose, onJobPo
                           onChange={(e) => setPostJobForm({ ...postJobForm, category: e.target.value })}
                           className="w-full px-3 py-2 bg-slate-900 border border-slate-700/80 rounded-lg text-xs text-white focus:outline-none focus:border-orange-500"
                         >
+                          <option value="Delivery & Logistics">Delivery & Logistics</option>
+                          <option value="Warehouse & Packing">Warehouse & Packing</option>
                           <option value="Drivers">Drivers</option>
-                          <option value="Warehouse">Warehouse</option>
-                          <option value="Picker & Packer">Picker & Packer</option>
+                          <option value="Office & Admin">Office & Admin</option>
                           <option value="Other Jobs">Other Jobs</option>
                           <option value="Delivery Jobs">Delivery Jobs</option>
                           <option value="Warehouse & Logistics">Warehouse & Logistics</option>

@@ -426,11 +426,12 @@ export default function CandidateDashboard({
     return Math.round((filled / total) * 100);
   }, [profile, candidate, mobile, email, documents]);
 
-  // Dynamic Category Counts
+  // Dynamic Category Counts (5 Categories)
   const categoryCounts = React.useMemo(() => {
-    let warehouse = 0;
-    let pickerPacker = 0;
+    let deliveryLogistics = 0;
+    let warehousePacking = 0;
     let drivers = 0;
+    let officeAdmin = 0;
     let other = 0;
 
     activeJobs.forEach(j => {
@@ -440,18 +441,20 @@ export default function CandidateDashboard({
 
       const cat = (j.category || '').toLowerCase();
       const title = (j.title || '').toLowerCase();
-      if (cat.includes('picker') || cat.includes('packer') || title.includes('picker') || title.includes('packer') || title.includes('packing')) {
-        pickerPacker++;
-      } else if (cat.includes('warehouse') || title.includes('warehouse') || title.includes('inventory') || title.includes('store')) {
-        warehouse++;
-      } else if (cat.includes('driver') || cat.includes('delivery') || cat.includes('rider') || cat.includes('fleet') || cat.includes('courier') || title.includes('driver') || title.includes('rider') || title.includes('delivery') || title.includes('van') || title.includes('truck')) {
+      if (cat.includes('driver') || title.includes('driver') || title.includes('chauffeur') || title.includes('van driver') || title.includes('truck driver')) {
         drivers++;
+      } else if (cat.includes('warehouse') || cat.includes('pack') || cat.includes('picker') || title.includes('warehouse') || title.includes('packer') || title.includes('picker') || title.includes('packing') || title.includes('inventory')) {
+        warehousePacking++;
+      } else if (cat.includes('office') || cat.includes('admin') || cat.includes('support') || title.includes('office') || title.includes('admin') || title.includes('telecaller') || title.includes('hr') || title.includes('receptionist')) {
+        officeAdmin++;
+      } else if (cat.includes('delivery') || cat.includes('logistics') || cat.includes('courier') || title.includes('delivery') || title.includes('courier') || title.includes('logistics') || title.includes('fleet')) {
+        deliveryLogistics++;
       } else {
         other++;
       }
     });
 
-    return { warehouse, pickerPacker, drivers, other };
+    return { deliveryLogistics, warehousePacking, drivers, officeAdmin, other };
   }, [activeJobs]);
 
   // Client-side dynamic instant-search filtering & sorting
@@ -471,26 +474,24 @@ export default function CandidateDashboard({
       result = result.filter(j => {
         const cat = (j.category || '').toLowerCase();
         const title = (j.title || '').toLowerCase();
-        if (selectedCategory === 'Warehouse') {
-          return cat.includes('warehouse') || title.includes('warehouse') || title.includes('inventory') || title.includes('store');
+        if (selectedCategory === 'Delivery & Logistics') {
+          return cat === 'delivery & logistics' || cat.includes('logistics') || cat.includes('delivery') || cat.includes('courier') || title.includes('logistics') || title.includes('delivery') || title.includes('courier');
         }
-        if (selectedCategory === 'Picker & Packer' || selectedCategory === 'Picker/Packer') {
-          return cat.includes('picker') || cat.includes('packer') || title.includes('picker') || title.includes('packer') || title.includes('packing') || title.includes('sorting');
+        if (selectedCategory === 'Warehouse & Packing') {
+          return cat === 'warehouse & packing' || cat.includes('warehouse') || cat.includes('pack') || cat.includes('picker') || title.includes('warehouse') || title.includes('picker') || title.includes('packer') || title.includes('packing') || title.includes('inventory');
         }
         if (selectedCategory === 'Drivers') {
-          return cat === 'drivers' || cat.includes('driver') || cat.includes('delivery') || cat.includes('rider') || cat.includes('courier') || cat.includes('fleet') || title.includes('driver') || title.includes('rider') || title.includes('delivery') || title.includes('van') || title.includes('truck') || title.includes('courier');
+          return cat === 'drivers' || cat.includes('driver') || cat.includes('fleet') || cat.includes('chauffeur') || title.includes('driver') || title.includes('van') || title.includes('truck') || title.includes('pilot') || title.includes('auto') || title.includes('cab');
+        }
+        if (selectedCategory === 'Office & Admin') {
+          return cat === 'office & admin' || cat.includes('office') || cat.includes('admin') || cat.includes('support') || title.includes('admin') || title.includes('office') || title.includes('telecaller') || title.includes('receptionist') || title.includes('accountant') || title.includes('hr') || title.includes('coordinator');
         }
         if (selectedCategory === 'Other Jobs') {
-          const isWh = cat.includes('warehouse') || title.includes('warehouse') || title.includes('inventory');
-          const isPp = cat.includes('picker') || cat.includes('packer') || title.includes('picker') || title.includes('packer');
-          const isDr = cat.includes('driver') || cat.includes('delivery') || cat.includes('rider') || title.includes('driver') || title.includes('rider') || title.includes('delivery');
-          return !isWh && !isPp && !isDr;
-        }
-        if (selectedCategory === 'Delivery Jobs') {
-          return cat === 'delivery jobs' || cat.includes('delivery') || cat.includes('courier') || cat.includes('trucking');
-        }
-        if (selectedCategory === 'Warehouse / Picker&Packer') {
-          return cat === 'warehouse / picker&packer' || cat.includes('warehouse') || cat.includes('picker') || cat.includes('dispatch');
+          const isDel = cat.includes('delivery') || cat.includes('logistics') || title.includes('delivery') || title.includes('logistics');
+          const isWh = cat.includes('warehouse') || cat.includes('pack') || cat.includes('picker') || title.includes('warehouse') || title.includes('packer');
+          const isDr = cat.includes('driver') || title.includes('driver') || title.includes('van');
+          const isOff = cat.includes('office') || cat.includes('admin') || title.includes('admin') || title.includes('office');
+          return !isDel && !isWh && !isDr && !isOff;
         }
         return j.category === selectedCategory;
       });
@@ -1226,9 +1227,9 @@ export default function CandidateDashboard({
                 </div>
               </div>
 
-              {/* 4 JOB CATEGORIES TILES (Warehouse, Picker/Packer, Drivers, Other Jobs) */}
+              {/* 5 JOB CATEGORIES TILES (Delivery & Logistics, Warehouse & Packing, Drivers, Office & Admin, Other Jobs) */}
               <div className="w-full bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-xs">
-                <div className="flex items-center justify-between mb-2 sm:mb-2.5">
+                <div className="flex items-center justify-between mb-2.5 sm:mb-3">
                   <span className="text-[10px] sm:text-xs font-black text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#1D61F2]" />
                     Job Categories
@@ -1243,56 +1244,56 @@ export default function CandidateDashboard({
                   )}
                 </div>
 
-                <div className="grid grid-cols-4 gap-2 sm:gap-3">
-                  {/* Category 1: Warehouse */}
+                <div className="grid grid-cols-5 gap-1 sm:gap-3">
+                  {/* Category 1: Delivery & Logistics */}
                   <button
                     onClick={() => {
-                      setSelectedCategory(selectedCategory === 'Warehouse' ? 'All' : 'Warehouse');
+                      setSelectedCategory(selectedCategory === 'Delivery & Logistics' ? 'All' : 'Delivery & Logistics');
                     }}
-                    className={`group relative flex flex-col items-center justify-center py-2 sm:py-3 px-1 rounded-xl sm:rounded-2xl border transition-all cursor-pointer ${
-                      selectedCategory === 'Warehouse'
-                        ? 'bg-amber-50/80 border-amber-400 ring-2 ring-amber-400/20 shadow-xs'
-                        : 'bg-slate-50/60 border-slate-100 hover:border-slate-200 hover:bg-slate-50'
+                    className={`group relative flex flex-col items-center justify-start py-1.5 sm:py-2.5 px-0.5 sm:px-1 rounded-xl sm:rounded-2xl transition-all cursor-pointer ${
+                      selectedCategory === 'Delivery & Logistics'
+                        ? 'bg-blue-50/90 ring-2 ring-blue-500/40 shadow-xs'
+                        : 'hover:bg-slate-50/80'
                     }`}
                   >
-                    <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 ${
-                      selectedCategory === 'Warehouse'
-                        ? 'bg-amber-500 text-white shadow-xs'
-                        : 'bg-amber-50 text-amber-600 border border-amber-200/60'
+                    <div className={`w-11 h-11 sm:w-13 sm:h-13 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
+                      selectedCategory === 'Delivery & Logistics'
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                        : 'bg-blue-50/60 text-[#1D61F2] border-blue-200/70'
                     }`}>
-                      <Warehouse className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <Truck className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
-                    <span className="text-[10px] sm:text-xs font-black text-slate-800 mt-1 truncate max-w-full">
-                      Warehouse
+                    <span className="text-[9px] sm:text-xs font-bold text-slate-800 mt-1.5 text-center leading-tight">
+                      Delivery &<br />Logistics
                     </span>
-                    <span className="text-[8px] sm:text-[9px] font-bold text-slate-400 mt-0.5 truncate">
-                      {categoryCounts.warehouse} Jobs
+                    <span className="text-[7.5px] sm:text-[9px] font-semibold text-slate-400 mt-0.5">
+                      {categoryCounts.deliveryLogistics} Jobs
                     </span>
                   </button>
 
-                  {/* Category 2: Picker & Packer */}
+                  {/* Category 2: Warehouse & Packing */}
                   <button
                     onClick={() => {
-                      setSelectedCategory(selectedCategory === 'Picker & Packer' ? 'All' : 'Picker & Packer');
+                      setSelectedCategory(selectedCategory === 'Warehouse & Packing' ? 'All' : 'Warehouse & Packing');
                     }}
-                    className={`group relative flex flex-col items-center justify-center py-2 sm:py-3 px-1 rounded-xl sm:rounded-2xl border transition-all cursor-pointer ${
-                      selectedCategory === 'Picker & Packer'
-                        ? 'bg-purple-50/80 border-purple-400 ring-2 ring-purple-400/20 shadow-xs'
-                        : 'bg-slate-50/60 border-slate-100 hover:border-slate-200 hover:bg-slate-50'
+                    className={`group relative flex flex-col items-center justify-start py-1.5 sm:py-2.5 px-0.5 sm:px-1 rounded-xl sm:rounded-2xl transition-all cursor-pointer ${
+                      selectedCategory === 'Warehouse & Packing'
+                        ? 'bg-orange-50/90 ring-2 ring-orange-500/40 shadow-xs'
+                        : 'hover:bg-slate-50/80'
                     }`}
                   >
-                    <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 ${
-                      selectedCategory === 'Picker & Packer'
-                        ? 'bg-purple-600 text-white shadow-xs'
-                        : 'bg-purple-50 text-purple-600 border border-purple-200/60'
+                    <div className={`w-11 h-11 sm:w-13 sm:h-13 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
+                      selectedCategory === 'Warehouse & Packing'
+                        ? 'bg-orange-600 text-white border-orange-600 shadow-xs'
+                        : 'bg-orange-50/60 text-orange-600 border-orange-200/70'
                     }`}>
-                      <Package className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <Package className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
-                    <span className="text-[10px] sm:text-xs font-black text-slate-800 mt-1 truncate max-w-full">
-                      Picker/Packer
+                    <span className="text-[9px] sm:text-xs font-bold text-slate-800 mt-1.5 text-center leading-tight">
+                      Warehouse &<br />Packing
                     </span>
-                    <span className="text-[8px] sm:text-[9px] font-bold text-slate-400 mt-0.5 truncate">
-                      {categoryCounts.pickerPacker} Jobs
+                    <span className="text-[7.5px] sm:text-[9px] font-semibold text-slate-400 mt-0.5">
+                      {categoryCounts.warehousePacking} Jobs
                     </span>
                   </button>
 
@@ -1301,49 +1302,75 @@ export default function CandidateDashboard({
                     onClick={() => {
                       setSelectedCategory(selectedCategory === 'Drivers' ? 'All' : 'Drivers');
                     }}
-                    className={`group relative flex flex-col items-center justify-center py-2 sm:py-3 px-1 rounded-xl sm:rounded-2xl border transition-all cursor-pointer ${
+                    className={`group relative flex flex-col items-center justify-start py-1.5 sm:py-2.5 px-0.5 sm:px-1 rounded-xl sm:rounded-2xl transition-all cursor-pointer ${
                       selectedCategory === 'Drivers'
-                        ? 'bg-blue-50/80 border-[#1D61F2] ring-2 ring-[#1D61F2]/20 shadow-xs'
-                        : 'bg-slate-50/60 border-slate-100 hover:border-slate-200 hover:bg-slate-50'
+                        ? 'bg-sky-50/90 ring-2 ring-sky-500/40 shadow-xs'
+                        : 'hover:bg-slate-50/80'
                     }`}
                   >
-                    <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 ${
+                    <div className={`w-11 h-11 sm:w-13 sm:h-13 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
                       selectedCategory === 'Drivers'
-                        ? 'bg-[#1D61F2] text-white shadow-xs'
-                        : 'bg-blue-50 text-[#1D61F2] border border-blue-200/60'
+                        ? 'bg-sky-600 text-white border-sky-600 shadow-xs'
+                        : 'bg-sky-50/60 text-sky-600 border-sky-200/70'
                     }`}>
-                      <Truck className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <Car className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
-                    <span className="text-[10px] sm:text-xs font-black text-slate-800 mt-1 truncate max-w-full">
-                      Drivers
+                    <span className="text-[9px] sm:text-xs font-bold text-slate-800 mt-1.5 text-center leading-tight">
+                      Drivers<br />& Fleet
                     </span>
-                    <span className="text-[8px] sm:text-[9px] font-bold text-slate-400 mt-0.5 truncate">
+                    <span className="text-[7.5px] sm:text-[9px] font-semibold text-slate-400 mt-0.5">
                       {categoryCounts.drivers} Jobs
                     </span>
                   </button>
 
-                  {/* Category 4: Other Jobs */}
+                  {/* Category 4: Office & Admin */}
+                  <button
+                    onClick={() => {
+                      setSelectedCategory(selectedCategory === 'Office & Admin' ? 'All' : 'Office & Admin');
+                    }}
+                    className={`group relative flex flex-col items-center justify-start py-1.5 sm:py-2.5 px-0.5 sm:px-1 rounded-xl sm:rounded-2xl transition-all cursor-pointer ${
+                      selectedCategory === 'Office & Admin'
+                        ? 'bg-purple-50/90 ring-2 ring-purple-500/40 shadow-xs'
+                        : 'hover:bg-slate-50/80'
+                    }`}
+                  >
+                    <div className={`w-11 h-11 sm:w-13 sm:h-13 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
+                      selectedCategory === 'Office & Admin'
+                        ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
+                        : 'bg-purple-50/60 text-purple-600 border-purple-200/70'
+                    }`}>
+                      <Briefcase className="w-5 h-5 sm:w-6 sm:h-6" />
+                    </div>
+                    <span className="text-[9px] sm:text-xs font-bold text-slate-800 mt-1.5 text-center leading-tight">
+                      Office &<br />Admin
+                    </span>
+                    <span className="text-[7.5px] sm:text-[9px] font-semibold text-slate-400 mt-0.5">
+                      {categoryCounts.officeAdmin} Jobs
+                    </span>
+                  </button>
+
+                  {/* Category 5: Other Jobs */}
                   <button
                     onClick={() => {
                       setSelectedCategory(selectedCategory === 'Other Jobs' ? 'All' : 'Other Jobs');
                     }}
-                    className={`group relative flex flex-col items-center justify-center py-2 sm:py-3 px-1 rounded-xl sm:rounded-2xl border transition-all cursor-pointer ${
+                    className={`group relative flex flex-col items-center justify-start py-1.5 sm:py-2.5 px-0.5 sm:px-1 rounded-xl sm:rounded-2xl transition-all cursor-pointer ${
                       selectedCategory === 'Other Jobs'
-                        ? 'bg-emerald-50/80 border-emerald-500 ring-2 ring-emerald-500/20 shadow-xs'
-                        : 'bg-slate-50/60 border-slate-100 hover:border-slate-200 hover:bg-slate-50'
+                        ? 'bg-emerald-50/90 ring-2 ring-emerald-500/40 shadow-xs'
+                        : 'hover:bg-slate-50/80'
                     }`}
                   >
-                    <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 ${
+                    <div className={`w-11 h-11 sm:w-13 sm:h-13 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
                       selectedCategory === 'Other Jobs'
-                        ? 'bg-emerald-600 text-white shadow-xs'
-                        : 'bg-emerald-50 text-emerald-600 border border-emerald-200/60'
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                        : 'bg-emerald-50/60 text-emerald-600 border-emerald-200/70'
                     }`}>
-                      <Briefcase className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <Store className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
-                    <span className="text-[10px] sm:text-xs font-black text-slate-800 mt-1 truncate max-w-full">
-                      Other Jobs
+                    <span className="text-[9px] sm:text-xs font-bold text-slate-800 mt-1.5 text-center leading-tight">
+                      Other<br />Jobs
                     </span>
-                    <span className="text-[8px] sm:text-[9px] font-bold text-slate-400 mt-0.5 truncate">
+                    <span className="text-[7.5px] sm:text-[9px] font-semibold text-slate-400 mt-0.5">
                       {categoryCounts.other} Jobs
                     </span>
                   </button>
