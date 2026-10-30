@@ -156,35 +156,104 @@ export default function CandidateDashboard({
   const [applyingJobId, setApplyingJobId] = React.useState<string | null>(null);
   const [withdrawingAppId, setWithdrawingAppId] = React.useState<string | null>(null);
 
-  // Recommended Jobs Carousel state
-  const [carouselIndex, setCarouselIndex] = React.useState(0);
-  const [carouselDragStart, setCarouselDragStart] = React.useState<number | null>(null);
-  const [carouselDragDelta, setCarouselDragDelta] = React.useState(0);
-  const [carouselIsDragging, setCarouselIsDragging] = React.useState(false);
-  const carouselHasDraggedRef = React.useRef(false);
-  const carouselDragStartX = React.useRef<number | null>(null);
-  const carouselDragStartY = React.useRef<number | null>(null);
-  const carouselIsHorizontal = React.useRef(false);
-  const [carouselVisibleCount, setCarouselVisibleCount] = React.useState<number>(() => {
-    if (typeof window !== 'undefined') {
-      if (window.innerWidth < 640) return 1;
-      if (window.innerWidth < 1024) return 2;
+  // Helper for deterministic seeded random shuffle
+  const shuffleJobsArray = (array: any[], seed: number): any[] => {
+    const result = [...array];
+    let m = result.length;
+    let s = seed;
+    while (m > 0) {
+      s = (s * 9301 + 49297) % 233280;
+      const rnd = s / 233280;
+      const i = Math.floor(rnd * m);
+      m--;
+      const temp = result[m];
+      result[m] = result[i];
+      result[i] = temp;
     }
-    return 3;
-  });
+    return result;
+  };
 
-  React.useEffect(() => {
-    const updateVisible = () => {
-      if (typeof window !== 'undefined') {
-        if (window.innerWidth < 640) setCarouselVisibleCount(1);
-        else if (window.innerWidth < 1024) setCarouselVisibleCount(2);
-        else setCarouselVisibleCount(3);
-      }
-    };
-    updateVisible();
-    window.addEventListener('resize', updateVisible);
-    return () => window.removeEventListener('resize', updateVisible);
+  // Recommended Jobs Carousel state & refs for ultra-smooth drag/slide
+  const carouselTrackRef = React.useRef<HTMLDivElement>(null);
+  const [carouselIndex, setCarouselIndex] = React.useState(0);
+  const [isCarouselDragging, setIsCarouselDragging] = React.useState(false);
+  const carouselStartXRef = React.useRef(0);
+  const carouselStartScrollLeftRef = React.useRef(0);
+  const carouselHasDraggedRef = React.useRef(false);
+
+  // Update carouselIndex on scroll
+  const handleCarouselScroll = React.useCallback(() => {
+    if (!carouselTrackRef.current) return;
+    const container = carouselTrackRef.current;
+    const firstCard = container.querySelector('[data-carousel-card]') as HTMLElement;
+    if (!firstCard) return;
+    const cardWidth = firstCard.offsetWidth + 16;
+    const idx = Math.round(container.scrollLeft / cardWidth);
+    setCarouselIndex(Math.max(0, Math.min(idx, Math.max(0, activeJobs.length - 1))));
+  }, [activeJobs.length]);
+
+  // Scroll carousel to card index
+  const scrollCarouselTo = React.useCallback((idx: number) => {
+    if (!carouselTrackRef.current) return;
+    const container = carouselTrackRef.current;
+    const firstCard = container.querySelector('[data-carousel-card]') as HTMLElement;
+    if (!firstCard) return;
+    const cardWidth = firstCard.offsetWidth + 16;
+    container.scrollTo({
+      left: idx * cardWidth,
+      behavior: 'smooth'
+    });
   }, []);
+
+  // Previous / Next button step with seamless loop
+  const handleCarouselStep = React.useCallback((direction: 'prev' | 'next') => {
+    if (!carouselTrackRef.current) return;
+    const container = carouselTrackRef.current;
+    const firstCard = container.querySelector('[data-carousel-card]') as HTMLElement;
+    const cardWidth = firstCard ? firstCard.offsetWidth + 16 : 320;
+    const maxScroll = container.scrollWidth - container.clientWidth;
+
+    if (direction === 'prev') {
+      if (container.scrollLeft <= 15) {
+        container.scrollTo({ left: maxScroll, behavior: 'smooth' });
+      } else {
+        container.scrollBy({ left: -cardWidth, behavior: 'smooth' });
+      }
+    } else {
+      if (container.scrollLeft >= maxScroll - 15) {
+        container.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        container.scrollBy({ left: cardWidth, behavior: 'smooth' });
+      }
+    }
+  }, []);
+
+  // Mouse Drag Handlers for Desktop
+  const handleCarouselMouseDown = (e: React.MouseEvent) => {
+    if (!carouselTrackRef.current) return;
+    setIsCarouselDragging(true);
+    carouselStartXRef.current = e.pageX - carouselTrackRef.current.offsetLeft;
+    carouselStartScrollLeftRef.current = carouselTrackRef.current.scrollLeft;
+    carouselHasDraggedRef.current = false;
+  };
+
+  const handleCarouselMouseMove = (e: React.MouseEvent) => {
+    if (!isCarouselDragging || !carouselTrackRef.current) return;
+    e.preventDefault();
+    const currentX = e.pageX - carouselTrackRef.current.offsetLeft;
+    const walk = (currentX - carouselStartXRef.current) * 1.35;
+    if (Math.abs(walk) > 6) {
+      carouselHasDraggedRef.current = true;
+    }
+    carouselTrackRef.current.scrollLeft = carouselStartScrollLeftRef.current - walk;
+  };
+
+  const handleCarouselMouseUp = () => {
+    setIsCarouselDragging(false);
+    setTimeout(() => {
+      carouselHasDraggedRef.current = false;
+    }, 100);
+  };
 
   // Instant Fast Apply States
   const [jobForInstantApply, setJobForInstantApply] = React.useState<any | null>(null);
@@ -575,7 +644,34 @@ export default function CandidateDashboard({
         return s.includes('reject') || s.includes('decline');
       });
     }
-    return filteredJobsList;
+
+    if (!filteredJobsList || filteredJobsList.length === 0) {
+      return [];
+    }
+
+    // 1. Initial list: show all filtered jobs in order
+    const originalList = filteredJobsList.map((job: any, idx: number) => ({
+      ...job,
+      _uniqueKey: `orig-${job.id}-${idx}`,
+      _isRepeat: false,
+      _repeatRound: 0,
+      _repeatIndex: idx
+    }));
+
+    // 2. When came to the end, repeat the same jobs randomly 5 times
+    const repeatedList: any[] = [];
+    for (let round = 1; round <= 5; round++) {
+      const shuffled = shuffleJobsArray(filteredJobsList, round * 7919 + 31).map((job: any, idx: number) => ({
+        ...job,
+        _uniqueKey: `repeat-${round}-${job.id}-${idx}`,
+        _isRepeat: true,
+        _repeatRound: round,
+        _repeatIndex: idx
+      }));
+      repeatedList.push(...shuffled);
+    }
+
+    return [...originalList, ...repeatedList];
   }, [appStatusTab, myApplications, filteredJobsList]);
 
   // Apply Now Handlers (Fast 0ms Optimistic Application)
@@ -1377,86 +1473,31 @@ export default function CandidateDashboard({
                 </div>
               </div>
 
-              {/* RECOMMENDED JOBS SECTION - Smooth Swipe Carousel */}
+              {/* RECOMMENDED JOBS SECTION - Smooth Visible Swipe & Drag Carousel */}
               {(() => {
                 const totalJobs = activeJobs.length;
-                const VISIBLE = Math.max(1, Math.min(carouselVisibleCount, totalJobs || 1));
-
-                const goTo = (idx: number) => {
-                  if (totalJobs === 0) return;
-                  const next = ((idx % totalJobs) + totalJobs) % totalJobs;
-                  setCarouselIndex(next);
-                };
-
-                const handleDragStart = (clientX: number, clientY: number) => {
-                  carouselDragStartX.current = clientX;
-                  carouselDragStartY.current = clientY;
-                  carouselIsHorizontal.current = false;
-                  carouselHasDraggedRef.current = false;
-                  setCarouselDragStart(clientX);
-                  setCarouselDragDelta(0);
-                  setCarouselIsDragging(true);
-                };
-
-                const handleDragMove = (clientX: number, clientY: number) => {
-                  if (carouselDragStartX.current === null) return;
-                  const deltaX = clientX - carouselDragStartX.current;
-                  const deltaY = carouselDragStartY.current !== null ? clientY - carouselDragStartY.current : 0;
-
-                  if (!carouselIsHorizontal.current) {
-                    if (Math.abs(deltaX) > 6 && Math.abs(deltaX) > Math.abs(deltaY)) {
-                      carouselIsHorizontal.current = true;
-                    } else if (Math.abs(deltaY) > 8) {
-                      carouselDragStartX.current = null;
-                      setCarouselIsDragging(false);
-                      setCarouselDragDelta(0);
-                      return;
-                    }
-                  }
-
-                  if (carouselIsHorizontal.current) {
-                    if (Math.abs(deltaX) > 8) {
-                      carouselHasDraggedRef.current = true;
-                    }
-                    setCarouselDragDelta(deltaX);
-                  }
-                };
-
-                const handleDragEnd = () => {
-                  if (carouselDragStartX.current !== null && carouselIsHorizontal.current) {
-                    if (carouselDragDelta < -35) {
-                      goTo(carouselIndex + 1);
-                    } else if (carouselDragDelta > 35) {
-                      goTo(carouselIndex - 1);
-                    }
-                  }
-                  setCarouselIsDragging(false);
-                  setCarouselDragDelta(0);
-                  carouselDragStartX.current = null;
-                  carouselDragStartY.current = null;
-                  carouselIsHorizontal.current = false;
-                  setTimeout(() => {
-                    carouselHasDraggedRef.current = false;
-                  }, 80);
-                };
-
-                const displayJobs = totalJobs === 0 ? [] : Array.from({ length: Math.min(VISIBLE, totalJobs) }, (_, i) =>
-                  activeJobs[(carouselIndex + i) % totalJobs]
-                );
 
                 return (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
-                        🔥 Recommended Jobs
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                          🔥 Recommended Jobs
+                        </h3>
+                        {totalJobs > 1 && (
+                          <span className="hidden sm:inline-flex items-center text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                            Drag or swipe to explore
+                          </span>
+                        )}
+                      </div>
                       <div className="flex items-center gap-2 sm:gap-3">
                         {totalJobs > 0 && (
-                          <span className="text-[10px] font-bold text-slate-400">
+                          <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
                             {carouselIndex + 1} / {totalJobs}
                           </span>
                         )}
                         <button
+                          type="button"
                           onClick={() => {
                             const el = document.getElementById('jobs-table-section');
                             if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -1474,124 +1515,143 @@ export default function CandidateDashboard({
                         <p className="text-xs font-bold">Loading jobs...</p>
                       </div>
                     ) : (
-                      <div className="relative select-none px-2 sm:px-0">
-                        {/* Left Arrow */}
-                        <button
-                          onClick={() => goTo(carouselIndex - 1)}
-                          className="absolute -left-1 sm:-left-3.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-9 sm:h-9 bg-white border border-slate-200 rounded-full shadow-md flex items-center justify-center hover:bg-[#1D61F2] hover:text-white hover:border-[#1D61F2] transition-all cursor-pointer"
-                          aria-label="Previous"
-                        >
-                          <ChevronRight className="w-4 h-4 rotate-180" />
-                        </button>
-
-                        {/* Cards Carousel Container with multi-touch & pointer swipe */}
-                        <div
-                          className="overflow-hidden px-1 py-2 touch-pan-y select-none"
-                          onMouseDown={(e) => {
-                            handleDragStart(e.clientX, e.clientY);
-                          }}
-                          onMouseMove={(e) => {
-                            if (carouselIsDragging) handleDragMove(e.clientX, e.clientY);
-                          }}
-                          onMouseUp={handleDragEnd}
-                          onMouseLeave={handleDragEnd}
-                          onTouchStart={(e) => {
-                            if (e.touches[0]) {
-                              handleDragStart(e.touches[0].clientX, e.touches[0].clientY);
-                            }
-                          }}
-                          onTouchMove={(e) => {
-                            if (e.touches[0]) {
-                              handleDragMove(e.touches[0].clientX, e.touches[0].clientY);
-                            }
-                          }}
-                          onTouchEnd={handleDragEnd}
-                          onTouchCancel={handleDragEnd}
-                          style={{ cursor: carouselIsDragging ? 'grabbing' : 'grab', touchAction: 'pan-y' }}
-                        >
-                          <div
-                            className="grid gap-4 sm:gap-5"
-                            style={{
-                              gridTemplateColumns: `repeat(${Math.min(VISIBLE, totalJobs)}, 1fr)`,
-                              transform: carouselIsDragging ? `translateX(${carouselDragDelta}px)` : 'translateX(0)',
-                              transition: carouselIsDragging ? 'none' : 'transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1)',
-                            }}
+                      <div className="relative group/carousel">
+                        {/* Left Arrow Button */}
+                        {totalJobs > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleCarouselStep('prev')}
+                            className="absolute -left-2 sm:-left-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-10 sm:h-10 bg-white/95 backdrop-blur-xs border border-slate-200 text-slate-700 hover:text-white hover:bg-[#1D61F2] hover:border-[#1D61F2] rounded-full shadow-lg flex items-center justify-center transition-all cursor-pointer active:scale-90"
+                            aria-label="Previous job"
                           >
-                            {displayJobs.map((job, idx) => {
-                              const isApplied = myApplications.some(a => String(a.jobId) === String(job.id));
-                              const isSaved = savedJobIds.includes(job.id);
-                              return (
-                                <div
-                                  key={`carousel-${job.id}-${carouselIndex}-${idx}`}
-                                  onClick={() => {
-                                    if (!carouselHasDraggedRef.current) {
-                                      handleViewDetails(job);
-                                    }
-                                  }}
-                                  className="bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-md hover:border-[#1D61F2] transition-all flex flex-col justify-between cursor-pointer group"
-                                >
-                                  <div>
-                                    <div className="flex items-center justify-between mb-3 sm:mb-4">
-                                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white border-2 border-slate-100 flex items-center justify-center overflow-hidden p-1 shadow-2xs">
-                                        {job.companyLogo ? (
-                                          <img src={job.companyLogo} alt={job.companyName} className="w-full h-full object-contain" />
-                                        ) : (
-                                          <Building className="w-6 h-6 sm:w-7 sm:h-7 text-[#1D61F2]" />
-                                        )}
-                                      </div>
-                                      <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-                                        <CheckCircle className="w-3 h-3 fill-emerald-500 text-white" /> Verified
-                                      </span>
-                                    </div>
-                                    <h4 className="font-black text-slate-900 text-sm sm:text-base line-clamp-1 group-hover:text-[#1D61F2] transition-colors">{job.title}</h4>
-                                    <p className="text-xs font-bold text-slate-500 mt-0.5 truncate">
-                                      {job.companyName} • <span className="text-slate-400">{job.employmentType || 'Full Time'}</span>
-                                    </p>
-                                    <p className="text-xs font-bold text-slate-500 mt-2 flex items-center gap-1 truncate">
-                                      <MapPin className="w-3.5 h-3.5 text-[#1D61F2] shrink-0" /> {job.city || 'India'}
-                                    </p>
-                                    <div className="flex flex-wrap gap-1.5 mt-3">
-                                      <span className="px-2.5 py-1 bg-blue-50 text-[#1D61F2] text-[10px] font-extrabold rounded-lg">{job.category || 'Delivery'}</span>
-                                      <span className="px-2.5 py-1 bg-slate-100 text-slate-700 text-[10px] font-bold rounded-lg">{job.experienceRequired ? `${job.experienceRequired}+ yrs` : 'Fresher'}</span>
-                                    </div>
-                                  </div>
-                                  <div className="mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
-                                    <span className="text-xs sm:text-[13px] font-black text-slate-900">
-                                      ₹{job.minSalary ? `${job.minSalary.toLocaleString()} - ${job.maxSalary?.toLocaleString()}` : '35,000'}/mo
-                                    </span>
-                                    <div className="flex items-center gap-2">
-                                      <button onClick={(e) => { e.stopPropagation(); handleToggleSaveJob(job.id, e); }} className="p-2 sm:p-2.5 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer" title="Save Job">
-                                        <Bookmark className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isSaved ? 'fill-[#1D61F2] text-[#1D61F2]' : 'text-slate-400'}`} />
-                                      </button>
-                                      {isApplied ? (
-                                        <span className="px-3 sm:px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-black rounded-xl">Applied ✓</span>
+                            <ChevronRight className="w-5 h-5 rotate-180" />
+                          </button>
+                        )}
+
+                        {/* Continuous Horizontal Scroll & Drag Track */}
+                        <div
+                          ref={carouselTrackRef}
+                          onScroll={handleCarouselScroll}
+                          onMouseDown={handleCarouselMouseDown}
+                          onMouseMove={handleCarouselMouseMove}
+                          onMouseUp={handleCarouselMouseUp}
+                          onMouseLeave={handleCarouselMouseUp}
+                          className={`flex items-stretch gap-4 sm:gap-5 overflow-x-auto scrollbar-none snap-x snap-mandatory py-2.5 px-1 select-none ${
+                            isCarouselDragging ? 'cursor-grabbing scroll-auto' : 'cursor-grab scroll-smooth'
+                          }`}
+                          style={{
+                            scrollbarWidth: 'none',
+                            msOverflowStyle: 'none',
+                            WebkitOverflowScrolling: 'touch',
+                          }}
+                        >
+                          {activeJobs.map((job, idx) => {
+                            const isApplied = myApplications.some(a => String(a.jobId) === String(job.id));
+                            const isSaved = savedJobIds.includes(job.id);
+                            return (
+                              <div
+                                key={`rec-job-${job.id}-${idx}`}
+                                data-carousel-card
+                                onClick={() => {
+                                  if (!carouselHasDraggedRef.current) {
+                                    handleViewDetails(job);
+                                  }
+                                }}
+                                className="w-[84vw] sm:w-[320px] md:w-[350px] shrink-0 snap-start bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-lg hover:border-[#1D61F2] transition-all flex flex-col justify-between cursor-pointer group/card"
+                              >
+                                <div>
+                                  <div className="flex items-center justify-between mb-3 sm:mb-4">
+                                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white border-2 border-slate-100 flex items-center justify-center overflow-hidden p-1 shadow-2xs">
+                                      {job.companyLogo ? (
+                                        <img src={job.companyLogo} alt={job.companyName} className="w-full h-full object-contain" />
                                       ) : (
-                                        <button onClick={(e) => { e.stopPropagation(); handleApplyNow(job); }} disabled={applyingJobId === job.id} className="px-4 sm:px-5 py-2 sm:py-2.5 bg-[#1D61F2] hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer">
-                                          Apply Now
-                                        </button>
+                                        <Building className="w-6 h-6 sm:w-7 sm:h-7 text-[#1D61F2]" />
                                       )}
                                     </div>
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                                      <CheckCircle className="w-3 h-3 fill-emerald-500 text-white" /> Verified
+                                    </span>
+                                  </div>
+                                  <h4 className="font-black text-slate-900 text-sm sm:text-base line-clamp-1 group-hover/card:text-[#1D61F2] transition-colors">
+                                    {job.title}
+                                  </h4>
+                                  <p className="text-xs font-bold text-slate-500 mt-0.5 truncate">
+                                    {job.companyName} • <span className="text-slate-400">{job.employmentType || 'Full Time'}</span>
+                                  </p>
+                                  <p className="text-xs font-bold text-slate-500 mt-2 flex items-center gap-1 truncate">
+                                    <MapPin className="w-3.5 h-3.5 text-[#1D61F2] shrink-0" /> {job.city || 'India'}
+                                  </p>
+                                  <div className="flex flex-wrap gap-1.5 mt-3">
+                                    <span className="px-2.5 py-1 bg-blue-50 text-[#1D61F2] text-[10px] font-extrabold rounded-lg">
+                                      {job.category || 'Delivery'}
+                                    </span>
+                                    <span className="px-2.5 py-1 bg-slate-100 text-slate-700 text-[10px] font-bold rounded-lg">
+                                      {job.experienceRequired ? `${job.experienceRequired}+ yrs` : 'Fresher'}
+                                    </span>
                                   </div>
                                 </div>
-                              );
-                            })}
-                          </div>
+
+                                <div className="mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                                  <span className="text-xs sm:text-[13px] font-black text-slate-900">
+                                    ₹{job.minSalary ? `${job.minSalary.toLocaleString()} - ${job.maxSalary?.toLocaleString()}` : '35,000'}/mo
+                                  </span>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={(e) => { e.stopPropagation(); handleToggleSaveJob(job.id, e); }}
+                                      className="p-2 sm:p-2.5 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
+                                      title="Save Job"
+                                    >
+                                      <Bookmark className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isSaved ? 'fill-[#1D61F2] text-[#1D61F2]' : 'text-slate-400'}`} />
+                                    </button>
+                                    {isApplied ? (
+                                      <span className="px-3 sm:px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-black rounded-xl">
+                                        Applied ✓
+                                      </span>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => { e.stopPropagation(); handleApplyNow(job); }}
+                                        disabled={applyingJobId === job.id}
+                                        className="px-4 sm:px-5 py-2 sm:py-2.5 bg-[#1D61F2] hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer"
+                                      >
+                                        Apply Now
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
 
-                        {/* Right Arrow */}
-                        <button
-                          onClick={() => goTo(carouselIndex + 1)}
-                          className="absolute -right-1 sm:-right-3.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-9 sm:h-9 bg-white border border-slate-200 rounded-full shadow-md flex items-center justify-center hover:bg-[#1D61F2] hover:text-white hover:border-[#1D61F2] transition-all cursor-pointer"
-                          aria-label="Next"
-                        >
-                          <ChevronRight className="w-4 h-4" />
-                        </button>
-
-                        {/* Dot indicators */}
+                        {/* Right Arrow Button */}
                         {totalJobs > 1 && (
-                          <div className="flex items-center justify-center gap-1.5 mt-4">
+                          <button
+                            type="button"
+                            onClick={() => handleCarouselStep('next')}
+                            className="absolute -right-2 sm:-right-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-10 sm:h-10 bg-white/95 backdrop-blur-xs border border-slate-200 text-slate-700 hover:text-white hover:bg-[#1D61F2] hover:border-[#1D61F2] rounded-full shadow-lg flex items-center justify-center transition-all cursor-pointer active:scale-90"
+                            aria-label="Next job"
+                          >
+                            <ChevronRight className="w-5 h-5" />
+                          </button>
+                        )}
+
+                        {/* Dot & Pill Indicators */}
+                        {totalJobs > 1 && (
+                          <div className="flex items-center justify-center gap-1.5 mt-3 sm:mt-4">
                             {activeJobs.map((_, i) => (
-                              <button key={i} onClick={() => goTo(i)} className={`rounded-full transition-all cursor-pointer ${i === carouselIndex ? 'w-5 h-2 bg-[#1D61F2]' : 'w-2 h-2 bg-slate-200 hover:bg-slate-400'}`} />
+                              <button
+                                key={`dot-${i}`}
+                                type="button"
+                                onClick={() => scrollCarouselTo(i)}
+                                className={`rounded-full transition-all duration-300 cursor-pointer ${
+                                  i === carouselIndex
+                                    ? 'w-6 h-2 bg-[#1D61F2]'
+                                    : 'w-2 h-2 bg-slate-200 hover:bg-slate-400'
+                                }`}
+                                aria-label={`Go to slide ${i + 1}`}
+                              />
                             ))}
                           </div>
                         )}
@@ -1709,111 +1769,127 @@ export default function CandidateDashboard({
                       <p className="text-xs font-bold">No job records found for this view.</p>
                     </div>
                   ) : (
-                    displayedJobsOrApps.map((item: any) => {
+                    displayedJobsOrApps.map((item: any, itemIdx: number) => {
                       const isAppRecord = appStatusTab !== 'all';
                       const job = isAppRecord ? activeJobs.find(j => String(j.id) === String(item.jobId)) || item : item;
                       const isApplied = myApplications.some(a => String(a.jobId) === String(job.id));
                       const isSaved = savedJobIds.includes(job.id);
 
                       return (
-                        <div
-                          key={item.id}
-                          onClick={() => handleViewDetails(job)}
-                          className="p-4 border border-slate-200/80 rounded-2xl bg-white hover:border-[#1D61F2] hover:shadow-xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer group"
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center p-1 overflow-hidden shrink-0 shadow-2xs">
-                              {job.companyLogo ? (
-                                <img src={job.companyLogo} alt={job.companyName} className="w-full h-full object-contain" />
-                              ) : (
-                                <Building className="w-6 h-6 text-[#1D61F2]" />
-                              )}
+                        <React.Fragment key={item._uniqueKey || `${item.id}-${itemIdx}`}>
+                          {item._isRepeat && item._repeatIndex === 0 && (
+                            <div className="py-3 flex items-center gap-3">
+                              <div className="h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent flex-1" />
+                              <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 bg-slate-100 px-3.5 py-1.5 rounded-full border border-slate-200 flex items-center gap-1.5 shadow-2xs">
+                                <Sparkles className="w-3.5 h-3.5 text-[#1D61F2]" />
+                                More Recommended Matches • Round {item._repeatRound} of 5
+                              </span>
+                              <div className="h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent flex-1" />
                             </div>
+                          )}
 
-                            <div>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <h4 className="font-black text-slate-900 text-sm group-hover:text-[#1D61F2] transition-colors">{job.title || job.jobTitle}</h4>
-                                <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-                                  <CheckCircle className="w-2.5 h-2.5 fill-emerald-500 text-white" /> Verified
-                                </span>
+                          <div
+                            onClick={() => handleViewDetails(job)}
+                            className="p-4 border border-slate-200/80 rounded-2xl bg-white hover:border-[#1D61F2] hover:shadow-xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer group"
+                          >
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center p-1 overflow-hidden shrink-0 shadow-2xs">
+                                {job.companyLogo ? (
+                                  <img src={job.companyLogo} alt={job.companyName} className="w-full h-full object-contain" />
+                                ) : (
+                                  <Building className="w-6 h-6 text-[#1D61F2]" />
+                                )}
                               </div>
 
-                              <p className="text-xs font-semibold text-slate-500 mt-0.5">
-                                {job.companyName} • <span className="text-slate-400">{job.employmentType || job.jobEmploymentType || 'Full Time'}</span> • <MapPin className="w-3 h-3 inline text-[#1D61F2]" /> {job.city || job.jobCity || 'India'}
-                              </p>
-
-                              <div className="flex flex-wrap gap-1.5 mt-2">
-                                <span className="px-2 py-0.5 bg-blue-50 text-[#1D61F2] text-[9px] font-extrabold rounded-md">
-                                  {job.category || 'Delivery'}
-                                </span>
-                                <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[9px] font-bold rounded-md">
-                                  {job.experienceRequired ? `${job.experienceRequired}+ yrs` : 'Fresher'}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 shrink-0 justify-between sm:justify-end w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
-                            <div className="text-left sm:text-right">
-                              <span className="text-xs font-black text-slate-900 block">
-                                ₹{job.minSalary ? `${job.minSalary.toLocaleString()} - ${job.maxSalary?.toLocaleString()}` : (job.salary || '35,000')}/month
-                              </span>
-                              <span className="text-[10px] text-slate-400 font-semibold block">
-                                Posted {job.createdAt ? new Date(job.createdAt).toLocaleDateString('en-GB') : 'Recently'}
-                              </span>
-                            </div>
-
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <button
-                                onClick={(e) => { e.stopPropagation(); handleToggleSaveJob(job.id, e); }}
-                                className="p-2 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
-                              >
-                                <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-[#1D61F2] text-[#1D61F2]' : 'text-slate-400'}`} />
-                              </button>
-
-                              {isAppRecord ? (
-                                <div className="flex items-center gap-2">
-                                  {item.currentStatus === 'Withdrawn' || item.withdrawStatus === 'Withdrawn' ? (
-                                    <span className="px-3 py-1.5 bg-slate-100 text-slate-500 border border-slate-200 text-xs font-black rounded-xl">
-                                      Withdrawn
-                                    </span>
-                                  ) : (
-                                    <>
-                                      <span className={`px-3 py-1.5 text-xs font-black rounded-xl border ${
-                                        String(item.currentStatus || '').toLowerCase().includes('shortlist') || String(item.currentStatus || '').toLowerCase().includes('select')
-                                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                          : String(item.currentStatus || '').toLowerCase().includes('reject')
-                                          ? 'bg-red-50 text-red-700 border-red-200'
-                                          : 'bg-blue-50 text-[#1D61F2] border-blue-200'
-                                      }`}>
-                                        {item.currentStatus || 'Applied'} ✓
-                                      </span>
-                                      <button
-                                        onClick={(e) => { e.stopPropagation(); handleWithdrawApplication(item.id); }}
-                                        disabled={withdrawingAppId === item.id}
-                                        className="px-3.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-xs rounded-xl transition-all cursor-pointer disabled:opacity-50"
-                                      >
-                                        {withdrawingAppId === item.id ? 'Withdrawing...' : 'Withdraw'}
-                                      </button>
-                                    </>
-                                  )}
+                              <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h4 className="font-black text-slate-900 text-sm group-hover:text-[#1D61F2] transition-colors">{job.title || job.jobTitle}</h4>
+                                  <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                                    <CheckCircle className="w-2.5 h-2.5 fill-emerald-500 text-white" /> Verified
+                                  </span>
                                 </div>
-                              ) : isApplied ? (
-                                <span className="px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-black rounded-xl">
-                                  Applied ✓
+
+                                <p className="text-xs font-semibold text-slate-500 mt-0.5">
+                                  {job.companyName} • <span className="text-slate-400">{job.employmentType || job.jobEmploymentType || 'Full Time'}</span> • <MapPin className="w-3 h-3 inline text-[#1D61F2]" /> {job.city || job.jobCity || 'India'}
+                                </p>
+
+                                <div className="flex flex-wrap gap-1.5 mt-2">
+                                  <span className="px-2 py-0.5 bg-blue-50 text-[#1D61F2] text-[9px] font-extrabold rounded-md">
+                                    {job.category || 'Delivery'}
+                                  </span>
+                                  <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[9px] font-bold rounded-md">
+                                    {job.experienceRequired ? `${job.experienceRequired}+ yrs` : 'Fresher'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 shrink-0 justify-between sm:justify-end w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
+                              <div className="text-left sm:text-right">
+                                <span className="text-xs font-black text-slate-900 block">
+                                  ₹{job.minSalary ? `${job.minSalary.toLocaleString()} - ${job.maxSalary?.toLocaleString()}` : (job.salary || '35,000')}/month
                                 </span>
-                              ) : (
+                                <span className="text-[10px] text-slate-400 font-semibold block">
+                                  Posted {job.createdAt ? new Date(job.createdAt).toLocaleDateString('en-GB') : 'Recently'}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <button
-                                  onClick={(e) => { e.stopPropagation(); handleApplyNow(job); }}
-                                  disabled={applyingJobId === job.id}
-                                  className="px-5 py-2.5 bg-[#1D61F2] hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer"
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); handleToggleSaveJob(job.id, e); }}
+                                  className="p-2 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
+                                  title="Save Job"
                                 >
-                                  Apply Now
+                                  <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-[#1D61F2] text-[#1D61F2]' : 'text-slate-400'}`} />
                                 </button>
-                              )}
+
+                                {isAppRecord ? (
+                                  <div className="flex items-center gap-2">
+                                    {item.currentStatus === 'Withdrawn' || item.withdrawStatus === 'Withdrawn' ? (
+                                      <span className="px-3 py-1.5 bg-slate-100 text-slate-500 border border-slate-200 text-xs font-black rounded-xl">
+                                        Withdrawn
+                                      </span>
+                                    ) : (
+                                      <>
+                                        <span className={`px-3 py-1.5 text-xs font-black rounded-xl border ${
+                                          String(item.currentStatus || '').toLowerCase().includes('shortlist') || String(item.currentStatus || '').toLowerCase().includes('select')
+                                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                            : String(item.currentStatus || '').toLowerCase().includes('reject')
+                                            ? 'bg-red-50 text-red-700 border-red-200'
+                                            : 'bg-blue-50 text-[#1D61F2] border-blue-200'
+                                        }`}>
+                                          {item.currentStatus || 'Applied'} ✓
+                                        </span>
+                                        <button
+                                          type="button"
+                                          onClick={(e) => { e.stopPropagation(); handleWithdrawApplication(item.id); }}
+                                          disabled={withdrawingAppId === item.id}
+                                          className="px-3.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-xs rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                                        >
+                                          {withdrawingAppId === item.id ? 'Withdrawing...' : 'Withdraw'}
+                                        </button>
+                                      </>
+                                    )}
+                                  </div>
+                                ) : isApplied ? (
+                                  <span className="px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-black rounded-xl">
+                                    Applied ✓
+                                  </span>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); handleApplyNow(job); }}
+                                    disabled={applyingJobId === job.id}
+                                    className="px-5 py-2.5 bg-[#1D61F2] hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer"
+                                  >
+                                    Apply Now
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        </React.Fragment>
                       );
                     })
                   )}
