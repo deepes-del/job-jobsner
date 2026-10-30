@@ -156,8 +156,9 @@ export default function CandidateDashboard({
   const [applyingJobId, setApplyingJobId] = React.useState<string | null>(null);
   const [withdrawingAppId, setWithdrawingAppId] = React.useState<string | null>(null);
 
-  // Helper for deterministic seeded random shuffle
+  // Helper for deterministic seeded random shuffle with company de-clustering
   const shuffleJobsArray = (array: any[], seed: number): any[] => {
+    if (!array || array.length <= 1) return array || [];
     const result = [...array];
     let m = result.length;
     let s = seed;
@@ -170,6 +171,24 @@ export default function CandidateDashboard({
       result[m] = result[i];
       result[i] = temp;
     }
+
+    // De-cluster so jobs from the same company are never listed one after another
+    for (let i = 0; i < result.length - 1; i++) {
+      const currCompany = (result[i].companyName || '').trim().toLowerCase();
+      const nextCompany = (result[i + 1].companyName || '').trim().toLowerCase();
+      if (currCompany && nextCompany && currCompany === nextCompany) {
+        for (let j = i + 2; j < result.length; j++) {
+          const otherCompany = (result[j].companyName || '').trim().toLowerCase();
+          if (otherCompany && otherCompany !== currCompany) {
+            const temp = result[i + 1];
+            result[i + 1] = result[j];
+            result[j] = temp;
+            break;
+          }
+        }
+      }
+    }
+
     return result;
   };
 
@@ -649,24 +668,19 @@ export default function CandidateDashboard({
       return [];
     }
 
-    // 1. Initial list: show all filtered jobs in order
-    const originalList = filteredJobsList.map((job: any, idx: number) => ({
+    // 1. Initial list: randomized with company de-clustering so the same company is not bunched together
+    const randomizedInitial = shuffleJobsArray(filteredJobsList, 101);
+    const originalList = randomizedInitial.map((job: any, idx: number) => ({
       ...job,
       _uniqueKey: `orig-${job.id}-${idx}`,
-      _isRepeat: false,
-      _repeatRound: 0,
-      _repeatIndex: idx
     }));
 
-    // 2. When came to the end, repeat the same jobs randomly 5 times
+    // 2. Repeat the jobs randomly 5 times seamlessly without any round indicators
     const repeatedList: any[] = [];
     for (let round = 1; round <= 5; round++) {
       const shuffled = shuffleJobsArray(filteredJobsList, round * 7919 + 31).map((job: any, idx: number) => ({
         ...job,
         _uniqueKey: `repeat-${round}-${job.id}-${idx}`,
-        _isRepeat: true,
-        _repeatRound: round,
-        _repeatIndex: idx
       }));
       repeatedList.push(...shuffled);
     }
@@ -1776,22 +1790,11 @@ export default function CandidateDashboard({
                       const isSaved = savedJobIds.includes(job.id);
 
                       return (
-                        <React.Fragment key={item._uniqueKey || `${item.id}-${itemIdx}`}>
-                          {item._isRepeat && item._repeatIndex === 0 && (
-                            <div className="py-3 flex items-center gap-3">
-                              <div className="h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent flex-1" />
-                              <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 bg-slate-100 px-3.5 py-1.5 rounded-full border border-slate-200 flex items-center gap-1.5 shadow-2xs">
-                                <Sparkles className="w-3.5 h-3.5 text-[#1D61F2]" />
-                                More Recommended Matches • Round {item._repeatRound} of 5
-                              </span>
-                              <div className="h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent flex-1" />
-                            </div>
-                          )}
-
-                          <div
-                            onClick={() => handleViewDetails(job)}
-                            className="p-4 border border-slate-200/80 rounded-2xl bg-white hover:border-[#1D61F2] hover:shadow-xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer group"
-                          >
+                        <div
+                          key={item._uniqueKey || `${item.id}-${itemIdx}`}
+                          onClick={() => handleViewDetails(job)}
+                          className="p-4 border border-slate-200/80 rounded-2xl bg-white hover:border-[#1D61F2] hover:shadow-xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer group"
+                        >
                             <div className="flex items-center gap-4">
                               <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center p-1 overflow-hidden shrink-0 shadow-2xs">
                                 {job.companyLogo ? (
@@ -1889,7 +1892,6 @@ export default function CandidateDashboard({
                               </div>
                             </div>
                           </div>
-                        </React.Fragment>
                       );
                     })
                   )}
