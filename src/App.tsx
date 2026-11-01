@@ -284,6 +284,9 @@ export default function App() {
     setView('dashboard');
     setPortal('candidate');
     setCandidatePrefill(null);
+    if (typeof window !== 'undefined') {
+      window.history.pushState({ app: 'jobsner', page: 'candidate', view: 'dashboard' }, '', window.location.pathname);
+    }
   };
 
   const handleCandidateProfileSaveSuccess = (updatedProfile: Profile) => {
@@ -313,6 +316,9 @@ export default function App() {
     setToken(null);
     setView('login');
     setUserRole(null);
+    if (typeof window !== 'undefined') {
+      window.history.pushState({ app: 'jobsner', page: 'home' }, '', '/');
+    }
   };
 
   // --- RECRUITER EVENT HANDLERS ---
@@ -325,6 +331,9 @@ export default function App() {
     setRecruiterView('dashboard');
     setPortal('recruiter');
     setUserRole('recruiter');
+    if (typeof window !== 'undefined') {
+      window.history.pushState({ app: 'jobsner', page: 'recruiter', view: 'dashboard' }, '', window.location.pathname);
+    }
   };
 
   const handleRecruiterProfileUpdated = (updatedRecruiter: Recruiter) => {
@@ -347,7 +356,97 @@ export default function App() {
     setRecruiterToken(null);
     setRecruiterView('login');
     setUserRole(null);
+    if (typeof window !== 'undefined') {
+      window.history.pushState({ app: 'jobsner', page: 'home' }, '', '/');
+    }
   };
+
+  // --- BROWSER HISTORY & BACK BUTTON NAVIGATION ---
+  const navigateToHomepage = () => {
+    setUserRole(null);
+    localStorage.removeItem('jobsner_portal');
+    if (typeof window !== 'undefined') {
+      window.history.pushState({ app: 'jobsner', page: 'home' }, '', '/');
+    }
+  };
+
+  const navigateToCandidatePortal = (targetView: 'login' | 'register' | 'dashboard' = 'dashboard') => {
+    setPortal('candidate');
+    setUserRole('candidate');
+    localStorage.setItem('jobsner_portal', 'candidate');
+    setView(targetView);
+    if (typeof window !== 'undefined') {
+      window.history.pushState({ app: 'jobsner', page: 'candidate', view: targetView }, '', window.location.pathname);
+    }
+  };
+
+  const navigateToRecruiterPortal = (targetView: 'login' | 'register' | 'dashboard' = 'dashboard') => {
+    setPortal('recruiter');
+    setUserRole('recruiter');
+    localStorage.setItem('jobsner_portal', 'recruiter');
+    setRecruiterView(targetView);
+    if (typeof window !== 'undefined') {
+      window.history.pushState({ app: 'jobsner', page: 'recruiter', view: targetView }, '', window.location.pathname);
+    }
+  };
+
+  // History sync effect on load & popstate listener for back button
+  useEffect(() => {
+    if (initialLoading) return;
+
+    // Anchor history if user opened JOBSNER directly onto an internal page (e.g. from Google Search)
+    const hasAnchored = sessionStorage.getItem('jobsner_home_anchored');
+    if (!hasAnchored) {
+      sessionStorage.setItem('jobsner_home_anchored', 'true');
+      if (userRole !== null) {
+        // User landed directly on internal page:
+        // Set root entry as Homepage so pressing browser Back lands on Homepage instead of exiting to Google Search
+        window.history.replaceState({ app: 'jobsner', page: 'home' }, '', '/');
+        const currentView = userRole === 'candidate' ? view : recruiterView;
+        window.history.pushState(
+          { app: 'jobsner', page: userRole, view: currentView },
+          '',
+          window.location.pathname + window.location.search
+        );
+      } else {
+        // Landed directly on Homepage: anchor as home without extra entry
+        window.history.replaceState({ app: 'jobsner', page: 'home' }, '', window.location.pathname + window.location.search);
+      }
+    }
+
+    const handlePopState = (e: PopStateEvent) => {
+      // If modal/child handles this pop, don't interfere
+      if (e.state?.modal === 'job_details' || e.state?.modal === 'recruiter_job_form') {
+        return;
+      }
+
+      if (!e.state || e.state.page === 'home') {
+        // Return to JOBSNER Homepage
+        setUserRole(null);
+        return;
+      }
+
+      if (e.state.page === 'candidate') {
+        setUserRole('candidate');
+        setPortal('candidate');
+        if (e.state.view) {
+          setView(e.state.view);
+        }
+        if (e.state.tab) {
+          setCandidateActiveTab(e.state.tab);
+        }
+      } else if (e.state.page === 'recruiter') {
+        setUserRole('recruiter');
+        setPortal('recruiter');
+        if (e.state.view) {
+          setRecruiterView(e.state.view);
+        }
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [initialLoading, userRole, view, recruiterView, candidateActiveTab]);
 
   if (initialLoading) {
     return (
@@ -476,16 +575,7 @@ export default function App() {
             ) : portal === 'candidate' ? (
               <div className="flex items-center gap-2">
                 <button 
-                  onClick={() => {
-                    setPortal('recruiter');
-                    setUserRole('recruiter');
-                    localStorage.setItem('jobsner_portal', 'recruiter');
-                    if (isRecruiterLoggedIn) {
-                      setRecruiterView('dashboard');
-                    } else {
-                      setRecruiterView('login');
-                    }
-                  }}
+                  onClick={() => navigateToRecruiterPortal(isRecruiterLoggedIn ? 'dashboard' : 'login')}
                   className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 border border-gray-200 hover:border-orange-500 hover:text-orange-600 rounded-lg text-xs font-bold transition-all cursor-pointer text-gray-600 bg-white"
                   id="switch-to-recruiter-portal"
                 >
@@ -512,16 +602,7 @@ export default function App() {
               ) : (
                 <div className="flex items-center gap-2">
                   <button 
-                    onClick={() => {
-                      setPortal('candidate');
-                      setUserRole('candidate');
-                      localStorage.setItem('jobsner_portal', 'candidate');
-                      if (isCandidateLoggedIn) {
-                        setView('dashboard');
-                      } else {
-                        setView('login');
-                      }
-                    }}
+                    onClick={() => navigateToCandidatePortal(isCandidateLoggedIn ? 'dashboard' : 'login')}
                     className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 hover:border-orange-500 hover:text-orange-600 rounded-lg text-xs font-bold transition-all cursor-pointer text-gray-600 bg-white"
                     id="switch-to-candidate-portal"
                   >
@@ -601,16 +682,7 @@ export default function App() {
                   </div>
 
                   <button
-                    onClick={() => {
-                      setPortal('recruiter');
-                      setUserRole('recruiter');
-                      localStorage.setItem('jobsner_portal', 'recruiter');
-                      if (isRecruiterLoggedIn) {
-                        setRecruiterView('dashboard');
-                      } else {
-                        setRecruiterView('login');
-                      }
-                    }}
+                    onClick={() => navigateToRecruiterPortal(isRecruiterLoggedIn ? 'dashboard' : 'login')}
                     id="gateway-recruiter-btn"
                     className="mt-6 w-full min-h-[48px] py-3.5 px-4 bg-slate-950 hover:bg-slate-900 active:scale-[0.98] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2 touch-manipulation"
                   >
@@ -659,16 +731,7 @@ export default function App() {
                   </div>
 
                   <button
-                    onClick={() => {
-                      setPortal('candidate');
-                      setUserRole('candidate');
-                      localStorage.setItem('jobsner_portal', 'candidate');
-                      if (isCandidateLoggedIn) {
-                        setView('dashboard');
-                      } else {
-                        setView('login');
-                      }
-                    }}
+                    onClick={() => navigateToCandidatePortal(isCandidateLoggedIn ? 'dashboard' : 'login')}
                     id="gateway-candidate-btn"
                     className="mt-6 w-full min-h-[48px] py-3.5 px-4 bg-orange-600 hover:bg-orange-700 active:scale-[0.98] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2 touch-manipulation"
                   >
@@ -700,24 +763,13 @@ export default function App() {
                       />
                       <div className="max-w-md mx-auto text-center mt-4 flex flex-col gap-2.5">
                         <button
-                          onClick={() => {
-                            setPortal('recruiter');
-                            setUserRole('recruiter');
-                            localStorage.setItem('jobsner_portal', 'recruiter');
-                            if (isRecruiterLoggedIn) {
-                              setRecruiterView('dashboard');
-                            } else {
-                              setRecruiterView('login');
-                            }
-                          }}
+                          onClick={() => navigateToRecruiterPortal(isRecruiterLoggedIn ? 'dashboard' : 'login')}
                           className="text-xs font-bold text-gray-500 hover:text-orange-600 transition-colors cursor-pointer"
                         >
                           Are you a Recruiter? Access Recruiter Portal
                         </button>
                         <button
-                          onClick={() => {
-                            setUserRole(null);
-                          }}
+                          onClick={navigateToHomepage}
                           className="text-xs font-extrabold text-orange-600 hover:underline transition-all cursor-pointer"
                         >
                           ← Choose Another Account Type
@@ -836,9 +888,7 @@ export default function App() {
                       />
                       <div className="max-w-md mx-auto text-center mt-4">
                         <button
-                          onClick={() => {
-                            setUserRole(null);
-                          }}
+                          onClick={navigateToHomepage}
                           className="text-xs font-extrabold text-orange-600 hover:underline transition-all cursor-pointer"
                         >
                           ← Choose Another Account Type

@@ -11,7 +11,7 @@ import {
   Bell, Users, UserCheck, TrendingUp, Menu, MoreVertical, ArrowUpRight,
   UserPlus
 } from 'lucide-react';
-import { Recruiter } from '../types';
+import { Recruiter, normalizeSalaryType } from '../types';
 import NotificationPermissionBanner from './NotificationPermissionBanner';
 import { playNotificationChime, showSystemNotification } from '../lib/webPush';
 import { getSupabase } from '../lib/supabase';
@@ -352,10 +352,30 @@ export default function RecruiterDashboard({
       setJobCompanyLogo('');
     }
     setShowJobForm(true);
+    if (typeof window !== 'undefined') {
+      window.history.pushState({ ...window.history.state, modal: 'recruiter_job_form' }, '', window.location.href);
+    }
     setTimeout(() => {
       scrollToJobFormTop();
     }, 10);
   };
+
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      if (showJobForm) {
+        setShowJobForm(false);
+        setEditingJob(null);
+      }
+      if (viewingJob) {
+        setViewingJob(null);
+      }
+      if (selectedAppDetail) {
+        setSelectedAppDetail(null);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [showJobForm, viewingJob, selectedAppDetail]);
 
   const scrollToJobFormTop = () => {
     document.getElementById('job-posting-fullscreen-page')?.scrollTo({ top: 0, behavior: 'instant' });
@@ -1185,7 +1205,7 @@ export default function RecruiterDashboard({
     setJobWorkLocation(job.workLocation || '');
     setJobMinSalary(String(job.minSalary || ''));
     setJobMaxSalary(String(job.maxSalary || ''));
-    setJobSalaryType(job.salaryType || 'Monthly');
+    setJobSalaryType(normalizeSalaryType(job.salaryType));
     setJobShift(job.shift || 'Day');
     setJobExperience(String(job.experienceRequired || '0'));
     setJobEducation(job.educationRequired || '10th Pass');
@@ -1223,7 +1243,7 @@ export default function RecruiterDashboard({
     setJobWorkLocation(job.workLocation || '');
     setJobMinSalary(String(job.minSalary || ''));
     setJobMaxSalary(String(job.maxSalary || ''));
-    setJobSalaryType(job.salaryType || 'Monthly');
+    setJobSalaryType(normalizeSalaryType(job.salaryType));
     setJobShift(job.shift || 'Day');
     setJobExperience(String(job.experienceRequired || '0'));
     setJobEducation(job.educationRequired || '10th Pass');
@@ -2272,7 +2292,7 @@ export default function RecruiterDashboard({
                         <MapPin className="w-3.5 h-3.5 text-emerald-600" /> {publishedJobData.area}, {publishedJobData.city}
                       </span>
                       <span className="font-bold text-emerald-800 bg-emerald-100/60 px-2 py-0.5 rounded">
-                        ₹{publishedJobData.minSalary} - ₹{publishedJobData.maxSalary} / {publishedJobData.salaryType || 'Monthly'}
+                        ₹{publishedJobData.minSalary} - ₹{publishedJobData.maxSalary} / {normalizeSalaryType(publishedJobData.salaryType)}
                       </span>
                     </div>
                   </div>
@@ -3584,7 +3604,7 @@ export default function RecruiterDashboard({
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-2xl border border-gray-100 text-xs">
                       <div>
                         <p className="text-gray-400 font-bold uppercase tracking-wider text-[9px]">Compensation</p>
-                        <p className="font-extrabold text-gray-800 mt-0.5">₹{viewingJob.minSalary} - ₹{viewingJob.maxSalary} / {viewingJob.salaryType}</p>
+                        <p className="font-extrabold text-gray-800 mt-0.5">₹{viewingJob.minSalary} - ₹{viewingJob.maxSalary} / {normalizeSalaryType(viewingJob.salaryType)}</p>
                       </div>
                       <div>
                         <p className="text-gray-400 font-bold uppercase tracking-wider text-[9px]">Openings Available</p>
@@ -3783,7 +3803,7 @@ export default function RecruiterDashboard({
 
                               <div className="flex items-center gap-2 mt-3 flex-wrap text-xs text-gray-600">
                                 <span className="bg-orange-50/50 text-orange-800 font-extrabold px-2 py-0.5 rounded-md border border-orange-100">
-                                  ₹{job.minSalary} - ₹{job.maxSalary} / {job.salaryType || 'Monthly'}
+                                  ₹{job.minSalary} - ₹{job.maxSalary} / {normalizeSalaryType(job.salaryType)}
                                 </span>
                                 <span className="bg-gray-50 text-gray-600 font-bold px-2 py-0.5 rounded-md border border-gray-150">
                                   {job.openings || 1} open positions

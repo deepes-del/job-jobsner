@@ -1876,10 +1876,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose, onJobPo
                           onChange={(e) => setPostJobForm({ ...postJobForm, salaryType: e.target.value })}
                           className="w-full px-3 py-2 bg-slate-900 border border-slate-700/80 rounded-lg text-xs text-white focus:outline-none focus:border-orange-500"
                         >
-                          <option value="Per Month">Per Month</option>
-                          <option value="Per Week">Per Week</option>
-                          <option value="Per Day">Per Day</option>
-                          <option value="Per Order">Per Order / Payout</option>
+                          <option value="Monthly">Monthly</option>
+                          <option value="Weekly">Weekly</option>
+                          <option value="Daily">Daily</option>
                         </select>
                       </div>
 

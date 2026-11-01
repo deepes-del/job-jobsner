@@ -10,7 +10,7 @@ import {
   Shield, Store, Car, ChevronDown, Bell, Package, Users, BarChart2, Star, Eye, MessageSquare, Settings, HelpCircle, ArrowUpRight, Menu,
   Truck, Warehouse
 } from 'lucide-react';
-import { Candidate, Profile } from '../types';
+import { Candidate, Profile, normalizeSalaryType } from '../types';
 import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
 import FlowerBlastAnimation from './FlowerBlastAnimation';
 import CandidateProfileEdit from './CandidateProfileEdit';
@@ -341,7 +341,7 @@ export default function CandidateDashboard({
                   workLocation: j.workLocation || j.work_location || '',
                   minSalary: Number(j.minSalary ?? j.min_salary ?? 0),
                   maxSalary: Number(j.maxSalary ?? j.max_salary ?? 0),
-                  salaryType: j.salaryType || j.salary_type || 'Per Month',
+                  salaryType: normalizeSalaryType(j.salaryType || j.salary_type),
                   shift: j.shift || 'Day Shift',
                   experienceRequired: Number(j.experienceRequired ?? j.experience_required ?? 0),
                   educationRequired: j.educationRequired || j.education_required || '10th Pass or below',
@@ -818,10 +818,61 @@ export default function CandidateDashboard({
     }
   };
 
-  const handleViewDetails = (job: any) => {
+  const handleViewDetails = (job: any, pushHistory: boolean = true) => {
     setSelectedJob(job);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (pushHistory && typeof window !== 'undefined') {
+      const currentState = window.history.state || {};
+      window.history.pushState(
+        { ...currentState, modal: 'job_details', jobId: job.id },
+        '',
+        window.location.pathname + `?job=${encodeURIComponent(job.id)}`
+      );
+    }
   };
+
+  const handleCloseJobDetails = (fromPopState: boolean = false) => {
+    setSelectedJob(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (!fromPopState && typeof window !== 'undefined') {
+      if (window.history.state?.modal === 'job_details') {
+        window.history.back();
+      } else {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('job');
+        window.history.replaceState({ ...window.history.state, modal: undefined, jobId: undefined }, '', url.pathname + (url.search || ''));
+      }
+    }
+  };
+
+  // Back button popstate listener for Job Details and deep links
+  React.useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      if (selectedJob && e.state?.modal !== 'job_details') {
+        setSelectedJob(null);
+      } else if (!selectedJob && e.state?.modal === 'job_details' && e.state?.jobId) {
+        const targetJob = activeJobs.find(j => String(j.id) === String(e.state.jobId));
+        if (targetJob) setSelectedJob(targetJob);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [selectedJob, activeJobs]);
+
+  // Deep-link check: open job from ?job=<id> query parameter on mount/load
+  React.useEffect(() => {
+    if (activeJobs.length > 0 && !selectedJob && typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const jobId = params.get('job');
+      if (jobId) {
+        const found = activeJobs.find(j => String(j.id) === String(jobId));
+        if (found) {
+          setSelectedJob(found);
+        }
+      }
+    }
+  }, [activeJobs]);
 
   const handleViewAppDetails = (app: any) => {
     setSelectedApp(app);
@@ -1186,10 +1237,7 @@ export default function CandidateDashboard({
           {selectedJob ? (
             <JobDetailsView
               job={selectedJob}
-              onBack={() => {
-                setSelectedJob(null);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
+              onBack={() => handleCloseJobDetails(false)}
               onApply={handleApplyNow}
               isApplied={myApplications.some(a => String(a.jobId) === String(selectedJob.id))}
               isApplying={applyingJobId === selectedJob.id}
@@ -1607,7 +1655,7 @@ export default function CandidateDashboard({
 
                                 <div className="mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
                                   <span className="text-xs sm:text-[13px] font-black text-slate-900">
-                                    ₹{job.minSalary ? `${job.minSalary.toLocaleString()} - ${job.maxSalary?.toLocaleString()}` : '35,000'}/mo
+                                    ₹{job.minSalary ? `${job.minSalary.toLocaleString()} - ${job.maxSalary?.toLocaleString()}` : '35,000'} / {job.salaryType === 'Daily' ? 'day' : job.salaryType === 'Weekly' ? 'week' : 'mo'}
                                   </span>
                                   <div className="flex items-center gap-2">
                                     <button
@@ -1830,7 +1878,7 @@ export default function CandidateDashboard({
                             <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 shrink-0 justify-between sm:justify-end w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
                               <div className="text-left sm:text-right">
                                 <span className="text-xs font-black text-slate-900 block">
-                                  ₹{job.minSalary ? `${job.minSalary.toLocaleString()} - ${job.maxSalary?.toLocaleString()}` : (job.salary || '35,000')}/month
+                                  ₹{job.minSalary ? `${job.minSalary.toLocaleString()} - ${job.maxSalary?.toLocaleString()}` : (job.salary || '35,000')} / {job.salaryType === 'Daily' ? 'Daily' : job.salaryType === 'Weekly' ? 'Weekly' : 'Monthly'}
                                 </span>
                                 <span className="text-[10px] text-slate-400 font-semibold block">
                                   Posted {job.createdAt ? new Date(job.createdAt).toLocaleDateString('en-GB') : 'Recently'}
@@ -2027,7 +2075,7 @@ export default function CandidateDashboard({
                         <p className="text-xs font-semibold text-slate-500 mt-1">{job.companyName} • {job.city}</p>
                       </div>
                       <div className="mt-4 flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-900">₹{job.minSalary ? Number(job.minSalary).toLocaleString() : '35,000'}/mo</span>
+                        <span className="text-xs font-bold text-slate-900">₹{job.minSalary ? Number(job.minSalary).toLocaleString() : '35,000'} / {job.salaryType === 'Daily' ? 'day' : job.salaryType === 'Weekly' ? 'week' : 'mo'}</span>
                         <button
                           onClick={(e) => { e.stopPropagation(); handleApplyNow(job); }}
                           disabled={myApplications.some(a => String(a.jobId) === String(job.id))}

@@ -67,6 +67,17 @@ let memoryDB: any = null;
 let supabaseActive = false;
 let supabaseErrorDetails: string | null = null;
 
+export function normalizeSalaryType(val: any): 'Daily' | 'Weekly' | 'Monthly' {
+  if (!val) return 'Monthly';
+  const s = String(val).trim().toLowerCase();
+  if (s === 'daily' || s === 'per day' || s === 'day') return 'Daily';
+  if (s === 'weekly' || s === 'per week' || s === 'week') return 'Weekly';
+  if (s === 'monthly' || s === 'per month' || s === 'month') return 'Monthly';
+  if (s.includes('day')) return 'Daily';
+  if (s.includes('week')) return 'Weekly';
+  return 'Monthly';
+}
+
 // Exact Table Schema Converters for Supabase (Strict matching to existing PostgreSQL schema)
 
 export function toSupabaseJobRow(j: any) {
@@ -87,7 +98,7 @@ export function toSupabaseJobRow(j: any) {
     workLocation: j.workLocation || j.work_location || (j.area ? `${j.area}, ${j.city}` : j.city) || '',
     minSalary: Number(j.minSalary ?? j.min_salary ?? 0),
     maxSalary: Number(j.maxSalary ?? j.max_salary ?? 0),
-    salaryType: j.salaryType || j.salary_type || 'Per Month',
+    salaryType: normalizeSalaryType(j.salaryType || j.salary_type),
     shift: j.shift || 'Day Shift',
     experienceRequired: Number(j.experienceRequired ?? j.experience_required ?? 0),
     educationRequired: j.educationRequired || j.education_required || '10th Pass or below',
@@ -475,7 +486,7 @@ function normalizeJob(j: any) {
   const workLocation = j.workLocation || j.work_location || (area ? `${area}, ${city}` : city);
   const minSalary = Number(j.minSalary ?? j.min_salary ?? j.salary_min ?? 0);
   const maxSalary = Number(j.maxSalary ?? j.max_salary ?? j.salary_max ?? 0);
-  const salaryType = j.salaryType || j.salary_type || 'Per Month';
+  const salaryType = normalizeSalaryType(j.salaryType || j.salary_type);
   const shift = j.shift || 'Day Shift';
   const experienceRequired = Number(j.experienceRequired ?? j.experience_required ?? 0);
   const educationRequired = j.educationRequired || j.education_required || '10th Pass or below';
@@ -3075,7 +3086,7 @@ app.post('/api/recruiter/jobs', authenticateRecruiter, async (req, res) => {
       workLocation: workLocation ? workLocation.trim() : '',
       minSalary: Number(minSalary),
       maxSalary: Number(maxSalary),
-      salaryType: salaryType.trim(),
+      salaryType: normalizeSalaryType(salaryType),
       shift: shift.trim(),
       experienceRequired: Number(experienceRequired),
       educationRequired: educationRequired.trim(),
@@ -3292,7 +3303,7 @@ app.put('/api/recruiter/jobs/:id', authenticateRecruiter, async (req, res) => {
       workLocation: workLocation !== undefined ? (workLocation ? workLocation.trim() : '') : currentJob.workLocation,
       minSalary: minSalary !== undefined ? Number(minSalary) : currentJob.minSalary,
       maxSalary: maxSalary !== undefined ? Number(maxSalary) : currentJob.maxSalary,
-      salaryType: salaryType !== undefined ? salaryType.trim() : currentJob.salaryType,
+      salaryType: salaryType !== undefined ? normalizeSalaryType(salaryType) : normalizeSalaryType(currentJob.salaryType),
       shift: shift !== undefined ? shift.trim() : currentJob.shift,
       experienceRequired: experienceRequired !== undefined ? Number(experienceRequired) : currentJob.experienceRequired,
       educationRequired: educationRequired !== undefined ? educationRequired.trim() : currentJob.educationRequired,
@@ -5157,7 +5168,7 @@ app.put('/api/admin/jobs/:jobId', async (req, res) => {
       workLocation: workLocation !== undefined ? String(workLocation).trim() : (area ? `${area}, ${city}` : (currentJob.workLocation || city)),
       minSalary: minSalary !== undefined ? Number(minSalary) : currentJob.minSalary,
       maxSalary: maxSalary !== undefined ? Number(maxSalary) : currentJob.maxSalary,
-      salaryType: salaryType !== undefined ? String(salaryType).trim() : currentJob.salaryType,
+      salaryType: salaryType !== undefined ? normalizeSalaryType(salaryType) : normalizeSalaryType(currentJob.salaryType),
       shift: shift !== undefined ? String(shift).trim() : currentJob.shift,
       experienceRequired: experienceRequired !== undefined ? Number(experienceRequired) : currentJob.experienceRequired,
       educationRequired: educationRequired !== undefined ? String(educationRequired).trim() : currentJob.educationRequired,
@@ -5463,7 +5474,7 @@ app.post('/api/admin/jobs', async (req, res) => {
       workLocation: (workLocation ? String(workLocation).trim() : (area ? `${String(area).trim()}, ${String(city).trim()}` : String(city).trim())),
       minSalary: minSalary !== undefined && minSalary !== null ? Number(minSalary) : 15000,
       maxSalary: maxSalary !== undefined && maxSalary !== null ? Number(maxSalary) : 25000,
-      salaryType: (salaryType || 'Per Month').trim(),
+      salaryType: normalizeSalaryType(salaryType),
       shift: (shift || 'Day Shift').trim(),
       experienceRequired: experienceRequired !== undefined && experienceRequired !== null ? Number(experienceRequired) : 0,
       educationRequired: (educationRequired || '10th Pass or below').trim(),

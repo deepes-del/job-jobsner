@@ -949,7 +949,7 @@ export default function AdminPanelModal({ isOpen, onClose, onJobPosted }: AdminP
                         >
                           <option value="Monthly">Monthly</option>
                           <option value="Weekly">Weekly</option>
-                          <option value="Per Delivery">Per Delivery</option>
+                          <option value="Daily">Daily</option>
                         </select>
                       </div>
                     </div>

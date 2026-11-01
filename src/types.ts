@@ -119,3 +119,13 @@ export interface Job {
   updatedAt?: string;
 }
 
+export function normalizeSalaryType(val: any): 'Daily' | 'Weekly' | 'Monthly' {
+  if (!val) return 'Monthly';
+  const s = String(val).trim().toLowerCase();
+  if (s === 'daily' || s === 'per day' || s === 'day') return 'Daily';
+  if (s === 'weekly' || s === 'per week' || s === 'week') return 'Weekly';
+  if (s === 'monthly' || s === 'per month' || s === 'month') return 'Monthly';
+  if (s.includes('day')) return 'Daily';
+  if (s.includes('week')) return 'Weekly';
+  return 'Monthly';
+}

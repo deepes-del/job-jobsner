@@ -24,6 +24,7 @@ import {
   ChevronRight,
   Info
 } from 'lucide-react';
+import { normalizeSalaryType } from '../types';
 
 interface JobDetailsViewProps {
   job: any;
@@ -48,8 +49,13 @@ export default function JobDetailsView({
 }: JobDetailsViewProps) {
   const [copiedShare, setCopiedShare] = React.useState(false);
 
+  const salaryPeriod = normalizeSalaryType(job.salaryType);
+  const salarySuffix = salaryPeriod === 'Daily' ? 'Daily' : salaryPeriod === 'Weekly' ? 'Weekly' : 'Monthly';
+  const salaryUnit = salaryPeriod === 'Daily' ? 'day' : salaryPeriod === 'Weekly' ? 'week' : 'month';
+  const payoutText = salaryPeriod === 'Daily' ? 'Daily payouts available' : salaryPeriod === 'Weekly' ? 'Weekly payouts available' : 'Monthly payouts';
+
   const handleShare = () => {
-    const shareText = `Check out this job opening: ${job.title} at ${job.companyName} on Jobsner! Salary: ₹${job.minSalary?.toLocaleString()} - ₹${job.maxSalary?.toLocaleString()}/month.`;
+    const shareText = `Check out this job opening: ${job.title} at ${job.companyName} on Jobsner! Salary: ₹${job.minSalary?.toLocaleString()} - ₹${job.maxSalary?.toLocaleString()}/${salaryUnit}.`;
     if (navigator.share) {
       navigator.share({
         title: `${job.title} - Jobsner`,
@@ -71,8 +77,6 @@ export default function JobDetailsView({
   const formattedSalary = job.minSalary && job.maxSalary
     ? `₹${Number(job.minSalary).toLocaleString('en-IN')} - ₹${Number(job.maxSalary).toLocaleString('en-IN')}`
     : job.salary || '₹25,000 - ₹35,000';
-
-  const salaryPeriod = job.salaryType || 'Per Month';
 
   // Format responsibilities into list
   const responsibilitiesList = React.useMemo(() => {
@@ -114,7 +118,7 @@ export default function JobDetailsView({
     : `We are hiring enthusiastic and motivated candidates for the role of ${job.title} at ${job.companyName}. In this role, you will be an integral part of our delivery network, ensuring prompt deliveries to customers across ${job.city || 'your area'}. We offer competitive compensation, weekly payouts, comprehensive insurance coverage, and excellent performance-based growth opportunities. Immediate joining is available for eligible candidates with fast onboarding!`;
 
   return (
-    <div className="space-y-6 pb-28 animate-fadeIn" id="job-details-page">
+    <div className="space-y-6 pb-6 sm:pb-8 animate-fadeIn" id="job-details-page">
       {/* TOP NAVIGATION / BREADCRUMB */}
       <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -238,7 +242,7 @@ export default function JobDetailsView({
                 {formattedSalary}
               </div>
               <span className="text-xs font-bold text-emerald-600 block">
-                {salaryPeriod} • Weekly payouts available
+                {salarySuffix} • {payoutText}
               </span>
             </div>
 
@@ -515,6 +519,65 @@ export default function JobDetailsView({
 
       </div>
 
+      {/* BOTTOM ACTION SECTION (Immediately after job content) */}
+      <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-7 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-5" id="bottom-job-actions">
+        <div className="space-y-1.5 text-center sm:text-left">
+          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+            <span className="inline-flex items-center gap-1 text-[11px] font-black text-emerald-700 bg-emerald-50 px-3 py-0.5 rounded-full border border-emerald-200">
+              <CheckCircle className="w-3.5 h-3.5 fill-emerald-500 text-white" /> 100% Free Application
+            </span>
+            <span className="text-xs font-bold text-slate-300">•</span>
+            <span className="text-xs font-bold text-slate-600">{job.openings ? `${job.openings} Openings Available` : 'Immediate Hiring'}</span>
+          </div>
+          <h3 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
+            Ready to apply for {job.title}?
+          </h3>
+          <p className="text-xs text-slate-500 font-medium">
+            {job.companyName} is actively reviewing applications in {job.city || 'your area'}.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3 w-full sm:w-auto justify-stretch sm:justify-end shrink-0">
+          {/* Save Job Button */}
+          <button
+            type="button"
+            onClick={(e) => onToggleSave(job.id, e)}
+            className={`flex-1 sm:flex-initial px-4 sm:px-5 py-3 sm:py-3.5 border rounded-2xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 ${
+              isSaved
+                ? 'bg-blue-50 border-blue-200 text-[#1D61F2]'
+                : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'
+            }`}
+            title={isSaved ? 'Job Saved' : 'Save Job for Later'}
+            id="bottom-save-job-btn"
+          >
+            <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-[#1D61F2] text-[#1D61F2]' : 'text-slate-400'}`} />
+            <span>{isSaved ? 'Saved' : 'Save Job'}</span>
+          </button>
+
+          {/* Bottom Apply Button */}
+          {isApplied ? (
+            <div 
+              id="bottom-applied-badge"
+              className="flex-1 sm:flex-initial px-6 sm:px-7 py-3 sm:py-3.5 bg-emerald-50 border-2 border-emerald-300 text-emerald-700 font-black text-xs sm:text-sm rounded-2xl flex items-center justify-center gap-2 shadow-xs"
+            >
+              <CheckCircle className="w-4 h-4 fill-emerald-500 text-white shrink-0" />
+              <span>Applied Successfully ✓</span>
+            </div>
+          ) : (
+            <button
+              type="button"
+              id="bottom-apply-job-btn"
+              onClick={() => onApply(job)}
+              disabled={isApplying}
+              className="flex-1 sm:flex-initial px-6 sm:px-8 py-3 sm:py-3.5 bg-[#1D61F2] hover:bg-blue-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <Sparkles className="w-4 h-4 shrink-0" />
+              <span>{isApplying ? 'Applying...' : 'Apply Now'}</span>
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* STICKY BOTTOM ACTION BAR (Accessible on all screen sizes) */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-2xl py-3 px-4 sm:px-8 z-40 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -528,7 +591,7 @@ export default function JobDetailsView({
           <div className="space-y-0.5">
             <h4 className="text-xs sm:text-sm font-black text-slate-900 line-clamp-1">{job.title}</h4>
             <p className="text-[11px] font-bold text-slate-500">
-              <span className="text-slate-900 font-black">{formattedSalary}</span> • {job.companyName}
+              <span className="text-slate-900 font-black">{formattedSalary} / {salaryUnit}</span> • {job.companyName}
             </p>
           </div>
         </div>
