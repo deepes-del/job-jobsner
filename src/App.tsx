@@ -470,7 +470,7 @@ export default function App() {
           {/* Logo brand */}
           <div 
             onClick={handleLogoClick}
-            className="flex items-center gap-1.5 sm:gap-3 select-none cursor-pointer group active:scale-95 transition-all" 
+            className="flex items-center gap-1.5 sm:gap-3 select-none cursor-pointer group active:scale-95 transition-all min-w-0 shrink-0" 
             id="navbar-brand"
           >
             <JobsnerLogo size="xl" className="h-8.5 xs:h-9 sm:h-14 md:h-18" />

@@ -589,7 +589,7 @@ export default function JobDetailsView({
             )}
           </div>
           <div className="space-y-0.5 min-w-0 flex-1">
-            <h4 className="text-xs sm:text-sm font-black text-slate-900 truncate">{job.title}</h4>
+            <h4 className="text-xs sm:text-sm font-black text-slate-900 truncate min-w-0">{job.title}</h4>
             <p className="text-[10.5px] sm:text-[11px] font-bold text-slate-500 truncate">
               <span className="text-slate-900 font-black">{formattedSalary} / {salaryUnit}</span> • {job.companyName}
             </p>
