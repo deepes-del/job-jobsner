@@ -5058,7 +5058,7 @@ export default function RecruiterDashboard({
       </AnimatePresence>
 
       {/* FIXED MOBILE BOTTOM NAVIGATION BAR */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 px-2 py-2 flex items-center justify-around shadow-2xl shadow-gray-900/20">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 px-2 py-2 flex items-center justify-around shadow-2xl shadow-gray-900/20 safe-area-pb">
         {[
           { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, action: () => { setActiveTab('dashboard'); setShowJobForm(false); window.scrollTo({ top: 0, behavior: 'instant' }); } },
           { id: 'jobs', label: 'Jobs', icon: Briefcase, badge: jobs.length ? String(jobs.length) : undefined, action: () => { handleOpenJobsList(); window.scrollTo({ top: 0, behavior: 'instant' }); } },

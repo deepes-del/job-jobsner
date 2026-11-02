@@ -1090,7 +1090,7 @@ export default function CandidateDashboard({
       </AnimatePresence>
 
       {/* Main 3-Column Dashboard Layout (Left Nav | Center Content | Right Widgets) */}
-      <div className="flex flex-col lg:flex-row gap-6 items-start">
+      <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 items-start pb-20 lg:pb-0">
         
         {/* ================= LEFT NAVIGATION SIDEBAR (DESKTOP EXCLUSIVE) ================= */}
         {!selectedJob && (
@@ -1284,16 +1284,16 @@ export default function CandidateDashboard({
             <React.Fragment>
               
               {/* TOP HERO BANNER */}
-              <div className="w-full bg-gradient-to-r from-[#0052D4] via-[#2B63FF] to-[#4379FF] rounded-2xl sm:rounded-3xl px-3 py-4 sm:p-7 lg:p-8 text-white shadow-xl relative overflow-visible flex flex-row items-center justify-between gap-2 border border-blue-400/20 min-h-[190px] sm:min-h-[225px]">
+              <div className="w-full bg-gradient-to-r from-[#0052D4] via-[#2B63FF] to-[#4379FF] rounded-2xl sm:rounded-3xl px-3.5 py-4 sm:p-7 lg:p-8 text-white shadow-xl relative overflow-hidden flex flex-row items-center justify-between gap-2 border border-blue-400/20 min-h-[185px] sm:min-h-[225px]">
                 {/* Ambient Background Glow Effects */}
                 <div className="absolute -left-12 -top-12 w-48 h-48 sm:w-64 sm:h-64 bg-blue-400/25 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute right-0 bottom-0 w-60 h-60 sm:w-80 sm:h-80 bg-indigo-500/30 rounded-full blur-3xl pointer-events-none" />
 
-                <div className="relative z-10 flex-1 max-w-[54%] sm:max-w-lg space-y-1.5 sm:space-y-2.5">
+                <div className="relative z-10 flex-1 min-w-0 max-w-[56%] sm:max-w-lg space-y-1.5 sm:space-y-2.5">
                   <div className="inline-flex items-center gap-1 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-[9px] sm:text-[11px] font-extrabold border border-white/20">
                     <Sparkles className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-yellow-300" /> #1 Delivery Hiring Platform
                   </div>
-                  <h1 className="text-[22px] leading-tight sm:text-3xl lg:text-4xl font-black text-white tracking-tight">
+                  <h1 className="text-lg xs:text-xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight">
                     Better Jobs<br /><span>Brighter Future</span>
                   </h1>
                   <p className="text-blue-100 text-[10px] sm:text-xs font-medium leading-snug max-w-[200px] sm:max-w-sm line-clamp-2 sm:line-clamp-none">
@@ -1320,67 +1320,67 @@ export default function CandidateDashboard({
                 </div>
 
                 {/* Right Graphic in Hero Banner - Animated Rider Moving on Road (SIDE BY SIDE ON MOBILE) */}
-                <div className="relative z-10 shrink-0 w-[46%] sm:w-auto max-w-[190px] sm:max-w-[340px] lg:max-w-[400px] flex items-center justify-center sm:justify-end pointer-events-none">
+                <div className="relative z-10 shrink-0 w-[44%] sm:w-auto max-w-[170px] sm:max-w-[340px] lg:max-w-[400px] flex items-center justify-center sm:justify-end pointer-events-none">
                   <AnimatedHeroRider className="w-full" />
                 </div>
               </div>
 
               {/* 3 DASHBOARD STAT CARDS ROW (MATCHING REFERENCE IMAGE) */}
-              <div className="grid grid-cols-3 gap-2.5 sm:gap-4 w-full">
+              <div className="grid grid-cols-3 gap-1.5 xs:gap-2.5 sm:gap-4 w-full">
                 {/* Stat 1: Total Applications */}
-                <div className="bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-xs flex flex-col justify-between hover:shadow-md transition-all">
+                <div className="bg-white border border-slate-100 rounded-xl sm:rounded-3xl p-2.5 xs:p-3 sm:p-5 shadow-xs flex flex-col justify-between hover:shadow-md transition-all">
                   <div className="flex items-center justify-between gap-1 mb-1">
-                    <span className="text-[9px] sm:text-xs font-black text-slate-400 uppercase tracking-wider truncate">
+                    <span className="text-[8px] xs:text-[9px] sm:text-xs font-black text-slate-400 uppercase tracking-wider truncate">
                       APPLICATIONS
                     </span>
-                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-blue-50 text-[#1D61F2] flex items-center justify-center shrink-0">
-                      <Briefcase className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg bg-blue-50 text-[#1D61F2] flex items-center justify-center shrink-0">
+                      <Briefcase className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4" />
                     </div>
                   </div>
                   <div>
-                    <div className="flex items-baseline gap-1.5 pt-1">
-                      <span className="text-xl sm:text-2xl font-black text-slate-900 leading-none">{totalApplicationsCount}</span>
-                      <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100">+20%</span>
+                    <div className="flex items-baseline gap-1 xs:gap-1.5 pt-1">
+                      <span className="text-base xs:text-xl sm:text-2xl font-black text-slate-900 leading-none">{totalApplicationsCount}</span>
+                      <span className="text-[8px] xs:text-[9px] font-black text-emerald-600 bg-emerald-50 px-1 xs:px-1.5 py-0.5 rounded-full border border-emerald-100">+20%</span>
                     </div>
-                    <span className="text-[9px] sm:text-[10px] text-slate-400 font-medium block mt-1 truncate">vs 7 days</span>
+                    <span className="text-[8px] xs:text-[9px] sm:text-[10px] text-slate-400 font-medium block mt-0.5 sm:mt-1 truncate">vs 7 days</span>
                   </div>
                 </div>
 
                 {/* Stat 2: Profile Views */}
-                <div className="bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-xs flex flex-col justify-between hover:shadow-md transition-all">
+                <div className="bg-white border border-slate-100 rounded-xl sm:rounded-3xl p-2.5 xs:p-3 sm:p-5 shadow-xs flex flex-col justify-between hover:shadow-md transition-all">
                   <div className="flex items-center justify-between gap-1 mb-1">
-                    <span className="text-[9px] sm:text-xs font-black text-slate-400 uppercase tracking-wider truncate">
+                    <span className="text-[8px] xs:text-[9px] sm:text-xs font-black text-slate-400 uppercase tracking-wider truncate">
                       VIEWS
                     </span>
-                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-                      <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                      <Eye className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4" />
                     </div>
                   </div>
                   <div>
-                    <div className="flex items-baseline gap-1.5 pt-1">
-                      <span className="text-xl sm:text-2xl font-black text-slate-900 leading-none">{profileViewsCount}</span>
-                      <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100">+16%</span>
+                    <div className="flex items-baseline gap-1 xs:gap-1.5 pt-1">
+                      <span className="text-base xs:text-xl sm:text-2xl font-black text-slate-900 leading-none">{profileViewsCount}</span>
+                      <span className="text-[8px] xs:text-[9px] font-black text-emerald-600 bg-emerald-50 px-1 xs:px-1.5 py-0.5 rounded-full border border-emerald-100">+16%</span>
                     </div>
-                    <span className="text-[9px] sm:text-[10px] text-slate-400 font-medium block mt-1 truncate">vs 7 days</span>
+                    <span className="text-[8px] xs:text-[9px] sm:text-[10px] text-slate-400 font-medium block mt-0.5 sm:mt-1 truncate">vs 7 days</span>
                   </div>
                 </div>
 
                 {/* Stat 3: Shortlisted */}
-                <div className="bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-xs flex flex-col justify-between hover:shadow-md transition-all">
+                <div className="bg-white border border-slate-100 rounded-xl sm:rounded-3xl p-2.5 xs:p-3 sm:p-5 shadow-xs flex flex-col justify-between hover:shadow-md transition-all">
                   <div className="flex items-center justify-between gap-1 mb-1">
-                    <span className="text-[9px] sm:text-xs font-black text-slate-400 uppercase tracking-wider truncate">
+                    <span className="text-[8px] xs:text-[9px] sm:text-xs font-black text-slate-400 uppercase tracking-wider truncate">
                       SHORTLISTED
                     </span>
-                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                      <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                      <Star className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4" />
                     </div>
                   </div>
                   <div>
-                    <div className="flex items-baseline gap-1.5 pt-1">
-                      <span className="text-xl sm:text-2xl font-black text-slate-900 leading-none">{shortlistedCount}</span>
-                      <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100">+25%</span>
+                    <div className="flex items-baseline gap-1 xs:gap-1.5 pt-1">
+                      <span className="text-base xs:text-xl sm:text-2xl font-black text-slate-900 leading-none">{shortlistedCount}</span>
+                      <span className="text-[8px] xs:text-[9px] font-black text-emerald-600 bg-emerald-50 px-1 xs:px-1.5 py-0.5 rounded-full border border-emerald-100">+25%</span>
                     </div>
-                    <span className="text-[9px] sm:text-[10px] text-slate-400 font-medium block mt-1 truncate">vs 7 days</span>
+                    <span className="text-[8px] xs:text-[9px] sm:text-[10px] text-slate-400 font-medium block mt-0.5 sm:mt-1 truncate">vs 7 days</span>
                   </div>
                 </div>
               </div>
@@ -1414,17 +1414,17 @@ export default function CandidateDashboard({
                         : 'hover:bg-slate-50/80'
                     }`}
                   >
-                    <div className={`w-11 h-11 sm:w-13 sm:h-13 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
+                    <div className={`w-9 h-9 xs:w-11 xs:h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
                       selectedCategory === 'Delivery & Logistics'
                         ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
                         : 'bg-blue-50/60 text-[#1D61F2] border-blue-200/70'
                     }`}>
-                      <Truck className="w-5 h-5 sm:w-6 sm:h-6" />
+                      <Truck className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6" />
                     </div>
-                    <span className="text-[9px] sm:text-xs font-bold text-slate-800 mt-1.5 text-center leading-tight">
+                    <span className="text-[8px] xs:text-[9.5px] sm:text-xs font-bold text-slate-800 mt-1 sm:mt-1.5 text-center leading-tight">
                       Delivery &<br />Logistics
                     </span>
-                    <span className="text-[7.5px] sm:text-[9px] font-semibold text-slate-400 mt-0.5">
+                    <span className="text-[7px] xs:text-[8px] sm:text-[9px] font-semibold text-slate-400 mt-0.5">
                       {categoryCounts.deliveryLogistics} Jobs
                     </span>
                   </button>
@@ -1440,17 +1440,17 @@ export default function CandidateDashboard({
                         : 'hover:bg-slate-50/80'
                     }`}
                   >
-                    <div className={`w-11 h-11 sm:w-13 sm:h-13 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
+                    <div className={`w-9 h-9 xs:w-11 xs:h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
                       selectedCategory === 'Warehouse & Packing'
                         ? 'bg-orange-600 text-white border-orange-600 shadow-xs'
                         : 'bg-orange-50/60 text-orange-600 border-orange-200/70'
                     }`}>
-                      <Package className="w-5 h-5 sm:w-6 sm:h-6" />
+                      <Package className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6" />
                     </div>
-                    <span className="text-[9px] sm:text-xs font-bold text-slate-800 mt-1.5 text-center leading-tight">
+                    <span className="text-[8px] xs:text-[9.5px] sm:text-xs font-bold text-slate-800 mt-1 sm:mt-1.5 text-center leading-tight">
                       Warehouse &<br />Packing
                     </span>
-                    <span className="text-[7.5px] sm:text-[9px] font-semibold text-slate-400 mt-0.5">
+                    <span className="text-[7px] xs:text-[8px] sm:text-[9px] font-semibold text-slate-400 mt-0.5">
                       {categoryCounts.warehousePacking} Jobs
                     </span>
                   </button>
@@ -1466,17 +1466,17 @@ export default function CandidateDashboard({
                         : 'hover:bg-slate-50/80'
                     }`}
                   >
-                    <div className={`w-11 h-11 sm:w-13 sm:h-13 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
+                    <div className={`w-9 h-9 xs:w-11 xs:h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
                       selectedCategory === 'Drivers'
                         ? 'bg-sky-600 text-white border-sky-600 shadow-xs'
                         : 'bg-sky-50/60 text-sky-600 border-sky-200/70'
                     }`}>
-                      <Car className="w-5 h-5 sm:w-6 sm:h-6" />
+                      <Car className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6" />
                     </div>
-                    <span className="text-[9px] sm:text-xs font-bold text-slate-800 mt-1.5 text-center leading-tight">
+                    <span className="text-[8px] xs:text-[9.5px] sm:text-xs font-bold text-slate-800 mt-1 sm:mt-1.5 text-center leading-tight">
                       Drivers<br />& Fleet
                     </span>
-                    <span className="text-[7.5px] sm:text-[9px] font-semibold text-slate-400 mt-0.5">
+                    <span className="text-[7px] xs:text-[8px] sm:text-[9px] font-semibold text-slate-400 mt-0.5">
                       {categoryCounts.drivers} Jobs
                     </span>
                   </button>
@@ -1492,17 +1492,17 @@ export default function CandidateDashboard({
                         : 'hover:bg-slate-50/80'
                     }`}
                   >
-                    <div className={`w-11 h-11 sm:w-13 sm:h-13 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
+                    <div className={`w-9 h-9 xs:w-11 xs:h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
                       selectedCategory === 'Office & Admin'
                         ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
                         : 'bg-purple-50/60 text-purple-600 border-purple-200/70'
                     }`}>
-                      <Briefcase className="w-5 h-5 sm:w-6 sm:h-6" />
+                      <Briefcase className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6" />
                     </div>
-                    <span className="text-[9px] sm:text-xs font-bold text-slate-800 mt-1.5 text-center leading-tight">
+                    <span className="text-[8px] xs:text-[9.5px] sm:text-xs font-bold text-slate-800 mt-1 sm:mt-1.5 text-center leading-tight">
                       Office &<br />Admin
                     </span>
-                    <span className="text-[7.5px] sm:text-[9px] font-semibold text-slate-400 mt-0.5">
+                    <span className="text-[7px] xs:text-[8px] sm:text-[9px] font-semibold text-slate-400 mt-0.5">
                       {categoryCounts.officeAdmin} Jobs
                     </span>
                   </button>
@@ -1518,17 +1518,17 @@ export default function CandidateDashboard({
                         : 'hover:bg-slate-50/80'
                     }`}
                   >
-                    <div className={`w-11 h-11 sm:w-13 sm:h-13 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
+                    <div className={`w-9 h-9 xs:w-11 xs:h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
                       selectedCategory === 'Other Jobs'
                         ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
                         : 'bg-emerald-50/60 text-emerald-600 border-emerald-200/70'
                     }`}>
-                      <Store className="w-5 h-5 sm:w-6 sm:h-6" />
+                      <Store className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6" />
                     </div>
-                    <span className="text-[9px] sm:text-xs font-bold text-slate-800 mt-1.5 text-center leading-tight">
+                    <span className="text-[8px] xs:text-[9.5px] sm:text-xs font-bold text-slate-800 mt-1 sm:mt-1.5 text-center leading-tight">
                       Other<br />Jobs
                     </span>
-                    <span className="text-[7.5px] sm:text-[9px] font-semibold text-slate-400 mt-0.5">
+                    <span className="text-[7px] xs:text-[8px] sm:text-[9px] font-semibold text-slate-400 mt-0.5">
                       {categoryCounts.other} Jobs
                     </span>
                   </button>
@@ -1583,7 +1583,7 @@ export default function CandidateDashboard({
                           <button
                             type="button"
                             onClick={() => handleCarouselStep('prev')}
-                            className="absolute -left-2 sm:-left-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-10 sm:h-10 bg-white/95 backdrop-blur-xs border border-slate-200 text-slate-700 hover:text-white hover:bg-[#1D61F2] hover:border-[#1D61F2] rounded-full shadow-lg flex items-center justify-center transition-all cursor-pointer active:scale-90"
+                            className="hidden sm:flex absolute -left-2 sm:-left-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-10 sm:h-10 bg-white/95 backdrop-blur-xs border border-slate-200 text-slate-700 hover:text-white hover:bg-[#1D61F2] hover:border-[#1D61F2] rounded-full shadow-lg items-center justify-center transition-all cursor-pointer active:scale-90"
                             aria-label="Previous job"
                           >
                             <ChevronRight className="w-5 h-5 rotate-180" />
@@ -1619,7 +1619,7 @@ export default function CandidateDashboard({
                                     handleViewDetails(job);
                                   }
                                 }}
-                                className="w-[84vw] sm:w-[320px] md:w-[350px] shrink-0 snap-start bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-lg hover:border-[#1D61F2] transition-all flex flex-col justify-between cursor-pointer group/card"
+                                className="w-[85vw] max-w-[340px] xs:w-[300px] sm:w-[320px] md:w-[350px] shrink-0 snap-start bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-lg hover:border-[#1D61F2] transition-all flex flex-col justify-between cursor-pointer group/card"
                               >
                                 <div>
                                   <div className="flex items-center justify-between mb-3 sm:mb-4">
@@ -1630,7 +1630,7 @@ export default function CandidateDashboard({
                                         <Building className="w-6 h-6 sm:w-7 sm:h-7 text-[#1D61F2]" />
                                       )}
                                     </div>
-                                    <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 shrink-0">
                                       <CheckCircle className="w-3 h-3 fill-emerald-500 text-white" /> Verified
                                     </span>
                                   </div>
@@ -1653,21 +1653,21 @@ export default function CandidateDashboard({
                                   </div>
                                 </div>
 
-                                <div className="mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
-                                  <span className="text-xs sm:text-[13px] font-black text-slate-900">
+                                <div className="mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-slate-100 flex items-center justify-between gap-2 min-w-0 flex-nowrap">
+                                  <span className="text-xs sm:text-[13px] font-black text-slate-900 truncate min-w-0">
                                     ₹{job.minSalary ? `${job.minSalary.toLocaleString()} - ${job.maxSalary?.toLocaleString()}` : '35,000'} / {job.salaryType === 'Daily' ? 'day' : job.salaryType === 'Weekly' ? 'week' : 'mo'}
                                   </span>
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-nowrap">
                                     <button
                                       type="button"
                                       onClick={(e) => { e.stopPropagation(); handleToggleSaveJob(job.id, e); }}
-                                      className="p-2 sm:p-2.5 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
+                                      className="p-2 sm:p-2.5 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer shrink-0"
                                       title="Save Job"
                                     >
                                       <Bookmark className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isSaved ? 'fill-[#1D61F2] text-[#1D61F2]' : 'text-slate-400'}`} />
                                     </button>
                                     {isApplied ? (
-                                      <span className="px-3 sm:px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-black rounded-xl">
+                                      <span className="px-3 sm:px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-black rounded-xl shrink-0 whitespace-nowrap">
                                         Applied ✓
                                       </span>
                                     ) : (
@@ -1675,7 +1675,7 @@ export default function CandidateDashboard({
                                         type="button"
                                         onClick={(e) => { e.stopPropagation(); handleApplyNow(job); }}
                                         disabled={applyingJobId === job.id}
-                                        className="px-4 sm:px-5 py-2 sm:py-2.5 bg-[#1D61F2] hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer"
+                                        className="px-3.5 sm:px-5 py-2 sm:py-2.5 bg-[#1D61F2] hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 whitespace-nowrap"
                                       >
                                         Apply Now
                                       </button>
@@ -1692,7 +1692,7 @@ export default function CandidateDashboard({
                           <button
                             type="button"
                             onClick={() => handleCarouselStep('next')}
-                            className="absolute -right-2 sm:-right-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-10 sm:h-10 bg-white/95 backdrop-blur-xs border border-slate-200 text-slate-700 hover:text-white hover:bg-[#1D61F2] hover:border-[#1D61F2] rounded-full shadow-lg flex items-center justify-center transition-all cursor-pointer active:scale-90"
+                            className="hidden sm:flex absolute -right-2 sm:-right-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-10 sm:h-10 bg-white/95 backdrop-blur-xs border border-slate-200 text-slate-700 hover:text-white hover:bg-[#1D61F2] hover:border-[#1D61F2] rounded-full shadow-lg items-center justify-center transition-all cursor-pointer active:scale-90"
                             aria-label="Next job"
                           >
                             <ChevronRight className="w-5 h-5" />
@@ -1724,14 +1724,14 @@ export default function CandidateDashboard({
               })()}
 
               {/* APPLICATION STATUS & JOB FEED TABLE SECTION */}
-              <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-5" id="jobs-table-section">
+              <div className="bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 md:p-6 shadow-xs space-y-4 sm:space-y-5" id="jobs-table-section">
                 
                 {/* Status Tabs Header */}
-                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                  <div className="flex items-center gap-2 overflow-x-auto">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 sm:pb-4">
+                  <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none flex-nowrap max-w-full py-0.5">
                     <button
                       onClick={() => setAppStatusTab('all')}
-                      className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                      className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                         appStatusTab === 'all'
                           ? 'bg-[#1D61F2] text-white shadow-xs'
                           : 'text-slate-600 hover:bg-slate-100'
@@ -1741,7 +1741,7 @@ export default function CandidateDashboard({
                     </button>
                     <button
                       onClick={() => setAppStatusTab('applied')}
-                      className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                      className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                         appStatusTab === 'applied'
                           ? 'bg-[#1D61F2] text-white shadow-xs'
                           : 'text-slate-600 hover:bg-slate-100'
@@ -1751,7 +1751,7 @@ export default function CandidateDashboard({
                     </button>
                     <button
                       onClick={() => setAppStatusTab('shortlisted')}
-                      className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                      className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                         appStatusTab === 'shortlisted'
                           ? 'bg-[#1D61F2] text-white shadow-xs'
                           : 'text-slate-600 hover:bg-slate-100'
@@ -1761,7 +1761,7 @@ export default function CandidateDashboard({
                     </button>
                     <button
                       onClick={() => setAppStatusTab('rejected')}
-                      className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                      className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                         appStatusTab === 'rejected'
                           ? 'bg-[#1D61F2] text-white shadow-xs'
                           : 'text-slate-600 hover:bg-slate-100'
@@ -1841,30 +1841,37 @@ export default function CandidateDashboard({
                         <div
                           key={item._uniqueKey || `${item.id}-${itemIdx}`}
                           onClick={() => handleViewDetails(job)}
-                          className="p-4 border border-slate-200/80 rounded-2xl bg-white hover:border-[#1D61F2] hover:shadow-xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer group"
+                          className="p-3.5 sm:p-4 md:p-5 border border-slate-200/80 rounded-2xl bg-white hover:border-[#1D61F2] hover:shadow-xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-3.5 sm:gap-4 cursor-pointer group min-w-0"
                         >
-                            <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center p-1 overflow-hidden shrink-0 shadow-2xs">
+                            <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center p-1 overflow-hidden shrink-0 shadow-2xs">
                                 {job.companyLogo ? (
                                   <img src={job.companyLogo} alt={job.companyName} className="w-full h-full object-contain" />
                                 ) : (
-                                  <Building className="w-6 h-6 text-[#1D61F2]" />
+                                  <Building className="w-5 h-5 sm:w-6 sm:h-6 text-[#1D61F2]" />
                                 )}
                               </div>
 
-                              <div>
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <h4 className="font-black text-slate-900 text-sm group-hover:text-[#1D61F2] transition-colors">{job.title || job.jobTitle}</h4>
-                                  <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                              <div className="min-w-0 flex-1 space-y-1">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <h4 className="font-black text-slate-900 text-sm sm:text-base group-hover:text-[#1D61F2] transition-colors truncate">
+                                    {job.title || job.jobTitle}
+                                  </h4>
+                                  <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 shrink-0">
                                     <CheckCircle className="w-2.5 h-2.5 fill-emerald-500 text-white" /> Verified
                                   </span>
                                 </div>
 
-                                <p className="text-xs font-semibold text-slate-500 mt-0.5">
-                                  {job.companyName} • <span className="text-slate-400">{job.employmentType || job.jobEmploymentType || 'Full Time'}</span> • <MapPin className="w-3 h-3 inline text-[#1D61F2]" /> {job.city || job.jobCity || 'India'}
+                                <p className="text-xs font-semibold text-slate-500 truncate flex items-center gap-1">
+                                  <span className="text-slate-700 font-bold">{job.companyName}</span>
+                                  <span className="text-slate-300">•</span>
+                                  <span className="text-slate-400">{job.employmentType || job.jobEmploymentType || 'Full Time'}</span>
+                                  <span className="text-slate-300">•</span>
+                                  <MapPin className="w-3 h-3 inline text-[#1D61F2] shrink-0 -mt-0.5" />
+                                  <span className="truncate">{job.city || job.jobCity || 'India'}</span>
                                 </p>
 
-                                <div className="flex flex-wrap gap-1.5 mt-2">
+                                <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
                                   <span className="px-2 py-0.5 bg-blue-50 text-[#1D61F2] text-[9px] font-extrabold rounded-md">
                                     {job.category || 'Delivery'}
                                   </span>
@@ -1875,35 +1882,35 @@ export default function CandidateDashboard({
                               </div>
                             </div>
 
-                            <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 shrink-0 justify-between sm:justify-end w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
-                              <div className="text-left sm:text-right">
-                                <span className="text-xs font-black text-slate-900 block">
-                                  ₹{job.minSalary ? `${job.minSalary.toLocaleString()} - ${job.maxSalary?.toLocaleString()}` : (job.salary || '35,000')} / {job.salaryType === 'Daily' ? 'Daily' : job.salaryType === 'Weekly' ? 'Weekly' : 'Monthly'}
+                            <div className="flex items-center justify-between md:justify-end gap-3 shrink-0 w-full md:w-auto pt-3 md:pt-0 border-t md:border-t-0 border-slate-100 min-w-0 flex-nowrap">
+                              <div className="text-left md:text-right min-w-0 shrink">
+                                <span className="text-xs sm:text-sm font-black text-slate-900 block truncate">
+                                  ₹{job.minSalary ? `${job.minSalary.toLocaleString()} - ${job.maxSalary?.toLocaleString()}` : (job.salary || '35,000')} / {job.salaryType === 'Daily' ? 'day' : job.salaryType === 'Weekly' ? 'week' : 'mo'}
                                 </span>
-                                <span className="text-[10px] text-slate-400 font-semibold block">
+                                <span className="text-[10px] text-slate-400 font-semibold block truncate mt-0.5">
                                   Posted {job.createdAt ? new Date(job.createdAt).toLocaleDateString('en-GB') : 'Recently'}
                                 </span>
                               </div>
 
-                              <div className="flex items-center gap-2 flex-wrap">
+                              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-nowrap">
                                 <button
                                   type="button"
                                   onClick={(e) => { e.stopPropagation(); handleToggleSaveJob(job.id, e); }}
-                                  className="p-2 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
+                                  className="p-2 sm:p-2.5 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer shrink-0"
                                   title="Save Job"
                                 >
-                                  <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-[#1D61F2] text-[#1D61F2]' : 'text-slate-400'}`} />
+                                  <Bookmark className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isSaved ? 'fill-[#1D61F2] text-[#1D61F2]' : 'text-slate-400'}`} />
                                 </button>
 
                                 {isAppRecord ? (
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-nowrap">
                                     {item.currentStatus === 'Withdrawn' || item.withdrawStatus === 'Withdrawn' ? (
-                                      <span className="px-3 py-1.5 bg-slate-100 text-slate-500 border border-slate-200 text-xs font-black rounded-xl">
+                                      <span className="px-3 py-1.5 bg-slate-100 text-slate-500 border border-slate-200 text-xs font-black rounded-xl shrink-0 whitespace-nowrap">
                                         Withdrawn
                                       </span>
                                     ) : (
                                       <>
-                                        <span className={`px-3 py-1.5 text-xs font-black rounded-xl border ${
+                                        <span className={`px-2.5 sm:px-3 py-1.5 text-xs font-black rounded-xl border shrink-0 whitespace-nowrap ${
                                           String(item.currentStatus || '').toLowerCase().includes('shortlist') || String(item.currentStatus || '').toLowerCase().includes('select')
                                             ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                             : String(item.currentStatus || '').toLowerCase().includes('reject')
@@ -1916,7 +1923,7 @@ export default function CandidateDashboard({
                                           type="button"
                                           onClick={(e) => { e.stopPropagation(); handleWithdrawApplication(item.id); }}
                                           disabled={withdrawingAppId === item.id}
-                                          className="px-3.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-xs rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                                          className="px-3 sm:px-3.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-xs rounded-xl transition-all cursor-pointer disabled:opacity-50 shrink-0 whitespace-nowrap"
                                         >
                                           {withdrawingAppId === item.id ? 'Withdrawing...' : 'Withdraw'}
                                         </button>
@@ -1924,7 +1931,7 @@ export default function CandidateDashboard({
                                     )}
                                   </div>
                                 ) : isApplied ? (
-                                  <span className="px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-black rounded-xl">
+                                  <span className="px-3.5 sm:px-4 py-2 sm:py-2.5 bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-black rounded-xl shrink-0 whitespace-nowrap">
                                     Applied ✓
                                   </span>
                                 ) : (
@@ -1932,7 +1939,7 @@ export default function CandidateDashboard({
                                     type="button"
                                     onClick={(e) => { e.stopPropagation(); handleApplyNow(job); }}
                                     disabled={applyingJobId === job.id}
-                                    className="px-5 py-2.5 bg-[#1D61F2] hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer"
+                                    className="px-3.5 sm:px-5 py-2 sm:py-2.5 bg-[#1D61F2] hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 whitespace-nowrap"
                                   >
                                     Apply Now
                                   </button>
@@ -1992,24 +1999,29 @@ export default function CandidateDashboard({
                       <div
                         key={app.id}
                         onClick={() => handleViewDetails(appJob)}
-                        className="p-5 border border-slate-200/80 rounded-2xl bg-white hover:border-[#1D61F2] hover:shadow-xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer group"
+                        className="p-3.5 sm:p-5 border border-slate-200/80 rounded-2xl bg-white hover:border-[#1D61F2] hover:shadow-xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-3.5 sm:gap-4 cursor-pointer group min-w-0"
                       >
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center p-1 overflow-hidden shrink-0 shadow-2xs">
+                        <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center p-1 overflow-hidden shrink-0 shadow-2xs">
                             {app.companyLogo ? (
                               <img src={app.companyLogo} alt={app.companyName} className="w-full h-full object-contain" />
                             ) : (
-                              <Building className="w-6 h-6 text-[#1D61F2]" />
+                              <Building className="w-5 h-5 sm:w-6 sm:h-6 text-[#1D61F2]" />
                             )}
                           </div>
 
-                          <div>
-                            <h4 className="font-black text-slate-900 text-base group-hover:text-[#1D61F2] transition-colors">{app.jobTitle || app.title || 'Delivery Partner / Job Role'}</h4>
-                            <p className="text-xs font-semibold text-slate-500 mt-0.5">
-                              {app.companyName || 'Hiring Company'} • <MapPin className="w-3 h-3 inline text-[#1D61F2]" /> {app.jobCity || 'India'}
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <h4 className="font-black text-slate-900 text-sm sm:text-base group-hover:text-[#1D61F2] transition-colors truncate">
+                              {app.jobTitle || app.title || 'Delivery Partner / Job Role'}
+                            </h4>
+                            <p className="text-xs font-semibold text-slate-500 truncate flex items-center gap-1">
+                              <span className="text-slate-700 font-bold">{app.companyName || 'Hiring Company'}</span>
+                              <span className="text-slate-300">•</span>
+                              <MapPin className="w-3 h-3 inline text-[#1D61F2] shrink-0 -mt-0.5" />
+                              <span className="truncate">{app.jobCity || 'India'}</span>
                             </p>
-                            <div className="flex flex-wrap items-center gap-2 mt-2">
-                              <span className={`px-3 py-1 text-xs font-black rounded-full border ${
+                            <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                              <span className={`px-2.5 sm:px-3 py-1 text-xs font-black rounded-full border whitespace-nowrap shrink-0 ${
                                 isWithdrawn
                                   ? 'bg-slate-100 text-slate-500 border-slate-200'
                                   : String(status).toLowerCase().includes('shortlist') || String(status).toLowerCase().includes('select')
@@ -2020,23 +2032,23 @@ export default function CandidateDashboard({
                               }`}>
                                 Status: {status}
                               </span>
-                              <span className="text-[11px] text-slate-400 font-semibold">
+                              <span className="text-[11px] text-slate-400 font-semibold truncate">
                                 Applied {app.appliedDate ? new Date(app.appliedDate).toLocaleDateString('en-GB') : 'Recently'}
                               </span>
                             </div>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-3 shrink-0">
+                        <div className="flex items-center justify-end gap-3 shrink-0 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100 w-full md:w-auto">
                           {isWithdrawn ? (
-                            <span className="px-4 py-2 bg-slate-100 text-slate-500 border border-slate-200 rounded-xl text-xs font-bold">
+                            <span className="px-4 py-2 bg-slate-100 text-slate-500 border border-slate-200 rounded-xl text-xs font-bold whitespace-nowrap shrink-0">
                               Withdrawn
                             </span>
                           ) : (
                             <button
                               onClick={(e) => { e.stopPropagation(); handleWithdrawApplication(app.id); }}
                               disabled={withdrawingAppId === app.id}
-                              className="px-4 py-2 border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+                              className="px-4 py-2 border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-50 whitespace-nowrap shrink-0"
                             >
                               {withdrawingAppId === app.id ? 'Withdrawing...' : 'Withdraw Application'}
                             </button>
@@ -2068,25 +2080,48 @@ export default function CandidateDashboard({
                     <div
                       key={job.id}
                       onClick={() => handleViewDetails(job)}
-                      className="p-5 border border-slate-200/80 rounded-2xl flex flex-col justify-between hover:border-[#1D61F2] hover:shadow-xs transition-all cursor-pointer group bg-white"
+                      className="p-4 sm:p-5 border border-slate-200/80 rounded-2xl flex flex-col justify-between hover:border-[#1D61F2] hover:shadow-xs transition-all cursor-pointer group bg-white min-w-0"
                     >
-                      <div>
-                        <h4 className="font-black text-slate-900 text-sm group-hover:text-[#1D61F2] transition-colors">{job.title}</h4>
-                        <p className="text-xs font-semibold text-slate-500 mt-1">{job.companyName} • {job.city}</p>
+                      <div className="min-w-0 space-y-1">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <h4 className="font-black text-slate-900 text-sm sm:text-base group-hover:text-[#1D61F2] transition-colors truncate">
+                            {job.title}
+                          </h4>
+                          <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 shrink-0">
+                            <CheckCircle className="w-2.5 h-2.5 fill-emerald-500 text-white" /> Verified
+                          </span>
+                        </div>
+                        <p className="text-xs font-semibold text-slate-500 truncate">{job.companyName} • {job.city}</p>
                       </div>
-                      <div className="mt-4 flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-900">₹{job.minSalary ? Number(job.minSalary).toLocaleString() : '35,000'} / {job.salaryType === 'Daily' ? 'day' : job.salaryType === 'Weekly' ? 'week' : 'mo'}</span>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleApplyNow(job); }}
-                          disabled={myApplications.some(a => String(a.jobId) === String(job.id))}
-                          className={`px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition-all ${
-                            myApplications.some(a => String(a.jobId) === String(job.id))
-                              ? 'bg-emerald-50 text-emerald-600 border border-emerald-200 font-black'
-                              : 'bg-[#1D61F2] hover:bg-blue-700 text-white'
-                          }`}
-                        >
-                          {myApplications.some(a => String(a.jobId) === String(job.id)) ? 'Applied ✓' : 'Apply Now'}
-                        </button>
+
+                      <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2 min-w-0 flex-nowrap">
+                        <span className="text-xs sm:text-sm font-black text-slate-900 truncate min-w-0">
+                          ₹{job.minSalary ? Number(job.minSalary).toLocaleString() : '35,000'} / {job.salaryType === 'Daily' ? 'day' : job.salaryType === 'Weekly' ? 'week' : 'mo'}
+                        </span>
+                        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-nowrap">
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleToggleSaveJob(job.id, e); }}
+                            className="p-2 sm:p-2.5 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer shrink-0"
+                            title="Remove from Saved Jobs"
+                          >
+                            <Bookmark className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-[#1D61F2] text-[#1D61F2]" />
+                          </button>
+                          {myApplications.some(a => String(a.jobId) === String(job.id)) ? (
+                            <span className="px-3 sm:px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-black rounded-xl shrink-0 whitespace-nowrap">
+                              Applied ✓
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); handleApplyNow(job); }}
+                              disabled={applyingJobId === job.id}
+                              className="px-3.5 sm:px-5 py-2 sm:py-2.5 bg-[#1D61F2] hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 whitespace-nowrap"
+                            >
+                              Apply Now
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -2118,13 +2153,13 @@ export default function CandidateDashboard({
 
         {/* ================= RIGHT SIDEBAR WIDGETS ================= */}
         {!selectedJob && (
-          <aside className="w-full lg:w-80 shrink-0 flex flex-col gap-6">
+          <aside className="w-full lg:w-80 shrink-0 flex flex-col gap-4 sm:gap-6">
           
           {/* SINGLE QUICK ACTIONS WIDGET (ONLY 1 SECTION) */}
-          <div className="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-xs">
-            <h3 className="font-black text-slate-900 text-sm mb-4">Quick Actions</h3>
+          <div className="bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-xs">
+            <h3 className="font-black text-slate-900 text-sm mb-3 sm:mb-4">Quick Actions</h3>
             
-            <div className="grid grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
               {/* Action 1: Search Jobs */}
               <button
                 onClick={() => {
@@ -2132,40 +2167,40 @@ export default function CandidateDashboard({
                   const el = document.getElementById('jobs-search-input');
                   if (el) el.focus();
                 }}
-                className="p-3 rounded-2xl bg-blue-50/70 hover:bg-blue-100/70 border border-blue-100 transition-all flex flex-col items-center text-center cursor-pointer group"
+                className="p-2 xs:p-3 rounded-xl sm:rounded-2xl bg-blue-50/70 hover:bg-blue-100/70 border border-blue-100 transition-all flex flex-col items-center text-center cursor-pointer group"
               >
-                <div className="w-9 h-9 rounded-xl bg-blue-500 text-white flex items-center justify-center mb-1.5 shadow-xs group-hover:scale-110 transition-transform">
-                  <Search className="w-4 h-4" />
+                <div className="w-8 h-8 xs:w-9 xs:h-9 rounded-xl bg-blue-500 text-white flex items-center justify-center mb-1.5 shadow-xs group-hover:scale-110 transition-transform">
+                  <Search className="w-3.5 h-3.5 xs:w-4 xs:h-4" />
                 </div>
-                <span className="text-[11px] font-extrabold text-slate-800 leading-tight">Search Jobs</span>
+                <span className="text-[10px] xs:text-[11px] font-extrabold text-slate-800 leading-tight">Search Jobs</span>
               </button>
 
               {/* Action 2: Saved Jobs */}
               <button
                 onClick={() => setActiveTab('saved')}
-                className="p-3 rounded-2xl bg-purple-50/70 hover:bg-purple-100/70 border border-purple-100 transition-all flex flex-col items-center text-center cursor-pointer group"
+                className="p-2 xs:p-3 rounded-xl sm:rounded-2xl bg-purple-50/70 hover:bg-purple-100/70 border border-purple-100 transition-all flex flex-col items-center text-center cursor-pointer group"
               >
-                <div className="w-9 h-9 rounded-xl bg-purple-500 text-white flex items-center justify-center mb-1.5 shadow-xs group-hover:scale-110 transition-transform">
-                  <Bookmark className="w-4 h-4" />
+                <div className="w-8 h-8 xs:w-9 xs:h-9 rounded-xl bg-purple-500 text-white flex items-center justify-center mb-1.5 shadow-xs group-hover:scale-110 transition-transform">
+                  <Bookmark className="w-3.5 h-3.5 xs:w-4 xs:h-4" />
                 </div>
-                <span className="text-[11px] font-extrabold text-slate-800 leading-tight">Saved Jobs</span>
+                <span className="text-[10px] xs:text-[11px] font-extrabold text-slate-800 leading-tight">Saved Jobs</span>
               </button>
 
               {/* Action 3: Update Profile */}
               <button
                 onClick={() => setActiveTab('overview')}
-                className="p-3 rounded-2xl bg-emerald-50/70 hover:bg-emerald-100/70 border border-emerald-100 transition-all flex flex-col items-center text-center cursor-pointer group"
+                className="p-2 xs:p-3 rounded-xl sm:rounded-2xl bg-emerald-50/70 hover:bg-emerald-100/70 border border-emerald-100 transition-all flex flex-col items-center text-center cursor-pointer group"
               >
-                <div className="w-9 h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center mb-1.5 shadow-xs group-hover:scale-110 transition-transform">
-                  <User className="w-4 h-4" />
+                <div className="w-8 h-8 xs:w-9 xs:h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center mb-1.5 shadow-xs group-hover:scale-110 transition-transform">
+                  <User className="w-3.5 h-3.5 xs:w-4 xs:h-4" />
                 </div>
-                <span className="text-[11px] font-extrabold text-slate-800 leading-tight">Update Profile</span>
+                <span className="text-[10px] xs:text-[11px] font-extrabold text-slate-800 leading-tight">Update Profile</span>
               </button>
             </div>
           </div>
 
           {/* YOUR PROFILE PROGRESS WIDGET */}
-          <div className="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-xs">
+          <div className="bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-xs">
             <h3 className="font-black text-slate-900 text-sm mb-4">Your Profile Progress</h3>
             
             <div className="flex items-center gap-4">
@@ -2367,7 +2402,7 @@ export default function CandidateDashboard({
       )}
 
       {/* ================= MOBILE BOTTOM NAVIGATION BAR (lg:hidden) ================= */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#0F172A]/95 backdrop-blur-md border-t border-slate-800 text-slate-400 z-40 lg:hidden px-3 py-2 flex items-center justify-around shadow-2xl">
+      <div className="fixed bottom-0 left-0 right-0 bg-[#0F172A]/95 backdrop-blur-md border-t border-slate-800 text-slate-400 z-40 lg:hidden px-2 sm:px-3 py-2 flex items-center justify-around shadow-2xl safe-area-pb">
         <button
           onClick={() => { setActiveTab('find_jobs'); setAppStatusTab('all'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           className={`flex flex-col items-center gap-1 transition-all cursor-pointer ${

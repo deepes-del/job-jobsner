@@ -21,7 +21,7 @@ export const AnimatedHeroRider: React.FC<AnimatedHeroRiderProps> = ({
   }, []);
 
   return (
-    <div className={`relative flex flex-col items-center justify-end pointer-events-none select-none overflow-visible ${className}`}>
+    <div className={`relative flex flex-col items-center justify-end pointer-events-none select-none overflow-hidden sm:overflow-visible ${className}`}>
       
       {/* Background Radial Glow */}
       <motion.div
@@ -86,7 +86,7 @@ export const AnimatedHeroRider: React.FC<AnimatedHeroRiderProps> = ({
         <img
           src={imageSrc}
           alt="Animated Delivery Rider"
-          className="h-36 sm:h-56 lg:h-64 w-auto object-contain filter drop-shadow-2xl sm:scale-125"
+          className="h-28 xs:h-36 sm:h-56 lg:h-64 w-auto object-contain filter drop-shadow-2xl sm:scale-125"
         />
 
         {/* Ground Contact Wheel Shadow */}

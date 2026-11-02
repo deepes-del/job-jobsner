@@ -51,5 +51,21 @@ input, textarea, select, button {
   background: rgba(100, 116, 139, 0.6);
 }
 
+/* Utility to completely hide scrollbars while preserving scroll functionality */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
 
+/* Safe area padding for mobile notches and home indicator bars */
+.safe-area-pb {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+}
 
+/* Ensure all buttons and touch targets have touch manipulation */
+button, a, input, select {
+  touch-action: manipulation;
+}

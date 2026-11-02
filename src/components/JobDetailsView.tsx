@@ -118,7 +118,7 @@ export default function JobDetailsView({
     : `We are hiring enthusiastic and motivated candidates for the role of ${job.title} at ${job.companyName}. In this role, you will be an integral part of our delivery network, ensuring prompt deliveries to customers across ${job.city || 'your area'}. We offer competitive compensation, weekly payouts, comprehensive insurance coverage, and excellent performance-based growth opportunities. Immediate joining is available for eligible candidates with fast onboarding!`;
 
   return (
-    <div className="space-y-6 pb-6 sm:pb-8 animate-fadeIn" id="job-details-page">
+    <div className="space-y-6 pb-28 sm:pb-32 animate-fadeIn" id="job-details-page">
       {/* TOP NAVIGATION / BREADCRUMB */}
       <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -579,8 +579,8 @@ export default function JobDetailsView({
       </div>
 
       {/* STICKY BOTTOM ACTION BAR (Accessible on all screen sizes) */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-2xl py-3 px-4 sm:px-8 z-40 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-2xl py-3 px-3 sm:px-8 z-40 flex items-center justify-between gap-3 sm:gap-4 safe-area-pb">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
           <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center p-1 overflow-hidden shrink-0 hidden sm:flex">
             {job.companyLogo ? (
               <img src={job.companyLogo} alt={job.companyName} className="w-full h-full object-contain" />
@@ -588,9 +588,9 @@ export default function JobDetailsView({
               <Building className="w-5 h-5 text-[#1D61F2]" />
             )}
           </div>
-          <div className="space-y-0.5">
-            <h4 className="text-xs sm:text-sm font-black text-slate-900 line-clamp-1">{job.title}</h4>
-            <p className="text-[11px] font-bold text-slate-500">
+          <div className="space-y-0.5 min-w-0 flex-1">
+            <h4 className="text-xs sm:text-sm font-black text-slate-900 truncate">{job.title}</h4>
+            <p className="text-[10.5px] sm:text-[11px] font-bold text-slate-500 truncate">
               <span className="text-slate-900 font-black">{formattedSalary} / {salaryUnit}</span> • {job.companyName}
             </p>
           </div>
@@ -605,7 +605,7 @@ export default function JobDetailsView({
           </button>
 
           {isApplied ? (
-            <div className="px-6 py-2.5 sm:py-3 bg-emerald-50 border-2 border-emerald-400 text-emerald-700 font-black text-xs sm:text-sm rounded-xl flex items-center gap-2 shadow-xs">
+            <div className="px-4 sm:px-6 py-2.5 sm:py-3 bg-emerald-50 border-2 border-emerald-400 text-emerald-700 font-black text-xs sm:text-sm rounded-xl flex items-center gap-1.5 sm:gap-2 shadow-xs shrink-0 whitespace-nowrap">
               <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 fill-emerald-500 text-white" />
               <span>Applied ✓</span>
             </div>
@@ -613,7 +613,7 @@ export default function JobDetailsView({
             <button
               onClick={() => onApply(job)}
               disabled={isApplying}
-              className="px-6 sm:px-8 py-2.5 sm:py-3 bg-[#1D61F2] hover:bg-blue-700 text-white font-black text-xs sm:text-sm rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+              className="px-4 sm:px-8 py-2.5 sm:py-3 bg-[#1D61F2] hover:bg-blue-700 text-white font-black text-xs sm:text-sm rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer active:scale-95 shrink-0 whitespace-nowrap"
             >
               <Sparkles className="w-4 h-4" />
               <span>{isApplying ? 'Applying...' : 'Apply Now'}</span>

@@ -15,7 +15,7 @@ import JobsnerLogo from './components/JobsnerLogo';
 import RecruiterLogin from './components/RecruiterLogin';
 import RecruiterRegistration from './components/RecruiterRegistration';
 import RecruiterDashboard from './components/RecruiterDashboard';
-
+z   
 export default function App() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [userRole, setUserRole] = useState<'candidate' | 'recruiter' | null>(() => {
@@ -465,7 +465,7 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans max-w-full overflow-x-hidden" id="app-root-container">
       {/* Top Navbar Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-30 shrink-0 shadow-xs" id="global-navbar">
-        <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 sm:h-20 md:h-22 flex items-center justify-between gap-1.5 sm:gap-4">
+        <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 h-16 sm:h-20 md:h-22 flex items-center justify-between gap-1.5 sm:gap-4">
           
           {/* Logo brand */}
           <div 
@@ -473,7 +473,7 @@ export default function App() {
             className="flex items-center gap-1.5 sm:gap-3 select-none cursor-pointer group active:scale-95 transition-all" 
             id="navbar-brand"
           >
-            <JobsnerLogo size="xl" className="h-10 sm:h-14 md:h-18" />
+            <JobsnerLogo size="xl" className="h-8.5 xs:h-9 sm:h-14 md:h-18" />
             {userRole !== null && userRole !== 'candidate' && (
               <span className="text-[10px] sm:text-[11px] font-bold text-[#1D61F2] uppercase bg-blue-50 border border-blue-100 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full tracking-wider shrink-0 hidden xs:inline-block ml-1">
                 {portal === 'candidate' ? 'Candidate Portal' : 'Recruiter Portal'}
@@ -617,7 +617,7 @@ export default function App() {
       </header>
 
       {/* Main Content Area */}
-      <main className={`${userRole === null ? 'flex-1 flex flex-col justify-center items-center max-w-5xl w-full mx-auto px-3.5 sm:px-6 py-6 sm:py-10' : 'flex-1 max-w-[1600px] w-full mx-auto px-3 sm:px-5 lg:px-6 py-4 sm:py-6'}`} id="main-content-layout">
+      <main className={`${userRole === null ? 'flex-1 flex flex-col justify-center items-center max-w-5xl w-full mx-auto px-3.5 sm:px-6 py-6 sm:py-10' : 'flex-1 max-w-[1600px] w-full mx-auto px-2.5 sm:px-5 lg:px-6 py-4 sm:py-6 pb-24 lg:pb-6'}`} id="main-content-layout">
         <AnimatePresence mode="wait">
           
           {userRole === null ? (
@@ -948,7 +948,7 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className={`bg-white border-t border-gray-150 shrink-0 ${userRole === null ? 'py-3' : 'py-6'}`} id="global-footer">
+      <footer className={`bg-white border-t border-gray-150 shrink-0 ${userRole === null ? 'py-3' : 'py-6'} ${userRole !== null ? 'mb-16 lg:mb-0' : ''}`} id="global-footer">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-400">
           <p>© 2026 Jobsner. Connecting Careers. All rights reserved.</p>
           <div className="flex gap-4">
