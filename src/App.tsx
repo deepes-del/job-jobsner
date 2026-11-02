@@ -15,7 +15,6 @@ import JobsnerLogo from './components/JobsnerLogo';
 import RecruiterLogin from './components/RecruiterLogin';
 import RecruiterRegistration from './components/RecruiterRegistration';
 import RecruiterDashboard from './components/RecruiterDashboard';
-z   
 export default function App() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [userRole, setUserRole] = useState<'candidate' | 'recruiter' | null>(() => {
