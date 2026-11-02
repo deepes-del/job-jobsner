@@ -465,7 +465,7 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans max-w-full overflow-x-hidden" id="app-root-container">
       {/* Top Navbar Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-30 shrink-0 shadow-xs" id="global-navbar">
-        <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 h-16 sm:h-20 md:h-22 flex items-center justify-between gap-1.5 sm:gap-4">
+        <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 h-14 sm:h-16 md:h-16 flex items-center justify-between gap-1.5 sm:gap-4">
           
           {/* Logo brand */}
           <div 
@@ -473,7 +473,7 @@ export default function App() {
             className="flex items-center gap-1.5 sm:gap-3 select-none cursor-pointer group active:scale-95 transition-all min-w-0 shrink-0" 
             id="navbar-brand"
           >
-            <JobsnerLogo size="xl" className="h-8.5 xs:h-9 sm:h-14 md:h-18" />
+            <JobsnerLogo size="xl" className="h-7 xs:h-8 sm:h-9 md:h-9.5" />
             {userRole !== null && userRole !== 'candidate' && (
               <span className="text-[10px] sm:text-[11px] font-bold text-[#1D61F2] uppercase bg-blue-50 border border-blue-100 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full tracking-wider shrink-0 hidden xs:inline-block ml-1">
                 {portal === 'candidate' ? 'Candidate Portal' : 'Recruiter Portal'}
@@ -486,28 +486,28 @@ export default function App() {
             <nav className="hidden md:flex items-center gap-8 text-sm font-bold text-slate-600">
               <button 
                 onClick={() => setCandidateActiveTab('find_jobs')} 
-                className={`relative py-5 px-1 cursor-pointer transition-colors ${candidateActiveTab === 'find_jobs' ? 'text-[#1D61F2] font-black' : 'hover:text-slate-900'}`}
+                className={`relative py-4 px-1 cursor-pointer transition-colors ${candidateActiveTab === 'find_jobs' ? 'text-[#1D61F2] font-black' : 'hover:text-slate-900'}`}
               >
                 Jobs
                 {candidateActiveTab === 'find_jobs' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#1D61F2] rounded-full" />}
               </button>
               <button 
                 onClick={() => setCandidateActiveTab('applications')} 
-                className={`relative py-5 px-1 cursor-pointer transition-colors ${candidateActiveTab === 'applications' ? 'text-[#1D61F2] font-black' : 'hover:text-slate-900'}`}
+                className={`relative py-4 px-1 cursor-pointer transition-colors ${candidateActiveTab === 'applications' ? 'text-[#1D61F2] font-black' : 'hover:text-slate-900'}`}
               >
                 My Applications
                 {candidateActiveTab === 'applications' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#1D61F2] rounded-full" />}
               </button>
               <button 
                 onClick={() => setCandidateActiveTab('saved')} 
-                className={`relative py-5 px-1 cursor-pointer transition-colors flex items-center gap-1.5 ${candidateActiveTab === 'saved' ? 'text-[#1D61F2] font-black' : 'hover:text-slate-900'}`}
+                className={`relative py-4 px-1 cursor-pointer transition-colors flex items-center gap-1.5 ${candidateActiveTab === 'saved' ? 'text-[#1D61F2] font-black' : 'hover:text-slate-900'}`}
               >
                 <Heart className="w-4 h-4" /> Saved Jobs
                 {candidateActiveTab === 'saved' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#1D61F2] rounded-full" />}
               </button>
               <button 
                 onClick={() => setCandidateActiveTab('overview')} 
-                className={`relative py-5 px-1 cursor-pointer transition-colors flex items-center gap-1.5 ${candidateActiveTab === 'overview' ? 'text-[#1D61F2] font-black' : 'hover:text-slate-900'}`}
+                className={`relative py-4 px-1 cursor-pointer transition-colors flex items-center gap-1.5 ${candidateActiveTab === 'overview' ? 'text-[#1D61F2] font-black' : 'hover:text-slate-900'}`}
               >
                 <User className="w-4 h-4" /> My Profile
                 {candidateActiveTab === 'overview' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#1D61F2] rounded-full" />}
@@ -617,7 +617,7 @@ export default function App() {
       </header>
 
       {/* Main Content Area */}
-      <main className={`${userRole === null ? 'flex-1 flex flex-col justify-center items-center max-w-5xl w-full mx-auto px-3.5 sm:px-6 py-6 sm:py-10' : 'flex-1 max-w-[1600px] w-full mx-auto px-2.5 sm:px-5 lg:px-6 py-4 sm:py-6 pb-24 lg:pb-6'}`} id="main-content-layout">
+      <main className={`${userRole === null ? 'flex-1 flex flex-col justify-center items-center max-w-5xl w-full mx-auto px-3.5 sm:px-6 py-6 sm:py-10' : 'flex-1 max-w-[1600px] w-full mx-auto px-2.5 sm:px-5 lg:px-6 py-3 sm:py-5 pb-24 lg:pb-6'}`} id="main-content-layout">
         <AnimatePresence mode="wait">
           
           {userRole === null ? (

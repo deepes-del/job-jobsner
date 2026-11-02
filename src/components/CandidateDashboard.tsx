@@ -1094,7 +1094,7 @@ export default function CandidateDashboard({
         
         {/* ================= LEFT NAVIGATION SIDEBAR (DESKTOP EXCLUSIVE) ================= */}
         {!selectedJob && (
-          <aside className="hidden lg:flex w-64 shrink-0 bg-[#0F172A] text-slate-300 rounded-3xl p-5 shadow-xl flex-col justify-between min-h-[640px] sticky top-28 z-20">
+          <aside className="hidden lg:flex w-64 shrink-0 bg-[#0F172A] text-slate-300 rounded-3xl p-5 shadow-xl flex-col justify-between min-h-[640px] sticky top-20 z-20">
           <div>
             {/* Top Brand Branding Header */}
             <div className="px-2 py-1 mb-6 border-b border-slate-800/80 pb-5">

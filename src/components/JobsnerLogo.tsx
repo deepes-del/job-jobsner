@@ -10,32 +10,35 @@ interface JobsnerLogoProps {
 }
 
 const JobsnerLogo: React.FC<JobsnerLogoProps> = ({
+  variant = 'full',
   size = 'md',
   className = '',
   onClick,
   id,
 }) => {
   const heightMap = {
-    xs: 'h-10',
-    sm: 'h-12',
-    md: 'h-20',
-    lg: 'h-24',
-    xl: 'h-10',
+    xs: 'h-6 sm:h-7',
+    sm: 'h-7 sm:h-8',
+    md: 'h-8 sm:h-10',
+    lg: 'h-10 sm:h-12',
+    xl: 'h-8 sm:h-9 md:h-10',
   };
 
   const heightClass = heightMap[size] || heightMap.md;
+  const logoSrc = variant === 'icon' ? '/logo-icon.png' : '/logo.png';
 
   return (
     <img
       id={id}
-      src="/logo.png"
-      alt="Jobsner - Find Your Next Opportunity"
+      src={logoSrc}
+      alt="Jobsner"
       onClick={onClick}
       draggable={false}
       referrerPolicy="no-referrer"
       className={`
         ${heightClass}
         w-auto
+        max-w-full
         object-contain
         block
         select-none
