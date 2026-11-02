@@ -21,22 +21,22 @@ const JobsnerLogo: React.FC<JobsnerLogoProps> = ({
   const isIcon = variant === 'icon';
   const logoSrc = isIcon ? '/logo-icon.png' : '/logo.png';
 
-  // Strict sizes to keep logo crisp, compact, and clearly visible
+  // Configured sizes to make the logo bold, clearly visible, and well-proportioned
   // Full logo aspect ratio is ~5:1 (804x160)
-  const fullSizeConfig: Record<string, { height: string; maxHeight: string; maxWidth: string }> = {
-    xs: { height: '20px', maxHeight: '20px', maxWidth: '105px' },
-    sm: { height: '24px', maxHeight: '24px', maxWidth: '125px' },
-    md: { height: '28px', maxHeight: '28px', maxWidth: '145px' },
-    lg: { height: '32px', maxHeight: '32px', maxWidth: '165px' },
-    xl: { height: '28px', maxHeight: '30px', maxWidth: '155px' },
+  const fullSizeConfig: Record<string, { maxHeight: string; maxWidth: string; defaultClasses: string }> = {
+    xs: { maxHeight: '28px', maxWidth: '140px', defaultClasses: 'h-[24px]' },
+    sm: { maxHeight: '32px', maxWidth: '160px', defaultClasses: 'h-[28px]' },
+    md: { maxHeight: '40px', maxWidth: '200px', defaultClasses: 'h-[34px] sm:h-[36px]' },
+    lg: { maxHeight: '48px', maxWidth: '240px', defaultClasses: 'h-[40px] sm:h-[44px]' },
+    xl: { maxHeight: '46px', maxWidth: '235px', defaultClasses: 'h-[34px] sm:h-[38px] md:h-[42px]' },
   };
 
-  const iconSizeConfig: Record<string, { height: string; maxHeight: string; maxWidth: string }> = {
-    xs: { height: '20px', maxHeight: '20px', maxWidth: '24px' },
-    sm: { height: '24px', maxHeight: '24px', maxWidth: '30px' },
-    md: { height: '28px', maxHeight: '28px', maxWidth: '36px' },
-    lg: { height: '34px', maxHeight: '34px', maxWidth: '42px' },
-    xl: { height: '38px', maxHeight: '38px', maxWidth: '48px' },
+  const iconSizeConfig: Record<string, { maxHeight: string; maxWidth: string; defaultClasses: string }> = {
+    xs: { maxHeight: '24px', maxWidth: '28px', defaultClasses: 'h-[22px]' },
+    sm: { maxHeight: '28px', maxWidth: '34px', defaultClasses: 'h-[26px]' },
+    md: { maxHeight: '34px', maxWidth: '42px', defaultClasses: 'h-[32px]' },
+    lg: { maxHeight: '42px', maxWidth: '52px', defaultClasses: 'h-[38px]' },
+    xl: { maxHeight: '48px', maxWidth: '58px', defaultClasses: 'h-[44px]' },
   };
 
   const currentConfig = isIcon
@@ -52,17 +52,21 @@ const JobsnerLogo: React.FC<JobsnerLogoProps> = ({
       draggable={false}
       referrerPolicy="no-referrer"
       style={{
-        height: currentConfig.height,
         maxHeight: currentConfig.maxHeight,
         maxWidth: currentConfig.maxWidth,
-        width: 'auto',
         objectFit: 'contain',
         objectPosition: 'left center',
-        display: 'block',
-        flexShrink: 0,
         ...style,
       }}
-      className={`select-none shrink-0 ${onClick ? 'cursor-pointer hover:opacity-90 active:scale-95 transition-all' : ''} ${className}`}
+      className={`
+        ${currentConfig.defaultClasses}
+        w-auto
+        block
+        select-none
+        shrink-0
+        ${onClick ? 'cursor-pointer hover:opacity-90 active:scale-95 transition-all' : ''}
+        ${className}
+      `}
     />
   );
 };
