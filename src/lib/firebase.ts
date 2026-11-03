@@ -16,7 +16,21 @@ import {
   Auth
 } from 'firebase/auth';
 
-const env = (import.meta as any).env || {};
+function getFirebaseEnvObj(): Record<string, string | undefined> {
+  try {
+    if (typeof import.meta !== 'undefined' && (import.meta as any)?.env) {
+      return (import.meta as any).env;
+    }
+  } catch {}
+  try {
+    if (typeof process !== 'undefined' && process?.env) {
+      return process.env as any;
+    }
+  } catch {}
+  return {};
+}
+
+const env = getFirebaseEnvObj();
 
 const firebaseConfig = {
   apiKey: env.VITE_FIREBASE_API_KEY || "AIzaSyAObOh-nLew9M9pT9n64M-QBHZcWMPzRqM",

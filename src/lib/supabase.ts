@@ -17,16 +17,22 @@ export const DEFAULT_SUPABASE_URL = "https://jjzzauslbtfgpllxhagm.supabase.co";
 export const DEFAULT_SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqenphdXNsYnRmZ3BsbHhoYWdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2MjA3MzAsImV4cCI6MjA5ODE5NjczMH0.ygaO4s7C0KVL2SfNbMXpijLGeCujmqU_AgKEZN5rQkw";
 export const DEFAULT_SUPABASE_SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqenphdXNsYnRmZ3BsbHhoYWdtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MjYyMDczMCwiZXhwIjoyMDk4MTk2NzMwfQ.nDigZiWIRVPKzJQViASjjjCWhqaT2n25b-BqqJ7ccUw";
 
+function getEnvVal(key: string): string | undefined {
+  if (typeof process !== 'undefined' && process && process.env && process.env[key]) {
+    return process.env[key];
+  }
+  try {
+    if (typeof import.meta !== 'undefined' && (import.meta as any)?.env?.[key]) {
+      return (import.meta as any).env[key];
+    }
+  } catch {}
+  return undefined;
+}
+
 export function isSupabaseConfigured(): boolean {
   try {
-    const isServer = typeof process !== 'undefined' && process.env;
-    const url = isServer 
-      ? (process.env.SUPABASE_URL || (process.env as any).VITE_SUPABASE_URL)
-      : ((import.meta as any).env.VITE_SUPABASE_URL);
-    const key = isServer
-      ? (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || (process.env as any).VITE_SUPABASE_ANON_KEY)
-      : ((import.meta as any).env.VITE_SUPABASE_ANON_KEY);
-      
+    const url = getEnvVal('SUPABASE_URL') || getEnvVal('VITE_SUPABASE_URL');
+    const key = getEnvVal('SUPABASE_SERVICE_ROLE_KEY') || getEnvVal('SUPABASE_ANON_KEY') || getEnvVal('VITE_SUPABASE_ANON_KEY');
     return !!(url || DEFAULT_SUPABASE_URL) && !!(key || DEFAULT_SUPABASE_KEY || DEFAULT_SUPABASE_SERVICE_KEY);
   } catch {
     return true;
@@ -41,15 +47,12 @@ export function getSupabase(): SupabaseClient {
     return supabaseClientInstance;
   }
 
-  const isServer = typeof process !== 'undefined' && process.env;
+  const isServer = typeof process !== 'undefined' && process && process.env;
   
-  const supabaseUrl = (isServer 
-    ? (process.env.SUPABASE_URL || (process.env as any).VITE_SUPABASE_URL)
-    : ((import.meta as any).env.VITE_SUPABASE_URL)) || DEFAULT_SUPABASE_URL;
-    
-  const supabaseKey = (isServer
-    ? (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || (process.env as any).VITE_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_SERVICE_KEY)
-    : ((import.meta as any).env.VITE_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_KEY));
+  const supabaseUrl = getEnvVal('SUPABASE_URL') || getEnvVal('VITE_SUPABASE_URL') || DEFAULT_SUPABASE_URL;
+  const supabaseKey = isServer
+    ? (getEnvVal('SUPABASE_SERVICE_ROLE_KEY') || getEnvVal('SUPABASE_ANON_KEY') || getEnvVal('VITE_SUPABASE_ANON_KEY') || DEFAULT_SUPABASE_SERVICE_KEY)
+    : (getEnvVal('VITE_SUPABASE_ANON_KEY') || getEnvVal('SUPABASE_ANON_KEY') || DEFAULT_SUPABASE_KEY);
 
   supabaseClientInstance = createClient(supabaseUrl, supabaseKey, {
     auth: {
