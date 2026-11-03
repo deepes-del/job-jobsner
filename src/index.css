@@ -60,6 +60,11 @@ input, textarea, select, button {
   display: none;
 }
 
+/* Safe area padding for mobile notches, dynamic islands, and top status bar */
+.safe-area-pt {
+  padding-top: max(0.65rem, env(safe-area-inset-top, 0px));
+}
+
 /* Safe area padding for mobile notches and home indicator bars */
 .safe-area-pb {
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));

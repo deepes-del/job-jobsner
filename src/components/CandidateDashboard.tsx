@@ -542,7 +542,16 @@ export default function CandidateDashboard({
       }
     });
 
-    return { deliveryLogistics, warehousePacking, drivers, officeAdmin, other };
+    // Every category displays > 1500 jobs with '+' symbol as requested
+    const formattedCounts = {
+      deliveryLogistics: `${(1850 + deliveryLogistics).toLocaleString()}+`,
+      warehousePacking: `${(1620 + warehousePacking).toLocaleString()}+`,
+      drivers: `${(1740 + drivers).toLocaleString()}+`,
+      officeAdmin: `${(1530 + officeAdmin).toLocaleString()}+`,
+      other: `${(1580 + other).toLocaleString()}+`,
+    };
+
+    return formattedCounts;
   }, [activeJobs]);
 
   // Client-side dynamic instant-search filtering & sorting
