@@ -121,6 +121,61 @@ export default function CandidateDashboard({
   const [selectedGender, setSelectedGender] = React.useState('All');
   const [sortOrder, setSortOrder] = React.useState('newest');
 
+  // Infinite Scroll State for Unlimited Job Browsing
+  const [infiniteBatchCount, setInfiniteBatchCount] = React.useState(3);
+  const infiniteScrollSentinelRef = React.useRef<HTMLDivElement | null>(null);
+
+  // Reset infinite batch count when search query or filters change
+  React.useEffect(() => {
+    setInfiniteBatchCount(3);
+  }, [searchQuery, selectedCategory, selectedState, selectedCity, selectedSalary, selectedEmpType, selectedExperience, selectedShift, sortOrder]);
+
+  // Seamless Infinite Scrolling - automatically loads more randomized batches
+  React.useEffect(() => {
+    if (appStatusTab !== 'all' || !filteredJobsList || filteredJobsList.length === 0) return;
+
+    // IntersectionObserver for sentinel element at bottom
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0] && entries[0].isIntersecting) {
+          setInfiniteBatchCount((prev) => prev + 3);
+        }
+      },
+      { rootMargin: '800px 0px 800px 0px' }
+    );
+
+    const currentSentinel = infiniteScrollSentinelRef.current;
+    if (currentSentinel) {
+      observer.observe(currentSentinel);
+    }
+
+    // Fallback window scroll listener for rapid momentum scrolling
+    let isTicking = false;
+    const handleScroll = () => {
+      if (!isTicking) {
+        window.requestAnimationFrame(() => {
+          const scrollY = window.scrollY || window.pageYOffset;
+          const windowHeight = window.innerHeight;
+          const documentHeight = document.documentElement.scrollHeight;
+          if (documentHeight - (scrollY + windowHeight) < 1200) {
+            setInfiniteBatchCount((prev) => prev + 3);
+          }
+          isTicking = false;
+        });
+        isTicking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      if (currentSentinel) {
+        observer.unobserve(currentSentinel);
+      }
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [appStatusTab, filteredJobsList]);
+
   // Celebratory Flower Animation State
   const [showFlowerAnimation, setShowFlowerAnimation] = React.useState(false);
   const [flowerJobDetails, setFlowerJobDetails] = React.useState<{ title: string; companyName: string }>({ title: '', companyName: '' });
@@ -684,18 +739,19 @@ export default function CandidateDashboard({
       _uniqueKey: `orig-${job.id}-${idx}`,
     }));
 
-    // 2. Repeat the jobs randomly 5 times seamlessly without any round indicators
+    // 2. Unlimited Scrolling: Repeat the same jobs randomly across infinite batches
     const repeatedList: any[] = [];
-    for (let round = 1; round <= 5; round++) {
-      const shuffled = shuffleJobsArray(filteredJobsList, round * 7919 + 31).map((job: any, idx: number) => ({
+    for (let round = 1; round <= infiniteBatchCount; round++) {
+      const seed = (round * 7919 + (round % 2 === 0 ? 31 : 173)) % 100000;
+      const shuffled = shuffleJobsArray(filteredJobsList, seed).map((job: any, idx: number) => ({
         ...job,
-        _uniqueKey: `repeat-${round}-${job.id}-${idx}`,
+        _uniqueKey: `infinite-r${round}-${job.id}-${idx}`,
       }));
       repeatedList.push(...shuffled);
     }
 
     return [...originalList, ...repeatedList];
-  }, [appStatusTab, myApplications, filteredJobsList]);
+  }, [appStatusTab, myApplications, filteredJobsList, infiniteBatchCount]);
 
   // Apply Now Handlers (Fast 0ms Optimistic Application)
   const handleApplyNow = async (job: any) => {
@@ -1958,6 +2014,19 @@ export default function CandidateDashboard({
                           </div>
                       );
                     })
+                  )}
+
+                  {/* Infinite Scroll Sentinel & Loader */}
+                  {appStatusTab === 'all' && filteredJobsList.length > 0 && (
+                    <div
+                      ref={infiniteScrollSentinelRef}
+                      className="py-8 flex flex-col items-center justify-center text-slate-400 gap-2 select-none"
+                    >
+                      <div className="flex items-center gap-2.5 text-xs font-extrabold text-slate-500 bg-white px-5 py-2.5 rounded-full border border-slate-200/80 shadow-xs">
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#1D61F2] animate-ping" />
+                        <span>Showing unlimited verified jobs...</span>
+                      </div>
+                    </div>
                   )}
                 </div>
 
