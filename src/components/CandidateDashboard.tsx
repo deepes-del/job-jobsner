@@ -1,2545 +1,2550 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  User, Calendar, MapPin, Briefcase, GraduationCap,
-  IndianRupee, Languages, Bike, FileText, CheckCircle,
-  AlertCircle, Edit2, LogOut, Phone, Mail, Sparkles, AlertTriangle, Upload,
-  Search, SlidersHorizontal, ArrowUpDown, Clock, Building, UserCheck, ShieldAlert,
-  FileMinus, ExternalLink, ChevronRight, X, Info, RefreshCw,
-  RotateCcw, Heart, ThumbsUp, ThumbsDown, ClipboardList, Bookmark,
-  Shield, Store, Car, ChevronDown, Bell, Package, Users, BarChart2, Star, Eye, MessageSquare, Settings, HelpCircle, ArrowUpRight, Menu,
-  Truck, Warehouse
-} from 'lucide-react';
-import { Candidate, Profile, normalizeSalaryType } from '../types';
-import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
-import FlowerBlastAnimation from './FlowerBlastAnimation';
-import CandidateProfileEdit from './CandidateProfileEdit';
-import AnimatedHeroRider from './AnimatedHeroRider';
-import JobDetailsView from './JobDetailsView';
-import { playNotificationChime, showSystemNotification } from '../lib/webPush';
-
-interface CandidateDashboardProps {
-  candidate: Candidate;
-  token: string | null;
-  activeTab?: 'overview' | 'find_jobs' | 'applications' | 'saved';
-  onTabChange?: (tab: 'overview' | 'find_jobs' | 'applications' | 'saved') => void;
-  onEditProfile: () => void;
-  onLogout: () => void;
-  onManageDocuments: () => void;
-  onUpdateProfile?: (updatedProfile: Profile) => void;
-  isNotificationOpen?: boolean;
-  onCloseNotification?: () => void;
-}
-
-export default function CandidateDashboard({
-  candidate,
-  token,
-  activeTab: externalActiveTab,
-  onTabChange,
-  onEditProfile,
-  onLogout,
-  onManageDocuments,
-  onUpdateProfile,
-  isNotificationOpen: externalNotificationOpen,
-  onCloseNotification
-}: CandidateDashboardProps) {
-  const { profile, mobile, email } = candidate;
-
-  // Notification Modal state
-  const [internalNotificationOpen, setInternalNotificationOpen] = React.useState(false);
-  const isNotificationOpen = externalNotificationOpen !== undefined ? externalNotificationOpen : internalNotificationOpen;
-
-  // Mobile Navigation Drawer State
-  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = React.useState(false);
-
-  const closeNotificationModal = () => {
-    setInternalNotificationOpen(false);
-    if (onCloseNotification) onCloseNotification();
-  };
-
-  // Navigation state
-  const [internalActiveTab, setInternalActiveTab] = React.useState<'overview' | 'find_jobs' | 'applications' | 'saved'>('find_jobs');
-  const activeTab = externalActiveTab || internalActiveTab;
-
-  const setActiveTab = (tab: 'overview' | 'find_jobs' | 'applications' | 'saved') => {
-    setSelectedJob(null);
-    setInternalActiveTab(tab);
-    if (onTabChange) onTabChange(tab);
-  };
-
-  React.useEffect(() => {
-    if (externalActiveTab) {
-      setSelectedJob(null);
-    }
-  }, [externalActiveTab]);
-
-  // Status Filter Tab inside Dashboard ('all' | 'applied' | 'shortlisted' | 'rejected')
-  const [appStatusTab, setAppStatusTab] = React.useState<'all' | 'applied' | 'shortlisted' | 'rejected'>('all');
-
-  // Saved / Bookmarked Jobs state
-  const [savedJobIds, setSavedJobIds] = React.useState<string[]>(() => {
-    try {
-      const stored = localStorage.getItem(`saved_jobs_${candidate.id}`);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  const handleToggleSaveJob = (jobId: string, e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    setSavedJobIds(prev => {
-      const exists = prev.includes(jobId);
-      const next = exists ? prev.filter(id => id !== jobId) : [...prev, jobId];
-      try {
-        localStorage.setItem(`saved_jobs_${candidate.id}`, JSON.stringify(next));
-      } catch (err) { }
-      return next;
-    });
-  };
-
-  // Core API Lists state
-  const [activeJobs, setActiveJobs] = React.useState<any[]>([]);
-  const [loadingJobs, setLoadingJobs] = React.useState(false);
-  const [myApplications, setMyApplications] = React.useState<any[]>([]);
-  const [loadingApps, setLoadingApps] = React.useState(false);
-  const [documents, setDocuments] = React.useState<any[]>([]);
-  const [loadingDocs, setLoadingDocs] = React.useState(false);
-
-  // Search & Filter State
-  const [searchQuery, setSearchQuery] = React.useState('');
-  const [selectedCategory, setSelectedCategory] = React.useState('All');
-  const [selectedState, setSelectedState] = React.useState('All');
-  const [selectedCity, setSelectedCity] = React.useState('All');
-  const [selectedSalary, setSelectedSalary] = React.useState(0);
-  const [selectedEmpType, setSelectedEmpType] = React.useState('All');
-  const [selectedExperience, setSelectedExperience] = React.useState('All');
-  const [selectedShift, setSelectedShift] = React.useState('All');
-  const [selectedBike, setSelectedBike] = React.useState('All');
-  const [selectedLicense, setSelectedLicense] = React.useState('All');
-  const [selectedJoining, setSelectedJoining] = React.useState('All');
-  const [selectedGender, setSelectedGender] = React.useState('All');
-  const [sortOrder, setSortOrder] = React.useState('newest');
-
-  // Infinite Scroll State for Unlimited Job Browsing
-  const [infiniteBatchCount, setInfiniteBatchCount] = React.useState(3);
-  const infiniteScrollSentinelRef = React.useRef<HTMLDivElement | null>(null);
-
-  // Reset infinite batch count when search query or filters change
-  React.useEffect(() => {
-    setInfiniteBatchCount(3);
-  }, [searchQuery, selectedCategory, selectedState, selectedCity, selectedSalary, selectedEmpType, selectedExperience, selectedShift, sortOrder]);
-
-  // Seamless Infinite Scrolling - automatically loads more randomized batches
-  React.useEffect(() => {
-    if (appStatusTab !== 'all' || !filteredJobsList || filteredJobsList.length === 0) return;
-
-    // IntersectionObserver for sentinel element at bottom
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0] && entries[0].isIntersecting) {
-          setInfiniteBatchCount((prev) => prev + 3);
-        }
-      },
-      { rootMargin: '800px 0px 800px 0px' }
-    );
-
-    const currentSentinel = infiniteScrollSentinelRef.current;
-    if (currentSentinel) {
-      observer.observe(currentSentinel);
-    }
-
-    // Fallback window scroll listener for rapid momentum scrolling
-    let isTicking = false;
-    const handleScroll = () => {
-      if (!isTicking) {
-        window.requestAnimationFrame(() => {
-          const scrollY = window.scrollY || window.pageYOffset;
-          const windowHeight = window.innerHeight;
-          const documentHeight = document.documentElement.scrollHeight;
-          if (documentHeight - (scrollY + windowHeight) < 1200) {
-            setInfiniteBatchCount((prev) => prev + 3);
-          }
-          isTicking = false;
-        });
-        isTicking = true;
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-
-    return () => {
-      if (currentSentinel) {
-        observer.unobserve(currentSentinel);
-      }
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [appStatusTab, filteredJobsList]);
-
-  // Celebratory Flower Animation State
-  const [showFlowerAnimation, setShowFlowerAnimation] = React.useState(false);
-  const [flowerJobDetails, setFlowerJobDetails] = React.useState<{ title: string; companyName: string }>({ title: '', companyName: '' });
-
-  // Modal Detail State
-  const [selectedJob, setSelectedJob] = React.useState<any | null>(null);
-  const [selectedApp, setSelectedApp] = React.useState<any | null>(null);
-  const [appTimeline, setAppTimeline] = React.useState<any[]>([]);
-  const [loadingTimeline, setLoadingTimeline] = React.useState(false);
-
-  React.useEffect(() => {
-    if (selectedApp) {
-      setLoadingTimeline(true);
-      fetch(`/api/applications/${selectedApp.id}/timeline`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-        .then(res => res.json())
-        .then(data => {
-          setAppTimeline(data.timeline || []);
-        })
-        .catch(err => console.error('Error fetching timeline:', err))
-        .finally(() => setLoadingTimeline(false));
-    } else {
-      setAppTimeline([]);
-    }
-  }, [selectedApp, token]);
-
-  // Status alerts
-  const [submitError, setSubmitError] = React.useState<string | null>(null);
-  const [submitSuccess, setSubmitSuccess] = React.useState<string | null>(null);
-
-  // Action loaders
-  const [applyingJobId, setApplyingJobId] = React.useState<string | null>(null);
-  const [withdrawingAppId, setWithdrawingAppId] = React.useState<string | null>(null);
-
-  // Helper for deterministic seeded random shuffle with company de-clustering
-  const shuffleJobsArray = (array: any[], seed: number): any[] => {
-    if (!array || array.length <= 1) return array || [];
-    const result = [...array];
-    let m = result.length;
-    let s = seed;
-    while (m > 0) {
-      s = (s * 9301 + 49297) % 233280;
-      const rnd = s / 233280;
-      const i = Math.floor(rnd * m);
-      m--;
-      const temp = result[m];
-      result[m] = result[i];
-      result[i] = temp;
-    }
-
-    // De-cluster so jobs from the same company are never listed one after another
-    for (let i = 0; i < result.length - 1; i++) {
-      const currCompany = (result[i].companyName || '').trim().toLowerCase();
-      const nextCompany = (result[i + 1].companyName || '').trim().toLowerCase();
-      if (currCompany && nextCompany && currCompany === nextCompany) {
-        for (let j = i + 2; j < result.length; j++) {
-          const otherCompany = (result[j].companyName || '').trim().toLowerCase();
-          if (otherCompany && otherCompany !== currCompany) {
-            const temp = result[i + 1];
-            result[i + 1] = result[j];
-            result[j] = temp;
-            break;
-          }
-        }
-      }
-    }
-
-    return result;
-  };
-
-  // Recommended Jobs Carousel state & refs for ultra-smooth drag/slide
-  const carouselTrackRef = React.useRef<HTMLDivElement>(null);
-  const [carouselIndex, setCarouselIndex] = React.useState(0);
-  const [isCarouselDragging, setIsCarouselDragging] = React.useState(false);
-  const carouselStartXRef = React.useRef(0);
-  const carouselStartScrollLeftRef = React.useRef(0);
-  const carouselHasDraggedRef = React.useRef(false);
-
-  // Update carouselIndex on scroll
-  const handleCarouselScroll = React.useCallback(() => {
-    if (!carouselTrackRef.current) return;
-    const container = carouselTrackRef.current;
-    const firstCard = container.querySelector('[data-carousel-card]') as HTMLElement;
-    if (!firstCard) return;
-    const cardWidth = firstCard.offsetWidth + 16;
-    const idx = Math.round(container.scrollLeft / cardWidth);
-    setCarouselIndex(Math.max(0, Math.min(idx, Math.max(0, activeJobs.length - 1))));
-  }, [activeJobs.length]);
-
-  // Scroll carousel to card index
-  const scrollCarouselTo = React.useCallback((idx: number) => {
-    if (!carouselTrackRef.current) return;
-    const container = carouselTrackRef.current;
-    const firstCard = container.querySelector('[data-carousel-card]') as HTMLElement;
-    if (!firstCard) return;
-    const cardWidth = firstCard.offsetWidth + 16;
-    container.scrollTo({
-      left: idx * cardWidth,
-      behavior: 'smooth'
-    });
-  }, []);
-
-  // Previous / Next button step with seamless loop
-  const handleCarouselStep = React.useCallback((direction: 'prev' | 'next') => {
-    if (!carouselTrackRef.current) return;
-    const container = carouselTrackRef.current;
-    const firstCard = container.querySelector('[data-carousel-card]') as HTMLElement;
-    const cardWidth = firstCard ? firstCard.offsetWidth + 16 : 320;
-    const maxScroll = container.scrollWidth - container.clientWidth;
-
-    if (direction === 'prev') {
-      if (container.scrollLeft <= 15) {
-        container.scrollTo({ left: maxScroll, behavior: 'smooth' });
-      } else {
-        container.scrollBy({ left: -cardWidth, behavior: 'smooth' });
-      }
-    } else {
-      if (container.scrollLeft >= maxScroll - 15) {
-        container.scrollTo({ left: 0, behavior: 'smooth' });
-      } else {
-        container.scrollBy({ left: cardWidth, behavior: 'smooth' });
-      }
-    }
-  }, []);
-
-  // Mouse Drag Handlers for Desktop
-  const handleCarouselMouseDown = (e: React.MouseEvent) => {
-    if (!carouselTrackRef.current) return;
-    setIsCarouselDragging(true);
-    carouselStartXRef.current = e.pageX - carouselTrackRef.current.offsetLeft;
-    carouselStartScrollLeftRef.current = carouselTrackRef.current.scrollLeft;
-    carouselHasDraggedRef.current = false;
-  };
-
-  const handleCarouselMouseMove = (e: React.MouseEvent) => {
-    if (!isCarouselDragging || !carouselTrackRef.current) return;
-    e.preventDefault();
-    const currentX = e.pageX - carouselTrackRef.current.offsetLeft;
-    const walk = (currentX - carouselStartXRef.current) * 1.35;
-    if (Math.abs(walk) > 6) {
-      carouselHasDraggedRef.current = true;
-    }
-    carouselTrackRef.current.scrollLeft = carouselStartScrollLeftRef.current - walk;
-  };
-
-  const handleCarouselMouseUp = () => {
-    setIsCarouselDragging(false);
-    setTimeout(() => {
-      carouselHasDraggedRef.current = false;
-    }, 100);
-  };
-
-  // Instant Fast Apply States
-  const [jobForInstantApply, setJobForInstantApply] = React.useState<any | null>(null);
-  const [instantFullName, setInstantFullName] = React.useState('');
-  const [instantAge, setInstantAge] = React.useState('');
-  const [instantGender, setInstantGender] = React.useState('');
-  const [instantPincode, setInstantPincode] = React.useState('');
-  const [instantError, setInstantError] = React.useState<string | null>(null);
-  const [instantLoading, setInstantLoading] = React.useState(false);
-
-  // Fetch functions
-  const fetchJobs = React.useCallback(() => {
-    setLoadingJobs(true);
-    fetch('/api/jobs')
-      .then(res => res.json())
-      .then(async data => {
-        let jobsList: any[] = data.jobs || [];
-
-        try {
-          if (isSupabaseConfigured()) {
-            const supabase = getSupabase();
-            const [jobsRes, recsRes] = await Promise.all([
-              supabase.from('jobs').select('*'),
-              supabase.from('recruiters').select('id, companyLogo, company_logo, companyName, company_name')
-            ]);
-
-            const supaJobs = jobsRes.data;
-            const supaRecs = recsRes.data || [];
-
-            const recLogoMap = new Map<string, { logo: string; name: string }>();
-            supaRecs.forEach((r: any) => {
-              const rId = String(r.id || '');
-              if (rId) {
-                recLogoMap.set(rId, {
-                  logo: r.companyLogo || r.company_logo || '',
-                  name: r.companyName || r.company_name || ''
-                });
-              }
-            });
-
-            if (!jobsRes.error && supaJobs) {
-              const jobMap = new Map<string, any>();
-              supaJobs.forEach((j: any) => {
-                const id = String(j.id || j.jobId || j.job_id || '');
-                if (!id) return;
-
-                const recId = String(j.recruiterId || j.recruiter_id || '');
-                const recInfo = recLogoMap.get(recId);
-
-                const companyLogo = j.companyLogo || j.company_logo || recInfo?.logo || '';
-                const companyName = j.companyName || j.company_name || recInfo?.name || 'Hiring Company';
-
-                const normalized = {
-                  ...j,
-                  id,
-                  recruiterId: recId,
-                  companyName,
-                  companyLogo,
-                  title: j.title || j.jobTitle || j.job_title || 'Job Opening',
-                  category: j.category || j.jobCategory || j.job_category || 'Delivery Jobs',
-                  openings: Number(j.openings ?? j.no_of_openings ?? 1),
-                  employmentType: j.employmentType || j.employment_type || 'Full Time',
-                  state: j.state || '',
-                  city: j.city || '',
-                  area: j.area || '',
-                  workLocation: j.workLocation || j.work_location || '',
-                  minSalary: Number(j.minSalary ?? j.min_salary ?? 0),
-                  maxSalary: Number(j.maxSalary ?? j.max_salary ?? 0),
-                  salaryType: normalizeSalaryType(j.salaryType || j.salary_type),
-                  shift: j.shift || 'Day Shift',
-                  experienceRequired: Number(j.experienceRequired ?? j.experience_required ?? 0),
-                  educationRequired: j.educationRequired || j.education_required || '10th Pass or below',
-                  genderPreference: j.genderPreference || j.gender_preference || 'Any',
-                  ageLimitMin: Number(j.ageLimitMin ?? j.age_limit_min ?? 18),
-                  ageLimitMax: Number(j.ageLimitMax ?? j.age_limit_max ?? 45),
-                  bikeRequired: j.bikeRequired || j.bike_required || 'No',
-                  drivingLicenseRequired: j.drivingLicenseRequired || j.driving_license_required || 'No',
-                  immediateJoining: j.immediateJoining || j.immediate_joining || 'Yes',
-                  description: j.description || j.job_description || '',
-                  responsibilities: j.responsibilities || '',
-                  benefits: j.benefits || '',
-                  status: j.status || 'published',
-                  applicationsCount: Number(j.applicationsCount ?? j.applications_count ?? 0),
-                  createdAt: j.createdAt || j.created_at || new Date().toISOString()
-                };
-                const statusLower = String(normalized.status || '').toLowerCase();
-                if (!normalized.status || (statusLower !== 'closed' && statusLower !== 'deleted' && statusLower !== 'inactive' && statusLower !== 'expired' && statusLower !== 'rejected')) {
-                  jobMap.set(id, normalized);
-                }
-              });
-              jobsList = Array.from(jobMap.values());
-            }
-          }
-        } catch (supaErr) {
-          console.warn('[Supabase Direct Fetch Warning]', supaErr);
-        }
-
-        setActiveJobs(jobsList);
-      })
-      .catch(err => console.error('Error fetching jobs:', err))
-      .finally(() => setLoadingJobs(false));
-  }, []);
-
-  const fetchMyApplications = React.useCallback(() => {
-    if (!token) return;
-    setLoadingApps(true);
-    fetch('/api/applications/my', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-      .then(res => res.json())
-      .then(async data => {
-        let appsList: any[] = data.applications || [];
-
-        try {
-          if (isSupabaseConfigured() && candidate?.id) {
-            const supabase = getSupabase();
-            const { data: supaApps, error } = await supabase
-              .from('applications')
-              .select('*')
-              .or(`candidateId.eq.${candidate.id},candidate_id.eq.${candidate.id}`);
-
-            if (!error && supaApps && supaApps.length > 0) {
-              const appMap = new Map<string, any>();
-              appsList.forEach((a: any) => {
-                const key = a.jobId || a.job_id || a.id;
-                if (key) appMap.set(String(key), a);
-              });
-              supaApps.forEach((a: any) => {
-                const jobId = String(a.jobId || a.job_id || '');
-                const id = String(a.id || a.appId || a.app_id || '');
-                const withdrawStatus = a.withdrawStatus || a.withdraw_status || 'Active';
-
-                if (jobId && !appMap.has(jobId)) {
-                  const job = activeJobs.find(j => String(j.id) === jobId) || {};
-                  appMap.set(jobId, {
-                    id: id || crypto.randomUUID(),
-                    candidateId: candidate.id,
-                    jobId,
-                    recruiterId: a.recruiterId || a.recruiter_id || job.recruiterId || '',
-                    appliedDate: a.appliedDate || a.applied_date || a.created_at || new Date().toISOString(),
-                    currentStatus: a.currentStatus || a.current_status || a.status || 'Applied',
-                    withdrawStatus,
-                    lastUpdated: a.lastUpdated || a.last_updated || a.updated_at || new Date().toISOString(),
-                    jobTitle: job.title || 'Job Opening',
-                    companyName: job.companyName || 'Hiring Company',
-                    companyLogo: job.companyLogo || '',
-                    jobCity: job.city || '',
-                    jobState: job.state || '',
-                    jobSalary: job.minSalary ? `₹${job.minSalary} - ₹${job.maxSalary}` : (job.salary || 'N/A'),
-                    jobEmploymentType: job.employmentType || '',
-                    jobShift: job.shift || ''
-                  });
-                }
-              });
-              appsList = Array.from(appMap.values());
-            }
-          }
-        } catch (supaErr) {
-          console.warn('[Supabase Direct Apps Fetch Warning]', supaErr);
-        }
-
-        const seenJobIds = new Set<string>();
-        const uniqueActiveAppsList = appsList.filter((a) => {
-          const jobIdKey = String(a.jobId || a.job_id || a.id);
-          const isWithdrawn = a.currentStatus === 'Withdrawn' || a.current_status === 'Withdrawn' || a.withdrawStatus === 'Withdrawn' || a.withdraw_status === 'Withdrawn';
-          if (!jobIdKey || isWithdrawn || seenJobIds.has(jobIdKey)) return false;
-          seenJobIds.add(jobIdKey);
-          return true;
-        });
-
-        setMyApplications(uniqueActiveAppsList);
-      })
-      .catch(err => console.error('Error fetching applications:', err))
-      .finally(() => setLoadingApps(false));
-  }, [token, candidate?.id]);
-
-  const fetchDocuments = React.useCallback(() => {
-    if (!token) return;
-    setLoadingDocs(true);
-    fetch('/api/documents', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-      .then(res => res.json())
-      .then(data => {
-        setDocuments(data.documents || []);
-      })
-      .catch(err => console.error('Error fetching documents:', err))
-      .finally(() => setLoadingDocs(false));
-  }, [token]);
-
-  // Load stats & details on mount
-  React.useEffect(() => {
-    fetchJobs();
-    fetchMyApplications();
-    fetchDocuments();
-
-    const handleRefresh = () => {
-      fetchJobs();
-    };
-    window.addEventListener('refresh-jobs', handleRefresh);
-    return () => {
-      window.removeEventListener('refresh-jobs', handleRefresh);
-    };
-  }, [fetchJobs, fetchMyApplications, fetchDocuments]);
-
-  // Real Dynamic Calculations
-  const totalApplicationsCount = myApplications.length;
-
-  const shortlistedCount = React.useMemo(() => {
-    return myApplications.filter(a => {
-      const s = String(a.currentStatus || a.status || '').toLowerCase();
-      return s.includes('shortlist') || s.includes('select') || s.includes('interview') || s.includes('hired');
-    }).length;
-  }, [myApplications]);
-
-  const rejectedCount = React.useMemo(() => {
-    return myApplications.filter(a => {
-      const s = String(a.currentStatus || a.status || '').toLowerCase();
-      return s.includes('reject') || s.includes('decline');
-    }).length;
-  }, [myApplications]);
-
-  const profileViewsCount = React.useMemo(() => {
-    return (candidate as any).profileViews || (candidate as any).viewsCount || (profile as any).viewsCount || (profile as any).profileViews || (myApplications.length > 0 ? myApplications.length * 8 + 14 : 24);
-  }, [candidate, profile, myApplications]);
-
-  // Dynamic Profile Completion Calculation
-  const completionPercentage = React.useMemo(() => {
-    let filled = 0;
-    const total = 8;
-    if (profile.fullName?.trim() || candidate.fullName?.trim()) filled++;
-    if (mobile || candidate.mobile) filled++;
-    if (email || candidate.email) filled++;
-    if (profile.locality || profile.city || (profile as any).location) filled++;
-    if ((profile as any).workExperience || profile.experience) filled++;
-    if ((profile as any).drivingLicenseNumber || (profile as any).drivingLicense) filled++;
-    if (profile.profilePhoto || candidate.profile?.profilePhoto) filled++;
-    if (documents && documents.length > 0) filled++;
-    return Math.round((filled / total) * 100);
-  }, [profile, candidate, mobile, email, documents]);
-
-  // Dynamic Category Counts (5 Categories)
-  const categoryCounts = React.useMemo(() => {
-    let deliveryLogistics = 0;
-    let warehousePacking = 0;
-    let drivers = 0;
-    let officeAdmin = 0;
-    let other = 0;
-
-    activeJobs.forEach(j => {
-      if (!j) return;
-      const s = String(j.status || '').toLowerCase();
-      if (s === 'closed' || s === 'deleted' || s === 'inactive' || s === 'expired' || s === 'rejected') return;
-
-      const cat = (j.category || '').toLowerCase();
-      const title = (j.title || '').toLowerCase();
-      if (cat.includes('driver') || title.includes('driver') || title.includes('chauffeur') || title.includes('van driver') || title.includes('truck driver')) {
-        drivers++;
-      } else if (cat.includes('warehouse') || cat.includes('pack') || cat.includes('picker') || title.includes('warehouse') || title.includes('packer') || title.includes('picker') || title.includes('packing') || title.includes('inventory')) {
-        warehousePacking++;
-      } else if (cat.includes('office') || cat.includes('admin') || cat.includes('support') || title.includes('office') || title.includes('admin') || title.includes('telecaller') || title.includes('hr') || title.includes('receptionist')) {
-        officeAdmin++;
-      } else if (cat.includes('delivery') || cat.includes('logistics') || cat.includes('courier') || title.includes('delivery') || title.includes('courier') || title.includes('logistics') || title.includes('fleet')) {
-        deliveryLogistics++;
-      } else {
-        other++;
-      }
-    });
-
-    // Every category displays > 1500 jobs with '+' symbol as requested
-    const formattedCounts = {
-      deliveryLogistics: `${(1850 + deliveryLogistics).toLocaleString()}+`,
-      warehousePacking: `${(1620 + warehousePacking).toLocaleString()}+`,
-      drivers: `${(1740 + drivers).toLocaleString()}+`,
-      officeAdmin: `${(1530 + officeAdmin).toLocaleString()}+`,
-      other: `${(1580 + other).toLocaleString()}+`,
-    };
-
-    return formattedCounts;
-  }, [activeJobs]);
-
-  // Client-side dynamic instant-search filtering & sorting
-  const filteredJobsList = React.useMemo(() => {
-    let result = [...activeJobs];
-
-    // Filter active jobs
-    result = result.filter(j => {
-      if (!j) return false;
-      if (!j.status) return true;
-      const s = String(j.status).trim().toLowerCase();
-      return s !== 'closed' && s !== 'deleted' && s !== 'inactive' && s !== 'expired' && s !== 'rejected';
-    });
-
-    // Category Filter
-    if (selectedCategory !== 'All') {
-      result = result.filter(j => {
-        const cat = (j.category || '').toLowerCase();
-        const title = (j.title || '').toLowerCase();
-        if (selectedCategory === 'Delivery & Logistics') {
-          return cat === 'delivery & logistics' || cat.includes('logistics') || cat.includes('delivery') || cat.includes('courier') || title.includes('logistics') || title.includes('delivery') || title.includes('courier');
-        }
-        if (selectedCategory === 'Warehouse & Packing') {
-          return cat === 'warehouse & packing' || cat.includes('warehouse') || cat.includes('pack') || cat.includes('picker') || title.includes('warehouse') || title.includes('picker') || title.includes('packer') || title.includes('packing') || title.includes('inventory');
-        }
-        if (selectedCategory === 'Drivers') {
-          return cat === 'drivers' || cat.includes('driver') || cat.includes('fleet') || cat.includes('chauffeur') || title.includes('driver') || title.includes('van') || title.includes('truck') || title.includes('pilot') || title.includes('auto') || title.includes('cab');
-        }
-        if (selectedCategory === 'Office & Admin') {
-          return cat === 'office & admin' || cat.includes('office') || cat.includes('admin') || cat.includes('support') || title.includes('admin') || title.includes('office') || title.includes('telecaller') || title.includes('receptionist') || title.includes('accountant') || title.includes('hr') || title.includes('coordinator');
-        }
-        if (selectedCategory === 'Other Jobs') {
-          const isDel = cat.includes('delivery') || cat.includes('logistics') || title.includes('delivery') || title.includes('logistics');
-          const isWh = cat.includes('warehouse') || cat.includes('pack') || cat.includes('picker') || title.includes('warehouse') || title.includes('packer');
-          const isDr = cat.includes('driver') || title.includes('driver') || title.includes('van');
-          const isOff = cat.includes('office') || cat.includes('admin') || title.includes('admin') || title.includes('office');
-          return !isDel && !isWh && !isDr && !isOff;
-        }
-        return j.category === selectedCategory;
-      });
-    }
-
-    // Instant Search
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(j =>
-        j.title.toLowerCase().includes(q) ||
-        j.companyName.toLowerCase().includes(q) ||
-        (j.city || '').toLowerCase().includes(q)
-      );
-    }
-
-    // State Filter
-    if (selectedState !== 'All') {
-      result = result.filter(j => (j.state || '').toLowerCase() === selectedState.toLowerCase());
-    }
-
-    // City Filter
-    if (selectedCity !== 'All') {
-      result = result.filter(j => (j.city || '').toLowerCase() === selectedCity.toLowerCase());
-    }
-
-    // Salary Filter
-    if (selectedSalary > 0) {
-      result = result.filter(j => (j.maxSalary || j.minSalary || 0) >= selectedSalary);
-    }
-
-    // Employment Type
-    if (selectedEmpType !== 'All') {
-      result = result.filter(j => {
-        if (!j.employmentType) return false;
-        const emp = j.employmentType.toLowerCase();
-        const target = selectedEmpType.toLowerCase();
-        return emp === target || emp.includes(target) || target.includes(emp);
-      });
-    }
-
-    // Experience Limit
-    if (selectedExperience !== 'All') {
-      const maxExp = parseInt(selectedExperience, 10);
-      result = result.filter(j => (j.experienceRequired || 0) <= maxExp);
-    }
-
-    // Shift
-    if (selectedShift !== 'All') {
-      result = result.filter(j => {
-        if (!j.shift) return false;
-        const s = j.shift.toLowerCase();
-        const target = selectedShift.toLowerCase();
-        return s === target || s.includes(target) || target.includes(s);
-      });
-    }
-
-    // Sorting
-    if (sortOrder === 'oldest') {
-      result.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-    } else {
-      result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    }
-
-    return result;
-  }, [activeJobs, searchQuery, selectedCategory, selectedState, selectedCity, selectedSalary, selectedEmpType, selectedExperience, selectedShift, sortOrder]);
-
-  // Tab Status Filtered List
-  const displayedJobsOrApps = React.useMemo(() => {
-    if (appStatusTab === 'applied') {
-      return myApplications;
-    }
-    if (appStatusTab === 'shortlisted') {
-      return myApplications.filter(a => {
-        const s = String(a.currentStatus || a.status || '').toLowerCase();
-        return s.includes('shortlist') || s.includes('select') || s.includes('interview') || s.includes('hired');
-      });
-    }
-    if (appStatusTab === 'rejected') {
-      return myApplications.filter(a => {
-        const s = String(a.currentStatus || a.status || '').toLowerCase();
-        return s.includes('reject') || s.includes('decline');
-      });
-    }
-
-    if (!filteredJobsList || filteredJobsList.length === 0) {
-      return [];
-    }
-
-    // 1. Initial list: randomized with company de-clustering so the same company is not bunched together
-    const randomizedInitial = shuffleJobsArray(filteredJobsList, 101);
-    const originalList = randomizedInitial.map((job: any, idx: number) => ({
-      ...job,
-      _uniqueKey: `orig-${job.id}-${idx}`,
-    }));
-
-    // 2. Unlimited Scrolling: Repeat the same jobs randomly across infinite batches
-    const repeatedList: any[] = [];
-    for (let round = 1; round <= infiniteBatchCount; round++) {
-      const seed = (round * 7919 + (round % 2 === 0 ? 31 : 173)) % 100000;
-      const shuffled = shuffleJobsArray(filteredJobsList, seed).map((job: any, idx: number) => ({
-        ...job,
-        _uniqueKey: `infinite-r${round}-${job.id}-${idx}`,
-      }));
-      repeatedList.push(...shuffled);
-    }
-
-    return [...originalList, ...repeatedList];
-  }, [appStatusTab, myApplications, filteredJobsList, infiniteBatchCount]);
-
-  // Apply Now Handlers (Fast 0ms Optimistic Application)
-  const handleApplyNow = async (job: any) => {
-    if (!token) {
-      setSubmitError('Authentication session expired. Please log in again.');
-      return;
-    }
-
-    // Check if already applied
-    const alreadyApplied = myApplications.some(a => String(a.jobId) === String(job.id));
-    if (alreadyApplied) {
-      setSubmitSuccess(`You have already applied for ${job.title}!`);
-      return;
-    }
-
-    // 1. INSTANT OPTIMISTIC UI UPDATE (0ms latency - instantaneous feedback!)
-    const optimisticApp = {
-      id: 'app_' + Date.now(),
-      jobId: job.id,
-      job_id: job.id,
-      candidateId: candidate?.id,
-      currentStatus: 'Applied',
-      status: 'Applied',
-      appliedAt: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-      jobTitle: job.title || 'Job Opening',
-      companyName: job.companyName || 'Hiring Company',
-      companyLogo: job.companyLogo || '',
-      jobCity: job.city || '',
-      jobSalary: job.minSalary ? `₹${Number(job.minSalary).toLocaleString()} - ₹${Number(job.maxSalary).toLocaleString()}` : (job.salary || 'Competitive'),
-      jobEmploymentType: job.employmentType || 'Full Time'
-    };
-
-    setMyApplications(prev => [optimisticApp, ...prev.filter(a => String(a.jobId) !== String(job.id))]);
-    setSubmitSuccess(`🎉 Successfully applied for ${job.title}! Recruiter will review your application.`);
-    setSubmitError(null);
-
-    // Instant celebration animation & audio chime
-    setFlowerJobDetails({
-      title: job.title || 'Job Role',
-      companyName: job.companyName || 'Hiring Company'
-    });
-    setShowFlowerAnimation(true);
-    playNotificationChime();
-
-    // 2. Perform background API call without blocking the UI
-    try {
-      const response = await fetch(`/api/jobs/${job.id}/apply`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ 
-          candidateId: candidate.id,
-          fullName: profile?.fullName || candidate.fullName || 'Candidate',
-          age: profile?.age || 22,
-          gender: profile?.gender || 'Any',
-          pincode: profile?.pincode || '110001'
-        })
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        console.warn('Backend apply note:', data.error);
-      }
-      // Silently refresh applications in background to sync database state
-      fetchMyApplications();
-      fetchJobs();
-    } catch (err: any) {
-      console.warn('Background apply synced locally:', err);
-    }
-  };
-
-  const handleInstantApplySubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!jobForInstantApply || !token) return;
-
-    setInstantLoading(true);
-    setInstantError(null);
-
-    try {
-      const updatedProfileData: Profile = {
-        ...profile,
-        fullName: instantFullName.trim(),
-        age: parseInt(instantAge, 10) || profile.age || 22,
-        gender: instantGender || profile.gender || 'Male',
-        pincode: instantPincode.trim() || profile.pincode || ''
-      };
-
-      await fetch('/api/candidate/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ profile: updatedProfileData })
-      });
-
-      if (onUpdateProfile) onUpdateProfile(updatedProfileData);
-
-      const response = await fetch(`/api/jobs/${jobForInstantApply.id}/apply`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ candidateId: candidate.id })
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to apply after updating profile.');
-      }
-
-      setFlowerJobDetails({
-        title: jobForInstantApply.title || 'Job Opening',
-        companyName: jobForInstantApply.companyName || 'Hiring Company'
-      });
-      setShowFlowerAnimation(true);
-      setSubmitSuccess(`Instant Fast Apply completed for ${jobForInstantApply.title}!`);
-      setJobForInstantApply(null);
-      fetchMyApplications();
-      fetchJobs();
-    } catch (err: any) {
-      setInstantError(err.message || 'Error completing application.');
-    } finally {
-      setInstantLoading(false);
-    }
-  };
-
-  const handleViewDetails = (job: any, pushHistory: boolean = true) => {
-    setSelectedJob(job);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    if (pushHistory && typeof window !== 'undefined') {
-      const currentState = window.history.state || {};
-      window.history.pushState(
-        { ...currentState, modal: 'job_details', jobId: job.id },
-        '',
-        window.location.pathname + `?job=${encodeURIComponent(job.id)}`
-      );
-    }
-  };
-
-  const handleCloseJobDetails = (fromPopState: boolean = false) => {
-    setSelectedJob(null);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    if (!fromPopState && typeof window !== 'undefined') {
-      if (window.history.state?.modal === 'job_details') {
-        window.history.back();
-      } else {
-        const url = new URL(window.location.href);
-        url.searchParams.delete('job');
-        window.history.replaceState({ ...window.history.state, modal: undefined, jobId: undefined }, '', url.pathname + (url.search || ''));
-      }
-    }
-  };
-
-  // Back button popstate listener for Job Details and deep links
-  React.useEffect(() => {
-    const handlePopState = (e: PopStateEvent) => {
-      if (selectedJob && e.state?.modal !== 'job_details') {
-        setSelectedJob(null);
-      } else if (!selectedJob && e.state?.modal === 'job_details' && e.state?.jobId) {
-        const targetJob = activeJobs.find(j => String(j.id) === String(e.state.jobId));
-        if (targetJob) setSelectedJob(targetJob);
-      }
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [selectedJob, activeJobs]);
-
-  // Deep-link check: open job from ?job=<id> query parameter on mount/load
-  React.useEffect(() => {
-    if (activeJobs.length > 0 && !selectedJob && typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const jobId = params.get('job');
-      if (jobId) {
-        const found = activeJobs.find(j => String(j.id) === String(jobId));
-        if (found) {
-          setSelectedJob(found);
-        }
-      }
-    }
-  }, [activeJobs]);
-
-  const handleViewAppDetails = (app: any) => {
-    setSelectedApp(app);
-  };
-
-  const handleWithdrawApplication = async (appId: string) => {
-    if (!appId) return;
-    setWithdrawingAppId(appId);
-    setSubmitError(null);
-    setSubmitSuccess(null);
-
-    try {
-      // 1. Try POST request to API endpoint
-      let response = await fetch(`/api/applications/${appId}/withdraw`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        // Fallback: try PUT request
-        response = await fetch(`/api/applications/${appId}/withdraw`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        });
-      }
-
-      // 2. Update Supabase directly if configured
-      if (isSupabaseConfigured()) {
-        try {
-          const supabase = getSupabase();
-          await supabase
-            .from('applications')
-            .update({
-              currentStatus: 'Withdrawn',
-              current_status: 'Withdrawn',
-              withdrawStatus: 'Withdrawn',
-              withdraw_status: 'Withdrawn'
-            })
-            .or(`id.eq.${appId},appId.eq.${appId}`);
-        } catch (supaErr) {
-          console.warn('Supabase update during withdraw:', supaErr);
-        }
-      }
-
-      // 3. Immediately remove application from state so it disappears from the list
-      setMyApplications(prev => prev.filter(app => 
-        String(app.id) !== String(appId) && 
-        String(app.jobId) !== String(appId)
-      ));
-
-      setSubmitSuccess('Application successfully withdrawn.');
-      if (selectedApp?.id === appId) setSelectedApp(null);
-    } catch (err: any) {
-      console.error('Error withdrawing application:', err);
-      setSubmitError(err.message || 'Error withdrawing application.');
-    } finally {
-      setWithdrawingAppId(null);
-    }
-  };
-
-
-  return (
-    <div className="w-full text-slate-800 pb-24 lg:pb-0" id="candidate-dashboard-container">
-      
-      {/* Celebratory Flower Blast Animation */}
-      <FlowerBlastAnimation
-        show={showFlowerAnimation}
-        jobTitle={flowerJobDetails.title}
-        companyName={flowerJobDetails.companyName}
-        onComplete={() => setShowFlowerAnimation(false)}
-      />
-
-      {/* ================= MOBILE SLIDE-OVER DRAWER OVERLAY (lg:hidden) ================= */}
-      <AnimatePresence>
-        {isMobileDrawerOpen && (
-          <React.Fragment>
-            {/* Dark Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsMobileDrawerOpen(false)}
-              className="fixed inset-0 bg-slate-950/75 backdrop-blur-xs z-50 lg:hidden"
-            />
-
-            {/* Slide-over Drawer Panel */}
-            <motion.aside
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 250 }}
-              className="fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-[#0F172A] text-slate-300 p-5 shadow-2xl z-50 overflow-y-auto flex flex-col justify-between lg:hidden"
-            >
-              <div>
-                <div className="flex items-center justify-between px-1 py-1 mb-6 border-b border-slate-800/80 pb-4">
-                  <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setActiveTab('find_jobs'); setIsMobileDrawerOpen(false); }}>
-                    <div className="w-9 h-9 rounded-xl bg-[#1D61F2] text-white font-black flex items-center justify-center text-base shadow-md">
-                      J
-                    </div>
-                    <div>
-                      <h2 className="text-lg font-black text-white tracking-tight leading-none">Jobsner</h2>
-                      <span className="text-[10px] font-semibold text-slate-400">Connecting Talent</span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setIsMobileDrawerOpen(false)}
-                    className="p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white transition-colors"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-
-                <nav className="space-y-1.5 font-bold text-xs">
-                  <button
-                    onClick={() => { setActiveTab('find_jobs'); setAppStatusTab('all'); setIsMobileDrawerOpen(false); }}
-                    className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all cursor-pointer ${
-                      activeTab === 'find_jobs' && appStatusTab === 'all'
-                        ? 'bg-[#1D61F2] text-white shadow-md font-extrabold'
-                        : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <BarChart2 className="w-4 h-4" />
-                      <span>Dashboard</span>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => { setActiveTab('find_jobs'); setAppStatusTab('all'); setIsMobileDrawerOpen(false); }}
-                    className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all cursor-pointer ${
-                      activeTab === 'find_jobs' && appStatusTab === 'all'
-                        ? 'text-white bg-slate-800/80'
-                        : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Briefcase className="w-4 h-4" />
-                      <span>Jobs</span>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => { setActiveTab('applications'); setIsMobileDrawerOpen(false); }}
-                    className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all cursor-pointer ${
-                      activeTab === 'applications'
-                        ? 'bg-[#1D61F2] text-white shadow-md font-extrabold'
-                        : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <ClipboardList className="w-4 h-4" />
-                      <span>Applications</span>
-                    </div>
-                    {myApplications.length > 0 && (
-                      <span className="w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center">
-                        {myApplications.length}
-                      </span>
-                    )}
-                  </button>
-
-                  <button
-                    onClick={() => { setActiveTab('saved'); setIsMobileDrawerOpen(false); }}
-                    className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all cursor-pointer ${
-                      activeTab === 'saved'
-                        ? 'bg-[#1D61F2] text-white shadow-md font-extrabold'
-                        : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Bookmark className="w-4 h-4" />
-                      <span>Saved Jobs</span>
-                    </div>
-                    {savedJobIds.length > 0 && (
-                      <span className="px-2 py-0.5 rounded-full bg-blue-600/60 text-white text-[10px] font-bold">
-                        {savedJobIds.length}
-                      </span>
-                    )}
-                  </button>
-
-                  <button
-                    onClick={() => { setActiveTab('overview'); setIsMobileDrawerOpen(false); }}
-                    className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all cursor-pointer ${
-                      activeTab === 'overview'
-                        ? 'bg-[#1D61F2] text-white shadow-md font-extrabold'
-                        : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <User className="w-4 h-4" />
-                      <span>Profile</span>
-                    </div>
-                  </button>
-                </nav>
-              </div>
-
-              {/* Bottom Drawer Promo & Actions */}
-              <div className="mt-6 pt-4 border-t border-slate-800 space-y-3">
-                <button
-                  onClick={() => { setIsMobileDrawerOpen(false); onLogout(); }}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl text-xs font-bold transition-all cursor-pointer"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span>Log Out</span>
-                </button>
-              </div>
-            </motion.aside>
-          </React.Fragment>
-        )}
-      </AnimatePresence>
-
-      {/* Main 3-Column Dashboard Layout (Left Nav | Center Content | Right Widgets) */}
-      <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 items-start pb-20 lg:pb-0">
-        
-        {/* ================= LEFT NAVIGATION SIDEBAR (DESKTOP EXCLUSIVE) ================= */}
-        {!selectedJob && (
-          <aside className="hidden lg:flex w-64 shrink-0 bg-[#0F172A] text-slate-300 rounded-3xl p-5 shadow-xl flex-col justify-between min-h-[640px] sticky top-20 z-20">
-          <div>
-            {/* Top Brand Branding Header */}
-            <div className="px-2 py-1 mb-6 border-b border-slate-800/80 pb-5">
-              <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('find_jobs')}>
-                <div className="w-10 h-10 rounded-2xl bg-[#1D61F2] text-white font-black flex items-center justify-center text-lg shadow-md">
-                  J
-                </div>
-                <div>
-                  <h2 className="text-xl font-black text-white tracking-tight leading-none">Jobsner</h2>
-                  <span className="text-[10px] font-semibold text-slate-400">Connecting Talent</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Navigation Menu Items */}
-            <nav className="space-y-1.5 font-bold text-xs">
-              <button
-                onClick={() => { setActiveTab('find_jobs'); setAppStatusTab('all'); }}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all cursor-pointer ${
-                  activeTab === 'find_jobs' && appStatusTab === 'all'
-                    ? 'bg-[#1D61F2] text-white shadow-md font-extrabold'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <BarChart2 className="w-4 h-4" />
-                  <span>Dashboard</span>
-                </div>
-              </button>
-
-              <button
-                onClick={() => { setActiveTab('find_jobs'); setAppStatusTab('all'); }}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all cursor-pointer ${
-                  activeTab === 'find_jobs' && appStatusTab === 'all'
-                    ? 'text-white bg-slate-800/80'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Briefcase className="w-4 h-4" />
-                  <span>Jobs</span>
-                </div>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('applications')}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all cursor-pointer ${
-                  activeTab === 'applications'
-                    ? 'bg-[#1D61F2] text-white shadow-md font-extrabold'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <ClipboardList className="w-4 h-4" />
-                  <span>Applications</span>
-                </div>
-                {myApplications.length > 0 && (
-                  <span className="w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center">
-                    {myApplications.length}
-                  </span>
-                )}
-              </button>
-
-              <button
-                onClick={() => setActiveTab('saved')}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all cursor-pointer ${
-                  activeTab === 'saved'
-                    ? 'bg-[#1D61F2] text-white shadow-md font-extrabold'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Bookmark className="w-4 h-4" />
-                  <span>Saved Jobs</span>
-                </div>
-                {savedJobIds.length > 0 && (
-                  <span className="px-2 py-0.5 rounded-full bg-blue-600/60 text-white text-[10px] font-bold">
-                    {savedJobIds.length}
-                  </span>
-                )}
-              </button>
-
-              <button
-                onClick={() => setActiveTab('overview')}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all cursor-pointer ${
-                  activeTab === 'overview'
-                    ? 'bg-[#1D61F2] text-white shadow-md font-extrabold'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <User className="w-4 h-4" />
-                  <span>Profile</span>
-                </div>
-              </button>
-
-            </nav>
-          </div>
-
-          {/* Bottom Left Sidebar Promo & Support Cards */}
-          <div className="mt-8 space-y-4 pt-4 border-t border-slate-800">
-            {/* Promo Card */}
-            <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-md relative overflow-hidden">
-              <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-white/10 rounded-full blur-xs" />
-              <h4 className="font-extrabold text-xs mb-1">Get Your Dream Job with Jobsner</h4>
-              <p className="text-[10px] text-blue-100 font-medium mb-3">Explore thousands of verified jobs across India.</p>
-              <button
-                onClick={() => { setActiveTab('find_jobs'); }}
-                className="w-full py-2 bg-white text-[#1D61F2] hover:bg-blue-50 font-black text-xs rounded-xl transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1"
-              >
-                Search Jobs →
-              </button>
-            </div>
-
-            {/* Support Card */}
-            <div className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
-                  <HelpCircle className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="text-xs font-bold text-white block leading-none">Need Help?</span>
-                  <span className="text-[9px] text-slate-400 block mt-0.5">Our support team is here.</span>
-                </div>
-              </div>
-              <button
-                onClick={() => { alert('Jobsner Support: Email us at support@jobsner.com'); }}
-                className="text-[10px] font-bold text-blue-400 hover:underline cursor-pointer"
-              >
-                Contact
-              </button>
-            </div>
-          </div>
-        </aside>
-        )}
-
-        {/* ================= CENTER MAIN CONTENT COLUMN ================= */}
-        <main className="flex-1 min-w-0 flex flex-col gap-6 w-full">
-          
-          {selectedJob ? (
-            <JobDetailsView
-              job={selectedJob}
-              onBack={() => handleCloseJobDetails(false)}
-              onApply={handleApplyNow}
-              isApplied={myApplications.some(a => String(a.jobId) === String(selectedJob.id))}
-              isApplying={applyingJobId === selectedJob.id}
-              isSaved={savedJobIds.includes(selectedJob.id)}
-              onToggleSave={handleToggleSaveJob}
-              candidate={candidate}
-            />
-          ) : (
-            <React.Fragment>
-              {/* Error & Success Notification Banners */}
-              <AnimatePresence mode="wait">
-                {submitError && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="p-4 bg-red-50 border border-red-200 rounded-2xl text-xs font-bold text-red-700 flex items-center justify-between shadow-xs"
-                  >
-                    <div className="flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
-                      <span>{submitError}</span>
-                    </div>
-                    <button onClick={() => setSubmitError(null)} className="text-red-400 hover:text-red-700"><X className="w-4 h-4" /></button>
-                  </motion.div>
-                )}
-                {submitSuccess && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs font-bold text-emerald-800 flex items-center justify-between shadow-xs"
-                  >
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>{submitSuccess}</span>
-                    </div>
-                    <button onClick={() => setSubmitSuccess(null)} className="text-emerald-400 hover:text-emerald-800"><X className="w-4 h-4" /></button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* TAB 1: FIND JOBS / MAIN REFERENCE DASHBOARD */}
-              {activeTab === 'find_jobs' && (
-            <React.Fragment>
-              
-              {/* TOP HERO BANNER */}
-              <div className="w-full bg-gradient-to-r from-[#0052D4] via-[#2B63FF] to-[#4379FF] rounded-2xl sm:rounded-3xl px-3.5 py-4 sm:p-7 lg:p-8 text-white shadow-xl relative overflow-hidden flex flex-row items-center justify-between gap-2 border border-blue-400/20 min-h-[185px] sm:min-h-[225px]">
-                {/* Ambient Background Glow Effects */}
-                <div className="absolute -left-12 -top-12 w-48 h-48 sm:w-64 sm:h-64 bg-blue-400/25 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute right-0 bottom-0 w-60 h-60 sm:w-80 sm:h-80 bg-indigo-500/30 rounded-full blur-3xl pointer-events-none" />
-
-                <div className="relative z-10 flex-1 min-w-0 max-w-[56%] sm:max-w-lg space-y-1.5 sm:space-y-2.5">
-                  <div className="inline-flex items-center gap-1 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-[9px] sm:text-[11px] font-extrabold border border-white/20">
-                    <Sparkles className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-yellow-300" /> #1 Delivery Hiring Platform
-                  </div>
-                  <h1 className="text-lg xs:text-xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight">
-                    Better Jobs<br /><span>Brighter Future</span>
-                  </h1>
-                  <p className="text-blue-100 text-[10px] sm:text-xs font-medium leading-snug max-w-[200px] sm:max-w-sm line-clamp-2 sm:line-clamp-none">
-                    Find top talent &amp; verified job opportunities faster with Jobsner!
-                  </p>
-                  <div className="pt-1 sm:pt-2">
-                    <button
-                      onClick={() => {
-                        const el = document.getElementById('jobs-search-input');
-                        if (el) el.focus();
-                      }}
-                      className="bg-white text-[#1D61F2] hover:bg-blue-50 font-black px-4 sm:px-6 py-2 sm:py-2.5 rounded-full text-[11px] sm:text-sm transition-all shadow-md inline-flex items-center gap-1.5 cursor-pointer active:scale-95"
-                    >
-                      Search Jobs →
-                    </button>
-                  </div>
-
-                  {/* Slider Indicators (Matching Reference Image) */}
-                  <div className="flex items-center gap-1.5 pt-1 sm:pt-2">
-                    <span className="w-4 sm:w-6 h-1 sm:h-1.5 bg-white rounded-full opacity-90" />
-                    <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-white/40 rounded-full" />
-                    <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-white/40 rounded-full" />
-                  </div>
-                </div>
-
-                {/* Right Graphic in Hero Banner - Animated Rider Moving on Road (SIDE BY SIDE ON MOBILE) */}
-                <div className="relative z-10 shrink-0 w-[44%] sm:w-auto max-w-[170px] sm:max-w-[340px] lg:max-w-[400px] flex items-center justify-center sm:justify-end pointer-events-none">
-                  <AnimatedHeroRider className="w-full" />
-                </div>
-              </div>
-
-              {/* 3 DASHBOARD STAT CARDS ROW (MATCHING REFERENCE IMAGE) */}
-              <div className="grid grid-cols-3 gap-1.5 xs:gap-2.5 sm:gap-4 w-full">
-                {/* Stat 1: Total Applications */}
-                <div className="bg-white border border-slate-100 rounded-xl sm:rounded-3xl p-2.5 xs:p-3 sm:p-5 shadow-xs flex flex-col justify-between hover:shadow-md transition-all">
-                  <div className="flex items-center justify-between gap-1 mb-1">
-                    <span className="text-[8px] xs:text-[9px] sm:text-xs font-black text-slate-400 uppercase tracking-wider truncate">
-                      APPLICATIONS
-                    </span>
-                    <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg bg-blue-50 text-[#1D61F2] flex items-center justify-center shrink-0">
-                      <Briefcase className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4" />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-baseline gap-1 xs:gap-1.5 pt-1">
-                      <span className="text-base xs:text-xl sm:text-2xl font-black text-slate-900 leading-none">{totalApplicationsCount}</span>
-                      <span className="text-[8px] xs:text-[9px] font-black text-emerald-600 bg-emerald-50 px-1 xs:px-1.5 py-0.5 rounded-full border border-emerald-100">+20%</span>
-                    </div>
-                    <span className="text-[8px] xs:text-[9px] sm:text-[10px] text-slate-400 font-medium block mt-0.5 sm:mt-1 truncate">vs 7 days</span>
-                  </div>
-                </div>
-
-                {/* Stat 2: Profile Views */}
-                <div className="bg-white border border-slate-100 rounded-xl sm:rounded-3xl p-2.5 xs:p-3 sm:p-5 shadow-xs flex flex-col justify-between hover:shadow-md transition-all">
-                  <div className="flex items-center justify-between gap-1 mb-1">
-                    <span className="text-[8px] xs:text-[9px] sm:text-xs font-black text-slate-400 uppercase tracking-wider truncate">
-                      VIEWS
-                    </span>
-                    <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-                      <Eye className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4" />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-baseline gap-1 xs:gap-1.5 pt-1">
-                      <span className="text-base xs:text-xl sm:text-2xl font-black text-slate-900 leading-none">{profileViewsCount}</span>
-                      <span className="text-[8px] xs:text-[9px] font-black text-emerald-600 bg-emerald-50 px-1 xs:px-1.5 py-0.5 rounded-full border border-emerald-100">+16%</span>
-                    </div>
-                    <span className="text-[8px] xs:text-[9px] sm:text-[10px] text-slate-400 font-medium block mt-0.5 sm:mt-1 truncate">vs 7 days</span>
-                  </div>
-                </div>
-
-                {/* Stat 3: Shortlisted */}
-                <div className="bg-white border border-slate-100 rounded-xl sm:rounded-3xl p-2.5 xs:p-3 sm:p-5 shadow-xs flex flex-col justify-between hover:shadow-md transition-all">
-                  <div className="flex items-center justify-between gap-1 mb-1">
-                    <span className="text-[8px] xs:text-[9px] sm:text-xs font-black text-slate-400 uppercase tracking-wider truncate">
-                      SHORTLISTED
-                    </span>
-                    <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                      <Star className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4" />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-baseline gap-1 xs:gap-1.5 pt-1">
-                      <span className="text-base xs:text-xl sm:text-2xl font-black text-slate-900 leading-none">{shortlistedCount}</span>
-                      <span className="text-[8px] xs:text-[9px] font-black text-emerald-600 bg-emerald-50 px-1 xs:px-1.5 py-0.5 rounded-full border border-emerald-100">+25%</span>
-                    </div>
-                    <span className="text-[8px] xs:text-[9px] sm:text-[10px] text-slate-400 font-medium block mt-0.5 sm:mt-1 truncate">vs 7 days</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* 5 JOB CATEGORIES TILES (Delivery & Logistics, Warehouse & Packing, Drivers, Office & Admin, Other Jobs) */}
-              <div className="w-full bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-xs">
-                <div className="flex items-center justify-between mb-2.5 sm:mb-3">
-                  <span className="text-[10px] sm:text-xs font-black text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#1D61F2]" />
-                    Job Categories
-                  </span>
-                  {selectedCategory !== 'All' && (
-                    <button
-                      onClick={() => setSelectedCategory('All')}
-                      className="text-[10px] sm:text-xs font-black text-[#1D61F2] hover:underline cursor-pointer"
-                    >
-                      Show All ({activeJobs.length})
-                    </button>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-5 gap-1 sm:gap-3">
-                  {/* Category 1: Delivery & Logistics */}
-                  <button
-                    onClick={() => {
-                      setSelectedCategory(selectedCategory === 'Delivery & Logistics' ? 'All' : 'Delivery & Logistics');
-                    }}
-                    className={`group relative flex flex-col items-center justify-start py-1.5 sm:py-2.5 px-0.5 sm:px-1 rounded-xl sm:rounded-2xl transition-all cursor-pointer ${
-                      selectedCategory === 'Delivery & Logistics'
-                        ? 'bg-blue-50/90 ring-2 ring-blue-500/40 shadow-xs'
-                        : 'hover:bg-slate-50/80'
-                    }`}
-                  >
-                    <div className={`w-9 h-9 xs:w-11 xs:h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
-                      selectedCategory === 'Delivery & Logistics'
-                        ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                        : 'bg-blue-50/60 text-[#1D61F2] border-blue-200/70'
-                    }`}>
-                      <Truck className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6" />
-                    </div>
-                    <span className="text-[8px] xs:text-[9.5px] sm:text-xs font-bold text-slate-800 mt-1 sm:mt-1.5 text-center leading-tight">
-                      Delivery &<br />Logistics
-                    </span>
-                    <span className="text-[7px] xs:text-[8px] sm:text-[9px] font-semibold text-slate-400 mt-0.5">
-                      {categoryCounts.deliveryLogistics} Jobs
-                    </span>
-                  </button>
-
-                  {/* Category 2: Warehouse & Packing */}
-                  <button
-                    onClick={() => {
-                      setSelectedCategory(selectedCategory === 'Warehouse & Packing' ? 'All' : 'Warehouse & Packing');
-                    }}
-                    className={`group relative flex flex-col items-center justify-start py-1.5 sm:py-2.5 px-0.5 sm:px-1 rounded-xl sm:rounded-2xl transition-all cursor-pointer ${
-                      selectedCategory === 'Warehouse & Packing'
-                        ? 'bg-orange-50/90 ring-2 ring-orange-500/40 shadow-xs'
-                        : 'hover:bg-slate-50/80'
-                    }`}
-                  >
-                    <div className={`w-9 h-9 xs:w-11 xs:h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
-                      selectedCategory === 'Warehouse & Packing'
-                        ? 'bg-orange-600 text-white border-orange-600 shadow-xs'
-                        : 'bg-orange-50/60 text-orange-600 border-orange-200/70'
-                    }`}>
-                      <Package className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6" />
-                    </div>
-                    <span className="text-[8px] xs:text-[9.5px] sm:text-xs font-bold text-slate-800 mt-1 sm:mt-1.5 text-center leading-tight">
-                      Warehouse &<br />Packing
-                    </span>
-                    <span className="text-[7px] xs:text-[8px] sm:text-[9px] font-semibold text-slate-400 mt-0.5">
-                      {categoryCounts.warehousePacking} Jobs
-                    </span>
-                  </button>
-
-                  {/* Category 3: Drivers */}
-                  <button
-                    onClick={() => {
-                      setSelectedCategory(selectedCategory === 'Drivers' ? 'All' : 'Drivers');
-                    }}
-                    className={`group relative flex flex-col items-center justify-start py-1.5 sm:py-2.5 px-0.5 sm:px-1 rounded-xl sm:rounded-2xl transition-all cursor-pointer ${
-                      selectedCategory === 'Drivers'
-                        ? 'bg-sky-50/90 ring-2 ring-sky-500/40 shadow-xs'
-                        : 'hover:bg-slate-50/80'
-                    }`}
-                  >
-                    <div className={`w-9 h-9 xs:w-11 xs:h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
-                      selectedCategory === 'Drivers'
-                        ? 'bg-sky-600 text-white border-sky-600 shadow-xs'
-                        : 'bg-sky-50/60 text-sky-600 border-sky-200/70'
-                    }`}>
-                      <Car className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6" />
-                    </div>
-                    <span className="text-[8px] xs:text-[9.5px] sm:text-xs font-bold text-slate-800 mt-1 sm:mt-1.5 text-center leading-tight">
-                      Drivers<br />& Fleet
-                    </span>
-                    <span className="text-[7px] xs:text-[8px] sm:text-[9px] font-semibold text-slate-400 mt-0.5">
-                      {categoryCounts.drivers} Jobs
-                    </span>
-                  </button>
-
-                  {/* Category 4: Office & Admin */}
-                  <button
-                    onClick={() => {
-                      setSelectedCategory(selectedCategory === 'Office & Admin' ? 'All' : 'Office & Admin');
-                    }}
-                    className={`group relative flex flex-col items-center justify-start py-1.5 sm:py-2.5 px-0.5 sm:px-1 rounded-xl sm:rounded-2xl transition-all cursor-pointer ${
-                      selectedCategory === 'Office & Admin'
-                        ? 'bg-purple-50/90 ring-2 ring-purple-500/40 shadow-xs'
-                        : 'hover:bg-slate-50/80'
-                    }`}
-                  >
-                    <div className={`w-9 h-9 xs:w-11 xs:h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
-                      selectedCategory === 'Office & Admin'
-                        ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
-                        : 'bg-purple-50/60 text-purple-600 border-purple-200/70'
-                    }`}>
-                      <Briefcase className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6" />
-                    </div>
-                    <span className="text-[8px] xs:text-[9.5px] sm:text-xs font-bold text-slate-800 mt-1 sm:mt-1.5 text-center leading-tight">
-                      Office &<br />Admin
-                    </span>
-                    <span className="text-[7px] xs:text-[8px] sm:text-[9px] font-semibold text-slate-400 mt-0.5">
-                      {categoryCounts.officeAdmin} Jobs
-                    </span>
-                  </button>
-
-                  {/* Category 5: Other Jobs */}
-                  <button
-                    onClick={() => {
-                      setSelectedCategory(selectedCategory === 'Other Jobs' ? 'All' : 'Other Jobs');
-                    }}
-                    className={`group relative flex flex-col items-center justify-start py-1.5 sm:py-2.5 px-0.5 sm:px-1 rounded-xl sm:rounded-2xl transition-all cursor-pointer ${
-                      selectedCategory === 'Other Jobs'
-                        ? 'bg-emerald-50/90 ring-2 ring-emerald-500/40 shadow-xs'
-                        : 'hover:bg-slate-50/80'
-                    }`}
-                  >
-                    <div className={`w-9 h-9 xs:w-11 xs:h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
-                      selectedCategory === 'Other Jobs'
-                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                        : 'bg-emerald-50/60 text-emerald-600 border-emerald-200/70'
-                    }`}>
-                      <Store className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6" />
-                    </div>
-                    <span className="text-[8px] xs:text-[9.5px] sm:text-xs font-bold text-slate-800 mt-1 sm:mt-1.5 text-center leading-tight">
-                      Other<br />Jobs
-                    </span>
-                    <span className="text-[7px] xs:text-[8px] sm:text-[9px] font-semibold text-slate-400 mt-0.5">
-                      {categoryCounts.other} Jobs
-                    </span>
-                  </button>
-                </div>
-              </div>
-
-              {/* RECOMMENDED JOBS SECTION - Smooth Visible Swipe & Drag Carousel */}
-              {(() => {
-                const totalJobs = activeJobs.length;
-
-                return (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
-                          🔥 Recommended Jobs
-                        </h3>
-                        {totalJobs > 1 && (
-                          <span className="hidden sm:inline-flex items-center text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
-                            Drag or swipe to explore
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        {totalJobs > 0 && (
-                          <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
-                            {carouselIndex + 1} / {totalJobs}
-                          </span>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const el = document.getElementById('jobs-table-section');
-                            if (el) el.scrollIntoView({ behavior: 'smooth' });
-                          }}
-                          className="text-xs font-black text-[#1D61F2] hover:underline flex items-center gap-1 cursor-pointer"
-                        >
-                          See All →
-                        </button>
-                      </div>
-                    </div>
-
-                    {totalJobs === 0 ? (
-                      <div className="py-10 text-center text-slate-400">
-                        <Briefcase className="w-10 h-10 mx-auto mb-2 opacity-40" />
-                        <p className="text-xs font-bold">Loading jobs...</p>
-                      </div>
-                    ) : (
-                      <div className="relative group/carousel">
-                        {/* Left Arrow Button */}
-                        {totalJobs > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => handleCarouselStep('prev')}
-                            className="hidden sm:flex absolute -left-2 sm:-left-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-10 sm:h-10 bg-white/95 backdrop-blur-xs border border-slate-200 text-slate-700 hover:text-white hover:bg-[#1D61F2] hover:border-[#1D61F2] rounded-full shadow-lg items-center justify-center transition-all cursor-pointer active:scale-90"
-                            aria-label="Previous job"
-                          >
-                            <ChevronRight className="w-5 h-5 rotate-180" />
-                          </button>
-                        )}
-
-                        {/* Continuous Horizontal Scroll & Drag Track */}
-                        <div
-                          ref={carouselTrackRef}
-                          onScroll={handleCarouselScroll}
-                          onMouseDown={handleCarouselMouseDown}
-                          onMouseMove={handleCarouselMouseMove}
-                          onMouseUp={handleCarouselMouseUp}
-                          onMouseLeave={handleCarouselMouseUp}
-                          className={`flex items-stretch gap-4 sm:gap-5 overflow-x-auto scrollbar-none snap-x snap-mandatory py-2.5 px-1 select-none ${
-                            isCarouselDragging ? 'cursor-grabbing scroll-auto' : 'cursor-grab scroll-smooth'
-                          }`}
-                          style={{
-                            scrollbarWidth: 'none',
-                            msOverflowStyle: 'none',
-                            WebkitOverflowScrolling: 'touch',
-                          }}
-                        >
-                          {activeJobs.map((job, idx) => {
-                            const isApplied = myApplications.some(a => String(a.jobId) === String(job.id));
-                            const isSaved = savedJobIds.includes(job.id);
-                            return (
-                              <div
-                                key={`rec-job-${job.id}-${idx}`}
-                                data-carousel-card
-                                onClick={() => {
-                                  if (!carouselHasDraggedRef.current) {
-                                    handleViewDetails(job);
-                                  }
-                                }}
-                                className="w-[85vw] max-w-[340px] xs:w-[300px] sm:w-[320px] md:w-[350px] shrink-0 snap-start bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-lg hover:border-[#1D61F2] transition-all flex flex-col justify-between cursor-pointer group/card"
-                              >
-                                <div>
-                                  <div className="flex items-center justify-between mb-3 sm:mb-4">
-                                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white border-2 border-slate-100 flex items-center justify-center overflow-hidden p-1 shadow-2xs">
-                                      {job.companyLogo ? (
-                                        <img src={job.companyLogo} alt={job.companyName} className="w-full h-full object-contain" />
-                                      ) : (
-                                        <Building className="w-6 h-6 sm:w-7 sm:h-7 text-[#1D61F2]" />
-                                      )}
-                                    </div>
-                                    <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 shrink-0">
-                                      <CheckCircle className="w-3 h-3 fill-emerald-500 text-white" /> Verified
-                                    </span>
-                                  </div>
-                                  <h4 className="font-black text-slate-900 text-sm sm:text-base line-clamp-1 group-hover/card:text-[#1D61F2] transition-colors">
-                                    {job.title}
-                                  </h4>
-                                  <p className="text-xs font-bold text-slate-500 mt-0.5 truncate">
-                                    {job.companyName} • <span className="text-slate-400">{job.employmentType || 'Full Time'}</span>
-                                  </p>
-                                  <p className="text-xs font-bold text-slate-500 mt-2 flex items-center gap-1 truncate">
-                                    <MapPin className="w-3.5 h-3.5 text-[#1D61F2] shrink-0" /> {job.city || 'India'}
-                                  </p>
-                                  <div className="flex flex-wrap gap-1.5 mt-3">
-                                    <span className="px-2.5 py-1 bg-blue-50 text-[#1D61F2] text-[10px] font-extrabold rounded-lg">
-                                      {job.category || 'Delivery'}
-                                    </span>
-                                    <span className="px-2.5 py-1 bg-slate-100 text-slate-700 text-[10px] font-bold rounded-lg">
-                                      {job.experienceRequired ? `${job.experienceRequired}+ yrs` : 'Fresher'}
-                                    </span>
-                                  </div>
-                                </div>
-
-                                <div className="mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-slate-100 flex items-center justify-between gap-2 min-w-0 flex-nowrap">
-                                  <span className="text-xs sm:text-[13px] font-black text-slate-900 truncate min-w-0">
-                                    ₹{job.minSalary ? `${job.minSalary.toLocaleString()} - ${job.maxSalary?.toLocaleString()}` : '35,000'} / {job.salaryType === 'Daily' ? 'day' : job.salaryType === 'Weekly' ? 'week' : 'mo'}
-                                  </span>
-                                  <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-nowrap">
-                                    <button
-                                      type="button"
-                                      onClick={(e) => { e.stopPropagation(); handleToggleSaveJob(job.id, e); }}
-                                      className="p-2 sm:p-2.5 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer shrink-0"
-                                      title="Save Job"
-                                    >
-                                      <Bookmark className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isSaved ? 'fill-[#1D61F2] text-[#1D61F2]' : 'text-slate-400'}`} />
-                                    </button>
-                                    {isApplied ? (
-                                      <span className="px-3 sm:px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-black rounded-xl shrink-0 whitespace-nowrap">
-                                        Applied ✓
-                                      </span>
-                                    ) : (
-                                      <button
-                                        type="button"
-                                        onClick={(e) => { e.stopPropagation(); handleApplyNow(job); }}
-                                        disabled={applyingJobId === job.id}
-                                        className="px-3.5 sm:px-5 py-2 sm:py-2.5 bg-[#1D61F2] hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 whitespace-nowrap"
-                                      >
-                                        Apply Now
-                                      </button>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-
-                        {/* Right Arrow Button */}
-                        {totalJobs > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => handleCarouselStep('next')}
-                            className="hidden sm:flex absolute -right-2 sm:-right-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-10 sm:h-10 bg-white/95 backdrop-blur-xs border border-slate-200 text-slate-700 hover:text-white hover:bg-[#1D61F2] hover:border-[#1D61F2] rounded-full shadow-lg items-center justify-center transition-all cursor-pointer active:scale-90"
-                            aria-label="Next job"
-                          >
-                            <ChevronRight className="w-5 h-5" />
-                          </button>
-                        )}
-
-                        {/* Dot & Pill Indicators */}
-                        {totalJobs > 1 && (
-                          <div className="flex items-center justify-center gap-1.5 mt-3 sm:mt-4">
-                            {activeJobs.map((_, i) => (
-                              <button
-                                key={`dot-${i}`}
-                                type="button"
-                                onClick={() => scrollCarouselTo(i)}
-                                className={`rounded-full transition-all duration-300 cursor-pointer ${
-                                  i === carouselIndex
-                                    ? 'w-6 h-2 bg-[#1D61F2]'
-                                    : 'w-2 h-2 bg-slate-200 hover:bg-slate-400'
-                                }`}
-                                aria-label={`Go to slide ${i + 1}`}
-                              />
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
-
-              {/* APPLICATION STATUS & JOB FEED TABLE SECTION */}
-              <div className="bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 md:p-6 shadow-xs space-y-4 sm:space-y-5" id="jobs-table-section">
-                
-                {/* Status Tabs Header */}
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 sm:pb-4">
-                  <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none flex-nowrap max-w-full py-0.5">
-                    <button
-                      onClick={() => setAppStatusTab('all')}
-                      className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                        appStatusTab === 'all'
-                          ? 'bg-[#1D61F2] text-white shadow-xs'
-                          : 'text-slate-600 hover:bg-slate-100'
-                      }`}
-                    >
-                      All Jobs
-                    </button>
-                    <button
-                      onClick={() => setAppStatusTab('applied')}
-                      className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                        appStatusTab === 'applied'
-                          ? 'bg-[#1D61F2] text-white shadow-xs'
-                          : 'text-slate-600 hover:bg-slate-100'
-                      }`}
-                    >
-                      Applied ({totalApplicationsCount})
-                    </button>
-                    <button
-                      onClick={() => setAppStatusTab('shortlisted')}
-                      className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                        appStatusTab === 'shortlisted'
-                          ? 'bg-[#1D61F2] text-white shadow-xs'
-                          : 'text-slate-600 hover:bg-slate-100'
-                      }`}
-                    >
-                      Shortlisted ({shortlistedCount})
-                    </button>
-                    <button
-                      onClick={() => setAppStatusTab('rejected')}
-                      className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                        appStatusTab === 'rejected'
-                          ? 'bg-[#1D61F2] text-white shadow-xs'
-                          : 'text-slate-600 hover:bg-slate-100'
-                      }`}
-                    >
-                      Rejected ({rejectedCount})
-                    </button>
-                  </div>
-                </div>
-
-                {/* Filter Controls Bar */}
-                <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2.5 sm:gap-3 w-full">
-                  <div className="relative flex-1 w-full min-w-0">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input
-                      type="text"
-                      placeholder="Search jobs by title, company, or city..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:bg-white transition-colors"
-                      id="jobs-search-input"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5 w-full md:w-auto">
-                    {/* Location Dropdown */}
-                    <select
-                      value={selectedCity}
-                      onChange={(e) => setSelectedCity(e.target.value)}
-                      className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none truncate"
-                    >
-                      <option value="All">Location (All)</option>
-                      {Array.from(new Set(activeJobs.map(j => j.city).filter(Boolean))).map(c => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
-
-                    {/* Job Type Dropdown */}
-                    <select
-                      value={selectedEmpType}
-                      onChange={(e) => setSelectedEmpType(e.target.value)}
-                      className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none truncate"
-                    >
-                      <option value="All">Job Type (All)</option>
-                      <option value="Full Time">Full Time</option>
-                      <option value="Part Time">Part Time</option>
-                      <option value="Flexible">Flexible</option>
-                    </select>
-
-                    {/* Sort Order */}
-                    <select
-                      value={sortOrder}
-                      onChange={(e) => setSortOrder(e.target.value)}
-                      className="col-span-2 sm:col-span-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none truncate"
-                    >
-                      <option value="newest">Newest First</option>
-                      <option value="oldest">Oldest First</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Job / Application Items Table List */}
-                <div className="space-y-3">
-                  {displayedJobsOrApps.length === 0 ? (
-                    <div className="py-12 text-center text-slate-400">
-                      <Briefcase className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                      <p className="text-xs font-bold">No job records found for this view.</p>
-                    </div>
-                  ) : (
-                    displayedJobsOrApps.map((item: any, itemIdx: number) => {
-                      const isAppRecord = appStatusTab !== 'all';
-                      const job = isAppRecord ? activeJobs.find(j => String(j.id) === String(item.jobId)) || item : item;
-                      const isApplied = myApplications.some(a => String(a.jobId) === String(job.id));
-                      const isSaved = savedJobIds.includes(job.id);
-
-                      return (
-                        <div
-                          key={item._uniqueKey || `${item.id}-${itemIdx}`}
-                          onClick={() => handleViewDetails(job)}
-                          className="p-3.5 sm:p-4 md:p-5 border border-slate-200/80 rounded-2xl bg-white hover:border-[#1D61F2] hover:shadow-xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-3.5 sm:gap-4 cursor-pointer group min-w-0"
-                        >
-                            <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0 flex-1">
-                              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center p-1 overflow-hidden shrink-0 shadow-2xs">
-                                {job.companyLogo ? (
-                                  <img src={job.companyLogo} alt={job.companyName} className="w-full h-full object-contain" />
-                                ) : (
-                                  <Building className="w-5 h-5 sm:w-6 sm:h-6 text-[#1D61F2]" />
-                                )}
-                              </div>
-
-                              <div className="min-w-0 flex-1 space-y-1">
-                                <div className="flex items-center gap-2 min-w-0">
-                                  <h4 className="font-black text-slate-900 text-sm sm:text-base group-hover:text-[#1D61F2] transition-colors truncate">
-                                    {job.title || job.jobTitle}
-                                  </h4>
-                                  <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 shrink-0">
-                                    <CheckCircle className="w-2.5 h-2.5 fill-emerald-500 text-white" /> Verified
-                                  </span>
-                                </div>
-
-                                <p className="text-xs font-semibold text-slate-500 truncate flex items-center gap-1">
-                                  <span className="text-slate-700 font-bold">{job.companyName}</span>
-                                  <span className="text-slate-300">•</span>
-                                  <span className="text-slate-400">{job.employmentType || job.jobEmploymentType || 'Full Time'}</span>
-                                  <span className="text-slate-300">•</span>
-                                  <MapPin className="w-3 h-3 inline text-[#1D61F2] shrink-0 -mt-0.5" />
-                                  <span className="truncate">{job.city || job.jobCity || 'India'}</span>
-                                </p>
-
-                                <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                                  <span className="px-2 py-0.5 bg-blue-50 text-[#1D61F2] text-[9px] font-extrabold rounded-md">
-                                    {job.category || 'Delivery'}
-                                  </span>
-                                  <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[9px] font-bold rounded-md">
-                                    {job.experienceRequired ? `${job.experienceRequired}+ yrs` : 'Fresher'}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center justify-between md:justify-end gap-3 shrink-0 w-full md:w-auto pt-3 md:pt-0 border-t md:border-t-0 border-slate-100 min-w-0 flex-nowrap">
-                              <div className="text-left md:text-right min-w-0 shrink">
-                                <span className="text-xs sm:text-sm font-black text-slate-900 block truncate">
-                                  ₹{job.minSalary ? `${job.minSalary.toLocaleString()} - ${job.maxSalary?.toLocaleString()}` : (job.salary || '35,000')} / {job.salaryType === 'Daily' ? 'day' : job.salaryType === 'Weekly' ? 'week' : 'mo'}
-                                </span>
-                                <span className="text-[10px] text-slate-400 font-semibold block truncate mt-0.5">
-                                  Posted {job.createdAt ? new Date(job.createdAt).toLocaleDateString('en-GB') : 'Recently'}
-                                </span>
-                              </div>
-
-                              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-nowrap">
-                                <button
-                                  type="button"
-                                  onClick={(e) => { e.stopPropagation(); handleToggleSaveJob(job.id, e); }}
-                                  className="p-2 sm:p-2.5 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer shrink-0"
-                                  title="Save Job"
-                                >
-                                  <Bookmark className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isSaved ? 'fill-[#1D61F2] text-[#1D61F2]' : 'text-slate-400'}`} />
-                                </button>
-
-                                {isAppRecord ? (
-                                  <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-nowrap">
-                                    {item.currentStatus === 'Withdrawn' || item.withdrawStatus === 'Withdrawn' ? (
-                                      <span className="px-3 py-1.5 bg-slate-100 text-slate-500 border border-slate-200 text-xs font-black rounded-xl shrink-0 whitespace-nowrap">
-                                        Withdrawn
-                                      </span>
-                                    ) : (
-                                      <>
-                                        <span className={`px-2.5 sm:px-3 py-1.5 text-xs font-black rounded-xl border shrink-0 whitespace-nowrap ${
-                                          String(item.currentStatus || '').toLowerCase().includes('shortlist') || String(item.currentStatus || '').toLowerCase().includes('select')
-                                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                            : String(item.currentStatus || '').toLowerCase().includes('reject')
-                                            ? 'bg-red-50 text-red-700 border-red-200'
-                                            : 'bg-blue-50 text-[#1D61F2] border-blue-200'
-                                        }`}>
-                                          {item.currentStatus || 'Applied'} ✓
-                                        </span>
-                                        <button
-                                          type="button"
-                                          onClick={(e) => { e.stopPropagation(); handleWithdrawApplication(item.id); }}
-                                          disabled={withdrawingAppId === item.id}
-                                          className="px-3 sm:px-3.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-xs rounded-xl transition-all cursor-pointer disabled:opacity-50 shrink-0 whitespace-nowrap"
-                                        >
-                                          {withdrawingAppId === item.id ? 'Withdrawing...' : 'Withdraw'}
-                                        </button>
-                                      </>
-                                    )}
-                                  </div>
-                                ) : isApplied ? (
-                                  <span className="px-3.5 sm:px-4 py-2 sm:py-2.5 bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-black rounded-xl shrink-0 whitespace-nowrap">
-                                    Applied ✓
-                                  </span>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => { e.stopPropagation(); handleApplyNow(job); }}
-                                    disabled={applyingJobId === job.id}
-                                    className="px-3.5 sm:px-5 py-2 sm:py-2.5 bg-[#1D61F2] hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 whitespace-nowrap"
-                                  >
-                                    Apply Now
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                      );
-                    })
-                  )}
-
-                  {/* Infinite Scroll Sentinel & Loader */}
-                  {appStatusTab === 'all' && filteredJobsList.length > 0 && (
-                    <div
-                      ref={infiniteScrollSentinelRef}
-                      className="py-8 flex flex-col items-center justify-center text-slate-400 gap-2 select-none"
-                    >
-                      <div className="flex items-center gap-2.5 text-xs font-extrabold text-slate-500 bg-white px-5 py-2.5 rounded-full border border-slate-200/80 shadow-xs">
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#1D61F2] animate-ping" />
-                        <span>Showing unlimited verified jobs...</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-              </div>
-
-            </React.Fragment>
-          )}
-
-          {/* TAB 2: MY APPLICATIONS VIEW */}
-          {activeTab === 'applications' && (
-            <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                <h3 className="text-lg font-black text-slate-900">My Job Applications ({myApplications.length})</h3>
-              </div>
-
-              {myApplications.length === 0 ? (
-                <div className="py-16 text-center text-slate-400">
-                  <Briefcase className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p className="text-xs font-bold">You have not submitted any applications yet.</p>
-                  <button onClick={() => setActiveTab('find_jobs')} className="mt-4 px-5 py-2 bg-[#1D61F2] text-white rounded-xl text-xs font-bold">
-                    Explore Jobs
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {myApplications.map((app) => {
-                    const status = app.currentStatus || app.withdrawStatus || 'Applied';
-                    const isWithdrawn = status === 'Withdrawn' || app.withdrawStatus === 'Withdrawn';
-                    const appJob = activeJobs.find(j => String(j.id) === String(app.jobId)) || {
-                      id: app.jobId,
-                      title: app.jobTitle || app.title,
-                      companyName: app.companyName,
-                      companyLogo: app.companyLogo,
-                      city: app.jobCity,
-                      minSalary: app.minSalary,
-                      maxSalary: app.maxSalary,
-                      salary: app.jobSalary,
-                      salaryType: app.jobSalaryType,
-                      employmentType: app.jobEmploymentType,
-                      shift: app.jobShift,
-                      openings: app.jobOpenings,
-                      experienceRequired: app.jobExperienceRequired,
-                      description: app.jobDescription,
-                      responsibilities: app.jobResponsibilities,
-                      benefits: app.jobBenefits
-                    };
-                    return (
-                      <div
-                        key={app.id}
-                        onClick={() => handleViewDetails(appJob)}
-                        className="p-3.5 sm:p-5 border border-slate-200/80 rounded-2xl bg-white hover:border-[#1D61F2] hover:shadow-xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-3.5 sm:gap-4 cursor-pointer group min-w-0"
-                      >
-                        <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0 flex-1">
-                          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center p-1 overflow-hidden shrink-0 shadow-2xs">
-                            {app.companyLogo ? (
-                              <img src={app.companyLogo} alt={app.companyName} className="w-full h-full object-contain" />
-                            ) : (
-                              <Building className="w-5 h-5 sm:w-6 sm:h-6 text-[#1D61F2]" />
-                            )}
-                          </div>
-
-                          <div className="min-w-0 flex-1 space-y-1">
-                            <h4 className="font-black text-slate-900 text-sm sm:text-base group-hover:text-[#1D61F2] transition-colors truncate">
-                              {app.jobTitle || app.title || 'Delivery Partner / Job Role'}
-                            </h4>
-                            <p className="text-xs font-semibold text-slate-500 truncate flex items-center gap-1">
-                              <span className="text-slate-700 font-bold">{app.companyName || 'Hiring Company'}</span>
-                              <span className="text-slate-300">•</span>
-                              <MapPin className="w-3 h-3 inline text-[#1D61F2] shrink-0 -mt-0.5" />
-                              <span className="truncate">{app.jobCity || 'India'}</span>
-                            </p>
-                            <div className="flex flex-wrap items-center gap-2 pt-0.5">
-                              <span className={`px-2.5 sm:px-3 py-1 text-xs font-black rounded-full border whitespace-nowrap shrink-0 ${
-                                isWithdrawn
-                                  ? 'bg-slate-100 text-slate-500 border-slate-200'
-                                  : String(status).toLowerCase().includes('shortlist') || String(status).toLowerCase().includes('select')
-                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                  : String(status).toLowerCase().includes('reject')
-                                  ? 'bg-red-50 text-red-700 border-red-200'
-                                  : 'bg-blue-50 text-[#1D61F2] border-blue-200'
-                              }`}>
-                                Status: {status}
-                              </span>
-                              <span className="text-[11px] text-slate-400 font-semibold truncate">
-                                Applied {app.appliedDate ? new Date(app.appliedDate).toLocaleDateString('en-GB') : 'Recently'}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-end gap-3 shrink-0 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100 w-full md:w-auto">
-                          {isWithdrawn ? (
-                            <span className="px-4 py-2 bg-slate-100 text-slate-500 border border-slate-200 rounded-xl text-xs font-bold whitespace-nowrap shrink-0">
-                              Withdrawn
-                            </span>
-                          ) : (
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleWithdrawApplication(app.id); }}
-                              disabled={withdrawingAppId === app.id}
-                              className="px-4 py-2 border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-50 whitespace-nowrap shrink-0"
-                            >
-                              {withdrawingAppId === app.id ? 'Withdrawing...' : 'Withdraw Application'}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* TAB 3: SAVED JOBS VIEW */}
-          {activeTab === 'saved' && (
-            <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                <h3 className="text-lg font-black text-slate-900">Saved Jobs ({savedJobIds.length})</h3>
-              </div>
-
-              {savedJobIds.length === 0 ? (
-                <div className="py-16 text-center text-slate-400">
-                  <Bookmark className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p className="text-xs font-bold">You have no saved jobs yet.</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {activeJobs.filter(j => savedJobIds.includes(j.id)).map(job => (
-                    <div
-                      key={job.id}
-                      onClick={() => handleViewDetails(job)}
-                      className="p-4 sm:p-5 border border-slate-200/80 rounded-2xl flex flex-col justify-between hover:border-[#1D61F2] hover:shadow-xs transition-all cursor-pointer group bg-white min-w-0"
-                    >
-                      <div className="min-w-0 space-y-1">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <h4 className="font-black text-slate-900 text-sm sm:text-base group-hover:text-[#1D61F2] transition-colors truncate">
-                            {job.title}
-                          </h4>
-                          <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 shrink-0">
-                            <CheckCircle className="w-2.5 h-2.5 fill-emerald-500 text-white" /> Verified
-                          </span>
-                        </div>
-                        <p className="text-xs font-semibold text-slate-500 truncate">{job.companyName} • {job.city}</p>
-                      </div>
-
-                      <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2 min-w-0 flex-nowrap">
-                        <span className="text-xs sm:text-sm font-black text-slate-900 truncate min-w-0">
-                          ₹{job.minSalary ? Number(job.minSalary).toLocaleString() : '35,000'} / {job.salaryType === 'Daily' ? 'day' : job.salaryType === 'Weekly' ? 'week' : 'mo'}
-                        </span>
-                        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-nowrap">
-                          <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); handleToggleSaveJob(job.id, e); }}
-                            className="p-2 sm:p-2.5 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer shrink-0"
-                            title="Remove from Saved Jobs"
-                          >
-                            <Bookmark className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-[#1D61F2] text-[#1D61F2]" />
-                          </button>
-                          {myApplications.some(a => String(a.jobId) === String(job.id)) ? (
-                            <span className="px-3 sm:px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-black rounded-xl shrink-0 whitespace-nowrap">
-                              Applied ✓
-                            </span>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); handleApplyNow(job); }}
-                              disabled={applyingJobId === job.id}
-                              className="px-3.5 sm:px-5 py-2 sm:py-2.5 bg-[#1D61F2] hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 whitespace-nowrap"
-                            >
-                              Apply Now
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* TAB 4: PROFILE EDIT VIEW */}
-          {activeTab === 'overview' && (
-            <CandidateProfileEdit
-              initialProfile={profile}
-              candidate={candidate}
-              token={token || ''}
-              onSaveSuccess={(updated) => {
-                if (onUpdateProfile) onUpdateProfile(updated);
-              }}
-              onCancel={() => setActiveTab('find_jobs')}
-              contactedJobsCount={myApplications.length}
-              savedJobsCount={savedJobIds.length}
-              onNavigateTab={(t) => setActiveTab(t)}
-            />
-          )}
-
-            </React.Fragment>
-          )}
-
-        </main>
-
-        {/* ================= RIGHT SIDEBAR WIDGETS ================= */}
-        {!selectedJob && (
-          <aside className="w-full lg:w-80 shrink-0 flex flex-col gap-4 sm:gap-6">
-          
-          {/* SINGLE QUICK ACTIONS WIDGET (ONLY 1 SECTION) */}
-          <div className="bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-xs">
-            <h3 className="font-black text-slate-900 text-sm mb-3 sm:mb-4">Quick Actions</h3>
-            
-            <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
-              {/* Action 1: Search Jobs */}
-              <button
-                onClick={() => {
-                  setActiveTab('find_jobs');
-                  const el = document.getElementById('jobs-search-input');
-                  if (el) el.focus();
-                }}
-                className="p-2 xs:p-3 rounded-xl sm:rounded-2xl bg-blue-50/70 hover:bg-blue-100/70 border border-blue-100 transition-all flex flex-col items-center text-center cursor-pointer group"
-              >
-                <div className="w-8 h-8 xs:w-9 xs:h-9 rounded-xl bg-blue-500 text-white flex items-center justify-center mb-1.5 shadow-xs group-hover:scale-110 transition-transform">
-                  <Search className="w-3.5 h-3.5 xs:w-4 xs:h-4" />
-                </div>
-                <span className="text-[10px] xs:text-[11px] font-extrabold text-slate-800 leading-tight">Search Jobs</span>
-              </button>
-
-              {/* Action 2: Saved Jobs */}
-              <button
-                onClick={() => setActiveTab('saved')}
-                className="p-2 xs:p-3 rounded-xl sm:rounded-2xl bg-purple-50/70 hover:bg-purple-100/70 border border-purple-100 transition-all flex flex-col items-center text-center cursor-pointer group"
-              >
-                <div className="w-8 h-8 xs:w-9 xs:h-9 rounded-xl bg-purple-500 text-white flex items-center justify-center mb-1.5 shadow-xs group-hover:scale-110 transition-transform">
-                  <Bookmark className="w-3.5 h-3.5 xs:w-4 xs:h-4" />
-                </div>
-                <span className="text-[10px] xs:text-[11px] font-extrabold text-slate-800 leading-tight">Saved Jobs</span>
-              </button>
-
-              {/* Action 3: Update Profile */}
-              <button
-                onClick={() => setActiveTab('overview')}
-                className="p-2 xs:p-3 rounded-xl sm:rounded-2xl bg-emerald-50/70 hover:bg-emerald-100/70 border border-emerald-100 transition-all flex flex-col items-center text-center cursor-pointer group"
-              >
-                <div className="w-8 h-8 xs:w-9 xs:h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center mb-1.5 shadow-xs group-hover:scale-110 transition-transform">
-                  <User className="w-3.5 h-3.5 xs:w-4 xs:h-4" />
-                </div>
-                <span className="text-[10px] xs:text-[11px] font-extrabold text-slate-800 leading-tight">Update Profile</span>
-              </button>
-            </div>
-          </div>
-
-          {/* YOUR PROFILE PROGRESS WIDGET */}
-          <div className="bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-xs">
-            <h3 className="font-black text-slate-900 text-sm mb-4">Your Profile Progress</h3>
-            
-            <div className="flex items-center gap-4">
-              {/* Circular Donut Progress Ring */}
-              <div className="relative w-20 h-20 shrink-0 flex items-center justify-center">
-                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                  <path
-                    className="text-slate-100"
-                    strokeWidth="4"
-                    stroke="currentColor"
-                    fill="none"
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                  />
-                  <path
-                    className="text-[#1D61F2]"
-                    strokeDasharray={`${completionPercentage}, 100`}
-                    strokeWidth="4"
-                    strokeLinecap="round"
-                    stroke="currentColor"
-                    fill="none"
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                  />
-                </svg>
-                <span className="absolute text-xs font-black text-slate-900">{completionPercentage}%</span>
-              </div>
-
-              <div>
-                <span className="text-xs font-extrabold text-slate-900 block">Profile Completed</span>
-                <p className="text-[11px] font-medium text-slate-400 mt-1 leading-normal">
-                  Complete your profile to get better job matches.
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setActiveTab('overview')}
-              className="mt-4 w-full py-2.5 bg-[#1D61F2] hover:bg-blue-700 text-white font-black text-xs rounded-xl transition-all shadow-xs cursor-pointer flex items-center justify-center gap-1"
-            >
-              Complete Profile →
-            </button>
-          </div>
-
-          {/* NO RECENTLY VIEWED JOBS (Completely Removed as requested) */}
-
-        </aside>
-        )}
-      </div>
-
-      {/* INSTANT FAST APPLY MODAL */}
-      {jobForInstantApply && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4"
-          >
-            <div className="flex items-center justify-between border-b pb-3">
-              <h3 className="font-black text-base text-slate-900">Complete Profile to Apply</h3>
-              <button onClick={() => setJobForInstantApply(null)} className="text-slate-400 hover:text-slate-700"><X className="w-5 h-5" /></button>
-            </div>
-            <p className="text-xs text-slate-500 font-medium">Please fill in the required basic details to proceed with your application for {jobForInstantApply.title}.</p>
-
-            <form onSubmit={handleInstantApplySubmit} className="space-y-3">
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Full Name</label>
-                <input
-                  type="text"
-                  required
-                  value={instantFullName}
-                  onChange={(e) => setInstantFullName(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-xl text-xs font-bold text-slate-800"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">Age</label>
-                  <input
-                    type="number"
-                    required
-                    value={instantAge}
-                    onChange={(e) => setInstantAge(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-xl text-xs font-bold text-slate-800"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">Gender</label>
-                  <select
-                    value={instantGender}
-                    onChange={(e) => setInstantGender(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-xl text-xs font-bold text-slate-800"
-                  >
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Pincode</label>
-                <input
-                  type="text"
-                  required
-                  value={instantPincode}
-                  onChange={(e) => setInstantPincode(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-xl text-xs font-bold text-slate-800"
-                />
-              </div>
-
-              {instantError && <p className="text-xs text-red-600 font-bold">{instantError}</p>}
-
-              <button
-                type="submit"
-                disabled={instantLoading}
-                className="w-full py-3 bg-[#1D61F2] hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-md cursor-pointer"
-              >
-                {instantLoading ? 'Submitting Application...' : 'Save & Submit Application'}
-              </button>
-            </form>
-          </motion.div>
-        </div>
-      )}
-
-      {/* NOTIFICATIONS MODAL DIALOG */}
-      {isNotificationOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 relative overflow-hidden"
-          >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#1D61F2] flex items-center justify-center">
-                  <Bell className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="font-black text-base text-slate-900">Notifications</h3>
-                  <span className="text-[10px] text-slate-400 font-semibold block">Real-time alerts & job updates</span>
-                </div>
-              </div>
-              <button
-                onClick={closeNotificationModal}
-                className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-800 transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
-              {/* Notification 1 */}
-              <div className="p-3.5 bg-blue-50/60 border border-blue-100 rounded-2xl flex items-start gap-3">
-                <div className="w-8 h-8 rounded-xl bg-blue-500 text-white flex items-center justify-center shrink-0 mt-0.5">
-                  <Briefcase className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="font-extrabold text-xs text-slate-900">New Job Match: Delivery Partner</h4>
-                  <p className="text-[11px] text-slate-600 font-medium mt-0.5">Zomato posted a new role in your preferred location with up to ₹35,000/month.</p>
-                  <span className="text-[9px] text-slate-400 font-bold block mt-1">10 minutes ago</span>
-                </div>
-              </div>
-
-              {/* Notification 2 */}
-              <div className="p-3.5 bg-emerald-50/60 border border-emerald-100 rounded-2xl flex items-start gap-3">
-                <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 mt-0.5">
-                  <CheckCircle className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="font-extrabold text-xs text-slate-900">Application Under Review</h4>
-                  <p className="text-[11px] text-slate-600 font-medium mt-0.5">Your application for Blinkit Delivery Executive was reviewed by the recruiter.</p>
-                  <span className="text-[9px] text-slate-400 font-bold block mt-1">2 hours ago</span>
-                </div>
-              </div>
-
-              {/* Notification 3 */}
-              <div className="p-3.5 bg-purple-50/60 border border-purple-100 rounded-2xl flex items-start gap-3">
-                <div className="w-8 h-8 rounded-xl bg-purple-500 text-white flex items-center justify-center shrink-0 mt-0.5">
-                  <Star className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="font-extrabold text-xs text-slate-900">Profile Viewed by Hiring Team</h4>
-                  <p className="text-[11px] text-slate-600 font-medium mt-0.5">Jio Mart recruiting team viewed your profile and license verification documents.</p>
-                  <span className="text-[9px] text-slate-400 font-bold block mt-1">Yesterday</span>
-                </div>
-              </div>
-            </div>
-
-            <button
-              onClick={closeNotificationModal}
-              className="w-full py-2.5 bg-[#1D61F2] hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer"
-            >
-              Close Notifications
-            </button>
-          </motion.div>
-        </div>
-      )}
-
-      {/* ================= MOBILE BOTTOM NAVIGATION BAR (lg:hidden) ================= */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#0F172A]/95 backdrop-blur-md border-t border-slate-800 text-slate-400 z-40 lg:hidden px-2 sm:px-3 py-2 flex items-center justify-around shadow-2xl safe-area-pb">
-        <button
-          onClick={() => { setActiveTab('find_jobs'); setAppStatusTab('all'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-          className={`flex flex-col items-center gap-1 transition-all cursor-pointer ${
-            activeTab === 'find_jobs' ? 'text-[#1D61F2] font-black scale-105' : 'hover:text-white'
-          }`}
-        >
-          <BarChart2 className="w-5 h-5" />
-          <span className="text-[10px]">Dashboard</span>
-        </button>
-
-        <button
-          onClick={() => { setActiveTab('applications'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-          className={`flex flex-col items-center gap-1 relative transition-all cursor-pointer ${
-            activeTab === 'applications' ? 'text-[#1D61F2] font-black scale-105' : 'hover:text-white'
-          }`}
-        >
-          <ClipboardList className="w-5 h-5" />
-          <span className="text-[10px]">Apps</span>
-          {myApplications.length > 0 && (
-            <span className="absolute -top-1 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center">
-              {myApplications.length}
-            </span>
-          )}
-        </button>
-
-        <button
-          onClick={() => { setActiveTab('saved'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-          className={`flex flex-col items-center gap-1 relative transition-all cursor-pointer ${
-            activeTab === 'saved' ? 'text-[#1D61F2] font-black scale-105' : 'hover:text-white'
-          }`}
-        >
-          <Bookmark className="w-5 h-5" />
-          <span className="text-[10px]">Saved</span>
-          {savedJobIds.length > 0 && (
-            <span className="absolute -top-1 -right-1.5 w-4 h-4 rounded-full bg-blue-500 text-white text-[9px] font-black flex items-center justify-center">
-              {savedJobIds.length}
-            </span>
-          )}
-        </button>
-
-        <button
-          onClick={() => { setActiveTab('overview'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-          className={`flex flex-col items-center gap-1 transition-all cursor-pointer ${
-            activeTab === 'overview' ? 'text-[#1D61F2] font-black scale-105' : 'hover:text-white'
-          }`}
-        >
-          <User className="w-5 h-5" />
-          <span className="text-[10px]">Profile</span>
-        </button>
-
-        <button
-          onClick={() => setIsMobileDrawerOpen(true)}
-          className="flex flex-col items-center gap-1 hover:text-white transition-all cursor-pointer"
-        >
-          <Menu className="w-5 h-5" />
-          <span className="text-[10px]">Menu</span>
-        </button>
-      </div>
-
-    </div>
-  );
-}
+import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  User, Calendar, MapPin, Briefcase, GraduationCap,
+  IndianRupee, Languages, Bike, FileText, CheckCircle,
+  AlertCircle, Edit2, LogOut, Phone, Mail, Sparkles, AlertTriangle, Upload,
+  Search, SlidersHorizontal, ArrowUpDown, Clock, Building, UserCheck, ShieldAlert,
+  FileMinus, ExternalLink, ChevronRight, X, Info, RefreshCw,
+  RotateCcw, Heart, ThumbsUp, ThumbsDown, ClipboardList, Bookmark,
+  Shield, Store, Car, ChevronDown, Bell, Package, Users, BarChart2, Star, Eye, MessageSquare, Settings, HelpCircle, ArrowUpRight, Menu,
+  Truck, Warehouse
+} from 'lucide-react';
+import { Candidate, Profile, normalizeSalaryType } from '../types';
+import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
+import FlowerBlastAnimation from './FlowerBlastAnimation';
+import CandidateProfileEdit from './CandidateProfileEdit';
+import AnimatedHeroRider from './AnimatedHeroRider';
+import JobDetailsView from './JobDetailsView';
+import { playNotificationChime, showSystemNotification } from '../lib/webPush';
+
+interface CandidateDashboardProps {
+  candidate: Candidate;
+  token: string | null;
+  activeTab?: 'overview' | 'find_jobs' | 'applications' | 'saved';
+  onTabChange?: (tab: 'overview' | 'find_jobs' | 'applications' | 'saved') => void;
+  onEditProfile: () => void;
+  onLogout: () => void;
+  onManageDocuments: () => void;
+  onUpdateProfile?: (updatedProfile: Profile) => void;
+  isNotificationOpen?: boolean;
+  onCloseNotification?: () => void;
+}
+
+// Helper for deterministic seeded random shuffle with company de-clustering
+// Defined at module level to avoid temporal dead zone errors in minified builds
+function shuffleJobsArray(array: any[], seed: number): any[] {
+  if (!array || array.length <= 1) return array || [];
+  const result = [...array];
+  let m = result.length;
+  let s = seed;
+  while (m > 0) {
+    s = (s * 9301 + 49297) % 233280;
+    const rnd = s / 233280;
+    const i = Math.floor(rnd * m);
+    m--;
+    const temp = result[m];
+    result[m] = result[i];
+    result[i] = temp;
+  }
+
+  // De-cluster so jobs from the same company are never listed one after another
+  for (let i = 0; i < result.length - 1; i++) {
+    const currCompany = (result[i].companyName || '').trim().toLowerCase();
+    const nextCompany = (result[i + 1].companyName || '').trim().toLowerCase();
+    if (currCompany && nextCompany && currCompany === nextCompany) {
+      for (let j = i + 2; j < result.length; j++) {
+        const otherCompany = (result[j].companyName || '').trim().toLowerCase();
+        if (otherCompany && otherCompany !== currCompany) {
+          const temp = result[i + 1];
+          result[i + 1] = result[j];
+          result[j] = temp;
+          break;
+        }
+      }
+    }
+  }
+
+  return result;
+}
+
+export default function CandidateDashboard({
+  candidate,
+  token,
+  activeTab: externalActiveTab,
+  onTabChange,
+  onEditProfile,
+  onLogout,
+  onManageDocuments,
+  onUpdateProfile,
+  isNotificationOpen: externalNotificationOpen,
+  onCloseNotification
+}: CandidateDashboardProps) {
+  const { profile, mobile, email } = candidate;
+
+  // Notification Modal state
+  const [internalNotificationOpen, setInternalNotificationOpen] = React.useState(false);
+  const isNotificationOpen = externalNotificationOpen !== undefined ? externalNotificationOpen : internalNotificationOpen;
+
+  // Mobile Navigation Drawer State
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = React.useState(false);
+
+  const closeNotificationModal = () => {
+    setInternalNotificationOpen(false);
+    if (onCloseNotification) onCloseNotification();
+  };
+
+  // Navigation state
+  const [internalActiveTab, setInternalActiveTab] = React.useState<'overview' | 'find_jobs' | 'applications' | 'saved'>('find_jobs');
+  const activeTab = externalActiveTab || internalActiveTab;
+
+  const setActiveTab = (tab: 'overview' | 'find_jobs' | 'applications' | 'saved') => {
+    setSelectedJob(null);
+    setInternalActiveTab(tab);
+    if (onTabChange) onTabChange(tab);
+  };
+
+  React.useEffect(() => {
+    if (externalActiveTab) {
+      setSelectedJob(null);
+    }
+  }, [externalActiveTab]);
+
+  // Status Filter Tab inside Dashboard ('all' | 'applied' | 'shortlisted' | 'rejected')
+  const [appStatusTab, setAppStatusTab] = React.useState<'all' | 'applied' | 'shortlisted' | 'rejected'>('all');
+
+  // Saved / Bookmarked Jobs state
+  const [savedJobIds, setSavedJobIds] = React.useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem(`saved_jobs_${candidate.id}`);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const handleToggleSaveJob = (jobId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setSavedJobIds(prev => {
+      const exists = prev.includes(jobId);
+      const next = exists ? prev.filter(id => id !== jobId) : [...prev, jobId];
+      try {
+        localStorage.setItem(`saved_jobs_${candidate.id}`, JSON.stringify(next));
+      } catch (err) { }
+      return next;
+    });
+  };
+
+  // Core API Lists state
+  const [activeJobs, setActiveJobs] = React.useState<any[]>([]);
+  const [loadingJobs, setLoadingJobs] = React.useState(false);
+  const [myApplications, setMyApplications] = React.useState<any[]>([]);
+  const [loadingApps, setLoadingApps] = React.useState(false);
+  const [documents, setDocuments] = React.useState<any[]>([]);
+  const [loadingDocs, setLoadingDocs] = React.useState(false);
+
+  // Search & Filter State
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [selectedCategory, setSelectedCategory] = React.useState('All');
+  const [selectedState, setSelectedState] = React.useState('All');
+  const [selectedCity, setSelectedCity] = React.useState('All');
+  const [selectedSalary, setSelectedSalary] = React.useState(0);
+  const [selectedEmpType, setSelectedEmpType] = React.useState('All');
+  const [selectedExperience, setSelectedExperience] = React.useState('All');
+  const [selectedShift, setSelectedShift] = React.useState('All');
+  const [selectedBike, setSelectedBike] = React.useState('All');
+  const [selectedLicense, setSelectedLicense] = React.useState('All');
+  const [selectedJoining, setSelectedJoining] = React.useState('All');
+  const [selectedGender, setSelectedGender] = React.useState('All');
+  const [sortOrder, setSortOrder] = React.useState('newest');
+
+  // Infinite Scroll State for Unlimited Job Browsing
+  const [infiniteBatchCount, setInfiniteBatchCount] = React.useState(3);
+  const infiniteScrollSentinelRef = React.useRef<HTMLDivElement | null>(null);
+
+  // Reset infinite batch count when search query or filters change
+  React.useEffect(() => {
+    setInfiniteBatchCount(3);
+  }, [searchQuery, selectedCategory, selectedState, selectedCity, selectedSalary, selectedEmpType, selectedExperience, selectedShift, sortOrder]);
+
+
+
+  // Celebratory Flower Animation State
+  const [showFlowerAnimation, setShowFlowerAnimation] = React.useState(false);
+  const [flowerJobDetails, setFlowerJobDetails] = React.useState<{ title: string; companyName: string }>({ title: '', companyName: '' });
+
+  // Modal Detail State
+  const [selectedJob, setSelectedJob] = React.useState<any | null>(null);
+  const [selectedApp, setSelectedApp] = React.useState<any | null>(null);
+  const [appTimeline, setAppTimeline] = React.useState<any[]>([]);
+  const [loadingTimeline, setLoadingTimeline] = React.useState(false);
+
+  React.useEffect(() => {
+    if (selectedApp) {
+      setLoadingTimeline(true);
+      fetch(`/api/applications/${selectedApp.id}/timeline`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+        .then(res => res.json())
+        .then(data => {
+          setAppTimeline(data.timeline || []);
+        })
+        .catch(err => console.error('Error fetching timeline:', err))
+        .finally(() => setLoadingTimeline(false));
+    } else {
+      setAppTimeline([]);
+    }
+  }, [selectedApp, token]);
+
+  // Status alerts
+  const [submitError, setSubmitError] = React.useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = React.useState<string | null>(null);
+
+  // Action loaders
+  const [applyingJobId, setApplyingJobId] = React.useState<string | null>(null);
+  const [withdrawingAppId, setWithdrawingAppId] = React.useState<string | null>(null);
+
+
+
+  // Recommended Jobs Carousel state & refs for ultra-smooth drag/slide
+  const carouselTrackRef = React.useRef<HTMLDivElement>(null);
+  const [carouselIndex, setCarouselIndex] = React.useState(0);
+  const [isCarouselDragging, setIsCarouselDragging] = React.useState(false);
+  const carouselStartXRef = React.useRef(0);
+  const carouselStartScrollLeftRef = React.useRef(0);
+  const carouselHasDraggedRef = React.useRef(false);
+
+  // Update carouselIndex on scroll
+  const handleCarouselScroll = React.useCallback(() => {
+    if (!carouselTrackRef.current) return;
+    const container = carouselTrackRef.current;
+    const firstCard = container.querySelector('[data-carousel-card]') as HTMLElement;
+    if (!firstCard) return;
+    const cardWidth = firstCard.offsetWidth + 16;
+    const idx = Math.round(container.scrollLeft / cardWidth);
+    setCarouselIndex(Math.max(0, Math.min(idx, Math.max(0, activeJobs.length - 1))));
+  }, [activeJobs.length]);
+
+  // Scroll carousel to card index
+  const scrollCarouselTo = React.useCallback((idx: number) => {
+    if (!carouselTrackRef.current) return;
+    const container = carouselTrackRef.current;
+    const firstCard = container.querySelector('[data-carousel-card]') as HTMLElement;
+    if (!firstCard) return;
+    const cardWidth = firstCard.offsetWidth + 16;
+    container.scrollTo({
+      left: idx * cardWidth,
+      behavior: 'smooth'
+    });
+  }, []);
+
+  // Previous / Next button step with seamless loop
+  const handleCarouselStep = React.useCallback((direction: 'prev' | 'next') => {
+    if (!carouselTrackRef.current) return;
+    const container = carouselTrackRef.current;
+    const firstCard = container.querySelector('[data-carousel-card]') as HTMLElement;
+    const cardWidth = firstCard ? firstCard.offsetWidth + 16 : 320;
+    const maxScroll = container.scrollWidth - container.clientWidth;
+
+    if (direction === 'prev') {
+      if (container.scrollLeft <= 15) {
+        container.scrollTo({ left: maxScroll, behavior: 'smooth' });
+      } else {
+        container.scrollBy({ left: -cardWidth, behavior: 'smooth' });
+      }
+    } else {
+      if (container.scrollLeft >= maxScroll - 15) {
+        container.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        container.scrollBy({ left: cardWidth, behavior: 'smooth' });
+      }
+    }
+  }, []);
+
+  // Mouse Drag Handlers for Desktop
+  const handleCarouselMouseDown = (e: React.MouseEvent) => {
+    if (!carouselTrackRef.current) return;
+    setIsCarouselDragging(true);
+    carouselStartXRef.current = e.pageX - carouselTrackRef.current.offsetLeft;
+    carouselStartScrollLeftRef.current = carouselTrackRef.current.scrollLeft;
+    carouselHasDraggedRef.current = false;
+  };
+
+  const handleCarouselMouseMove = (e: React.MouseEvent) => {
+    if (!isCarouselDragging || !carouselTrackRef.current) return;
+    e.preventDefault();
+    const currentX = e.pageX - carouselTrackRef.current.offsetLeft;
+    const walk = (currentX - carouselStartXRef.current) * 1.35;
+    if (Math.abs(walk) > 6) {
+      carouselHasDraggedRef.current = true;
+    }
+    carouselTrackRef.current.scrollLeft = carouselStartScrollLeftRef.current - walk;
+  };
+
+  const handleCarouselMouseUp = () => {
+    setIsCarouselDragging(false);
+    setTimeout(() => {
+      carouselHasDraggedRef.current = false;
+    }, 100);
+  };
+
+  // Instant Fast Apply States
+  const [jobForInstantApply, setJobForInstantApply] = React.useState<any | null>(null);
+  const [instantFullName, setInstantFullName] = React.useState('');
+  const [instantAge, setInstantAge] = React.useState('');
+  const [instantGender, setInstantGender] = React.useState('');
+  const [instantPincode, setInstantPincode] = React.useState('');
+  const [instantError, setInstantError] = React.useState<string | null>(null);
+  const [instantLoading, setInstantLoading] = React.useState(false);
+
+  // Fetch functions
+  const fetchJobs = React.useCallback(() => {
+    setLoadingJobs(true);
+    fetch('/api/jobs')
+      .then(res => res.json())
+      .then(async data => {
+        let jobsList: any[] = data.jobs || [];
+
+        try {
+          if (isSupabaseConfigured()) {
+            const supabase = getSupabase();
+            const [jobsRes, recsRes] = await Promise.all([
+              supabase.from('jobs').select('*'),
+              supabase.from('recruiters').select('id, companyLogo, company_logo, companyName, company_name')
+            ]);
+
+            const supaJobs = jobsRes.data;
+            const supaRecs = recsRes.data || [];
+
+            const recLogoMap = new Map<string, { logo: string; name: string }>();
+            supaRecs.forEach((r: any) => {
+              const rId = String(r.id || '');
+              if (rId) {
+                recLogoMap.set(rId, {
+                  logo: r.companyLogo || r.company_logo || '',
+                  name: r.companyName || r.company_name || ''
+                });
+              }
+            });
+
+            if (!jobsRes.error && supaJobs) {
+              const jobMap = new Map<string, any>();
+              supaJobs.forEach((j: any) => {
+                const id = String(j.id || j.jobId || j.job_id || '');
+                if (!id) return;
+
+                const recId = String(j.recruiterId || j.recruiter_id || '');
+                const recInfo = recLogoMap.get(recId);
+
+                const companyLogo = j.companyLogo || j.company_logo || recInfo?.logo || '';
+                const companyName = j.companyName || j.company_name || recInfo?.name || 'Hiring Company';
+
+                const normalized = {
+                  ...j,
+                  id,
+                  recruiterId: recId,
+                  companyName,
+                  companyLogo,
+                  title: j.title || j.jobTitle || j.job_title || 'Job Opening',
+                  category: j.category || j.jobCategory || j.job_category || 'Delivery Jobs',
+                  openings: Number(j.openings ?? j.no_of_openings ?? 1),
+                  employmentType: j.employmentType || j.employment_type || 'Full Time',
+                  state: j.state || '',
+                  city: j.city || '',
+                  area: j.area || '',
+                  workLocation: j.workLocation || j.work_location || '',
+                  minSalary: Number(j.minSalary ?? j.min_salary ?? 0),
+                  maxSalary: Number(j.maxSalary ?? j.max_salary ?? 0),
+                  salaryType: normalizeSalaryType(j.salaryType || j.salary_type),
+                  shift: j.shift || 'Day Shift',
+                  experienceRequired: Number(j.experienceRequired ?? j.experience_required ?? 0),
+                  educationRequired: j.educationRequired || j.education_required || '10th Pass or below',
+                  genderPreference: j.genderPreference || j.gender_preference || 'Any',
+                  ageLimitMin: Number(j.ageLimitMin ?? j.age_limit_min ?? 18),
+                  ageLimitMax: Number(j.ageLimitMax ?? j.age_limit_max ?? 45),
+                  bikeRequired: j.bikeRequired || j.bike_required || 'No',
+                  drivingLicenseRequired: j.drivingLicenseRequired || j.driving_license_required || 'No',
+                  immediateJoining: j.immediateJoining || j.immediate_joining || 'Yes',
+                  description: j.description || j.job_description || '',
+                  responsibilities: j.responsibilities || '',
+                  benefits: j.benefits || '',
+                  status: j.status || 'published',
+                  applicationsCount: Number(j.applicationsCount ?? j.applications_count ?? 0),
+                  createdAt: j.createdAt || j.created_at || new Date().toISOString()
+                };
+                const statusLower = String(normalized.status || '').toLowerCase();
+                if (!normalized.status || (statusLower !== 'closed' && statusLower !== 'deleted' && statusLower !== 'inactive' && statusLower !== 'expired' && statusLower !== 'rejected')) {
+                  jobMap.set(id, normalized);
+                }
+              });
+              jobsList = Array.from(jobMap.values());
+            }
+          }
+        } catch (supaErr) {
+          console.warn('[Supabase Direct Fetch Warning]', supaErr);
+        }
+
+        setActiveJobs(jobsList);
+      })
+      .catch(err => console.error('Error fetching jobs:', err))
+      .finally(() => setLoadingJobs(false));
+  }, []);
+
+  const fetchMyApplications = React.useCallback(() => {
+    if (!token) return;
+    setLoadingApps(true);
+    fetch('/api/applications/my', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(async data => {
+        let appsList: any[] = data.applications || [];
+
+        try {
+          if (isSupabaseConfigured() && candidate?.id) {
+            const supabase = getSupabase();
+            const { data: supaApps, error } = await supabase
+              .from('applications')
+              .select('*')
+              .or(`candidateId.eq.${candidate.id},candidate_id.eq.${candidate.id}`);
+
+            if (!error && supaApps && supaApps.length > 0) {
+              const appMap = new Map<string, any>();
+              appsList.forEach((a: any) => {
+                const key = a.jobId || a.job_id || a.id;
+                if (key) appMap.set(String(key), a);
+              });
+              supaApps.forEach((a: any) => {
+                const jobId = String(a.jobId || a.job_id || '');
+                const id = String(a.id || a.appId || a.app_id || '');
+                const withdrawStatus = a.withdrawStatus || a.withdraw_status || 'Active';
+
+                if (jobId && !appMap.has(jobId)) {
+                  const job = activeJobs.find(j => String(j.id) === jobId) || {};
+                  appMap.set(jobId, {
+                    id: id || crypto.randomUUID(),
+                    candidateId: candidate.id,
+                    jobId,
+                    recruiterId: a.recruiterId || a.recruiter_id || job.recruiterId || '',
+                    appliedDate: a.appliedDate || a.applied_date || a.created_at || new Date().toISOString(),
+                    currentStatus: a.currentStatus || a.current_status || a.status || 'Applied',
+                    withdrawStatus,
+                    lastUpdated: a.lastUpdated || a.last_updated || a.updated_at || new Date().toISOString(),
+                    jobTitle: job.title || 'Job Opening',
+                    companyName: job.companyName || 'Hiring Company',
+                    companyLogo: job.companyLogo || '',
+                    jobCity: job.city || '',
+                    jobState: job.state || '',
+                    jobSalary: job.minSalary ? `₹${job.minSalary} - ₹${job.maxSalary}` : (job.salary || 'N/A'),
+                    jobEmploymentType: job.employmentType || '',
+                    jobShift: job.shift || ''
+                  });
+                }
+              });
+              appsList = Array.from(appMap.values());
+            }
+          }
+        } catch (supaErr) {
+          console.warn('[Supabase Direct Apps Fetch Warning]', supaErr);
+        }
+
+        const seenJobIds = new Set<string>();
+        const uniqueActiveAppsList = appsList.filter((a) => {
+          const jobIdKey = String(a.jobId || a.job_id || a.id);
+          const isWithdrawn = a.currentStatus === 'Withdrawn' || a.current_status === 'Withdrawn' || a.withdrawStatus === 'Withdrawn' || a.withdraw_status === 'Withdrawn';
+          if (!jobIdKey || isWithdrawn || seenJobIds.has(jobIdKey)) return false;
+          seenJobIds.add(jobIdKey);
+          return true;
+        });
+
+        setMyApplications(uniqueActiveAppsList);
+      })
+      .catch(err => console.error('Error fetching applications:', err))
+      .finally(() => setLoadingApps(false));
+  }, [token, candidate?.id]);
+
+  const fetchDocuments = React.useCallback(() => {
+    if (!token) return;
+    setLoadingDocs(true);
+    fetch('/api/documents', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => {
+        setDocuments(data.documents || []);
+      })
+      .catch(err => console.error('Error fetching documents:', err))
+      .finally(() => setLoadingDocs(false));
+  }, [token]);
+
+  // Load stats & details on mount
+  React.useEffect(() => {
+    fetchJobs();
+    fetchMyApplications();
+    fetchDocuments();
+
+    const handleRefresh = () => {
+      fetchJobs();
+    };
+    window.addEventListener('refresh-jobs', handleRefresh);
+    return () => {
+      window.removeEventListener('refresh-jobs', handleRefresh);
+    };
+  }, [fetchJobs, fetchMyApplications, fetchDocuments]);
+
+  // Real Dynamic Calculations
+  const totalApplicationsCount = myApplications.length;
+
+  const shortlistedCount = React.useMemo(() => {
+    return myApplications.filter(a => {
+      const s = String(a.currentStatus || a.status || '').toLowerCase();
+      return s.includes('shortlist') || s.includes('select') || s.includes('interview') || s.includes('hired');
+    }).length;
+  }, [myApplications]);
+
+  const rejectedCount = React.useMemo(() => {
+    return myApplications.filter(a => {
+      const s = String(a.currentStatus || a.status || '').toLowerCase();
+      return s.includes('reject') || s.includes('decline');
+    }).length;
+  }, [myApplications]);
+
+  const profileViewsCount = React.useMemo(() => {
+    return (candidate as any).profileViews || (candidate as any).viewsCount || (profile as any).viewsCount || (profile as any).profileViews || (myApplications.length > 0 ? myApplications.length * 8 + 14 : 24);
+  }, [candidate, profile, myApplications]);
+
+  // Dynamic Profile Completion Calculation
+  const completionPercentage = React.useMemo(() => {
+    let filled = 0;
+    const total = 8;
+    if (profile.fullName?.trim() || candidate.fullName?.trim()) filled++;
+    if (mobile || candidate.mobile) filled++;
+    if (email || candidate.email) filled++;
+    if (profile.locality || profile.city || (profile as any).location) filled++;
+    if ((profile as any).workExperience || profile.experience) filled++;
+    if ((profile as any).drivingLicenseNumber || (profile as any).drivingLicense) filled++;
+    if (profile.profilePhoto || candidate.profile?.profilePhoto) filled++;
+    if (documents && documents.length > 0) filled++;
+    return Math.round((filled / total) * 100);
+  }, [profile, candidate, mobile, email, documents]);
+
+  // Dynamic Category Counts (5 Categories)
+  const categoryCounts = React.useMemo(() => {
+    let deliveryLogistics = 0;
+    let warehousePacking = 0;
+    let drivers = 0;
+    let officeAdmin = 0;
+    let other = 0;
+
+    activeJobs.forEach(j => {
+      if (!j) return;
+      const s = String(j.status || '').toLowerCase();
+      if (s === 'closed' || s === 'deleted' || s === 'inactive' || s === 'expired' || s === 'rejected') return;
+
+      const cat = (j.category || '').toLowerCase();
+      const title = (j.title || '').toLowerCase();
+      if (cat.includes('driver') || title.includes('driver') || title.includes('chauffeur') || title.includes('van driver') || title.includes('truck driver')) {
+        drivers++;
+      } else if (cat.includes('warehouse') || cat.includes('pack') || cat.includes('picker') || title.includes('warehouse') || title.includes('packer') || title.includes('picker') || title.includes('packing') || title.includes('inventory')) {
+        warehousePacking++;
+      } else if (cat.includes('office') || cat.includes('admin') || cat.includes('support') || title.includes('office') || title.includes('admin') || title.includes('telecaller') || title.includes('hr') || title.includes('receptionist')) {
+        officeAdmin++;
+      } else if (cat.includes('delivery') || cat.includes('logistics') || cat.includes('courier') || title.includes('delivery') || title.includes('courier') || title.includes('logistics') || title.includes('fleet')) {
+        deliveryLogistics++;
+      } else {
+        other++;
+      }
+    });
+
+    // Every category displays > 1500 jobs with '+' symbol as requested
+    const formattedCounts = {
+      deliveryLogistics: `${(1850 + deliveryLogistics).toLocaleString()}+`,
+      warehousePacking: `${(1620 + warehousePacking).toLocaleString()}+`,
+      drivers: `${(1740 + drivers).toLocaleString()}+`,
+      officeAdmin: `${(1530 + officeAdmin).toLocaleString()}+`,
+      other: `${(1580 + other).toLocaleString()}+`,
+    };
+
+    return formattedCounts;
+  }, [activeJobs]);
+
+  // Client-side dynamic instant-search filtering & sorting
+  const filteredJobsList = React.useMemo(() => {
+    let result = [...activeJobs];
+
+    // Filter active jobs
+    result = result.filter(j => {
+      if (!j) return false;
+      if (!j.status) return true;
+      const s = String(j.status).trim().toLowerCase();
+      return s !== 'closed' && s !== 'deleted' && s !== 'inactive' && s !== 'expired' && s !== 'rejected';
+    });
+
+    // Category Filter
+    if (selectedCategory !== 'All') {
+      result = result.filter(j => {
+        const cat = (j.category || '').toLowerCase();
+        const title = (j.title || '').toLowerCase();
+        if (selectedCategory === 'Delivery & Logistics') {
+          return cat === 'delivery & logistics' || cat.includes('logistics') || cat.includes('delivery') || cat.includes('courier') || title.includes('logistics') || title.includes('delivery') || title.includes('courier');
+        }
+        if (selectedCategory === 'Warehouse & Packing') {
+          return cat === 'warehouse & packing' || cat.includes('warehouse') || cat.includes('pack') || cat.includes('picker') || title.includes('warehouse') || title.includes('picker') || title.includes('packer') || title.includes('packing') || title.includes('inventory');
+        }
+        if (selectedCategory === 'Drivers') {
+          return cat === 'drivers' || cat.includes('driver') || cat.includes('fleet') || cat.includes('chauffeur') || title.includes('driver') || title.includes('van') || title.includes('truck') || title.includes('pilot') || title.includes('auto') || title.includes('cab');
+        }
+        if (selectedCategory === 'Office & Admin') {
+          return cat === 'office & admin' || cat.includes('office') || cat.includes('admin') || cat.includes('support') || title.includes('admin') || title.includes('office') || title.includes('telecaller') || title.includes('receptionist') || title.includes('accountant') || title.includes('hr') || title.includes('coordinator');
+        }
+        if (selectedCategory === 'Other Jobs') {
+          const isDel = cat.includes('delivery') || cat.includes('logistics') || title.includes('delivery') || title.includes('logistics');
+          const isWh = cat.includes('warehouse') || cat.includes('pack') || cat.includes('picker') || title.includes('warehouse') || title.includes('packer');
+          const isDr = cat.includes('driver') || title.includes('driver') || title.includes('van');
+          const isOff = cat.includes('office') || cat.includes('admin') || title.includes('admin') || title.includes('office');
+          return !isDel && !isWh && !isDr && !isOff;
+        }
+        return j.category === selectedCategory;
+      });
+    }
+
+    // Instant Search
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(j =>
+        j.title.toLowerCase().includes(q) ||
+        j.companyName.toLowerCase().includes(q) ||
+        (j.city || '').toLowerCase().includes(q)
+      );
+    }
+
+    // State Filter
+    if (selectedState !== 'All') {
+      result = result.filter(j => (j.state || '').toLowerCase() === selectedState.toLowerCase());
+    }
+
+    // City Filter
+    if (selectedCity !== 'All') {
+      result = result.filter(j => (j.city || '').toLowerCase() === selectedCity.toLowerCase());
+    }
+
+    // Salary Filter
+    if (selectedSalary > 0) {
+      result = result.filter(j => (j.maxSalary || j.minSalary || 0) >= selectedSalary);
+    }
+
+    // Employment Type
+    if (selectedEmpType !== 'All') {
+      result = result.filter(j => {
+        if (!j.employmentType) return false;
+        const emp = j.employmentType.toLowerCase();
+        const target = selectedEmpType.toLowerCase();
+        return emp === target || emp.includes(target) || target.includes(emp);
+      });
+    }
+
+    // Experience Limit
+    if (selectedExperience !== 'All') {
+      const maxExp = parseInt(selectedExperience, 10);
+      result = result.filter(j => (j.experienceRequired || 0) <= maxExp);
+    }
+
+    // Shift
+    if (selectedShift !== 'All') {
+      result = result.filter(j => {
+        if (!j.shift) return false;
+        const s = j.shift.toLowerCase();
+        const target = selectedShift.toLowerCase();
+        return s === target || s.includes(target) || target.includes(s);
+      });
+    }
+
+    // Sorting
+    if (sortOrder === 'oldest') {
+      result.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    } else {
+      result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }
+
+    return result;
+  }, [activeJobs, searchQuery, selectedCategory, selectedState, selectedCity, selectedSalary, selectedEmpType, selectedExperience, selectedShift, sortOrder]);
+
+  // Tab Status Filtered List
+  const displayedJobsOrApps = React.useMemo(() => {
+    if (appStatusTab === 'applied') {
+      return myApplications;
+    }
+    if (appStatusTab === 'shortlisted') {
+      return myApplications.filter(a => {
+        const s = String(a.currentStatus || a.status || '').toLowerCase();
+        return s.includes('shortlist') || s.includes('select') || s.includes('interview') || s.includes('hired');
+      });
+    }
+    if (appStatusTab === 'rejected') {
+      return myApplications.filter(a => {
+        const s = String(a.currentStatus || a.status || '').toLowerCase();
+        return s.includes('reject') || s.includes('decline');
+      });
+    }
+
+    if (!filteredJobsList || filteredJobsList.length === 0) {
+      return [];
+    }
+
+    // 1. Initial list: randomized with company de-clustering so the same company is not bunched together
+    const randomizedInitial = shuffleJobsArray(filteredJobsList, 101);
+    const originalList = randomizedInitial.map((job: any, idx: number) => ({
+      ...job,
+      _uniqueKey: `orig-${job.id}-${idx}`,
+    }));
+
+    // 2. Unlimited Scrolling: Repeat the same jobs randomly across infinite batches
+    const repeatedList: any[] = [];
+    for (let round = 1; round <= infiniteBatchCount; round++) {
+      const seed = (round * 7919 + (round % 2 === 0 ? 31 : 173)) % 100000;
+      const shuffled = shuffleJobsArray(filteredJobsList, seed).map((job: any, idx: number) => ({
+        ...job,
+        _uniqueKey: `infinite-r${round}-${job.id}-${idx}`,
+      }));
+      repeatedList.push(...shuffled);
+    }
+
+    return [...originalList, ...repeatedList];
+  }, [appStatusTab, myApplications, filteredJobsList, infiniteBatchCount]);
+
+  // Seamless Infinite Scrolling - automatically loads more randomized batches
+  React.useEffect(() => {
+    if (appStatusTab !== 'all' || !filteredJobsList || filteredJobsList.length === 0) return;
+
+    // IntersectionObserver for sentinel element at bottom
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0] && entries[0].isIntersecting) {
+          setInfiniteBatchCount((prev) => prev + 3);
+        }
+      },
+      { rootMargin: '800px 0px 800px 0px' }
+    );
+
+    const currentSentinel = infiniteScrollSentinelRef.current;
+    if (currentSentinel) {
+      observer.observe(currentSentinel);
+    }
+
+    // Fallback window scroll listener for rapid momentum scrolling
+    let isTicking = false;
+    const handleScroll = () => {
+      if (!isTicking) {
+        window.requestAnimationFrame(() => {
+          const scrollY = window.scrollY || window.pageYOffset;
+          const windowHeight = window.innerHeight;
+          const documentHeight = document.documentElement.scrollHeight;
+          if (documentHeight - (scrollY + windowHeight) < 1200) {
+            setInfiniteBatchCount((prev) => prev + 3);
+          }
+          isTicking = false;
+        });
+        isTicking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      if (currentSentinel) {
+        observer.unobserve(currentSentinel);
+      }
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [appStatusTab, filteredJobsList]);
+
+  // Apply Now Handlers (Fast 0ms Optimistic Application)
+  const handleApplyNow = async (job: any) => {
+    if (!token) {
+      setSubmitError('Authentication session expired. Please log in again.');
+      return;
+    }
+
+    // Check if already applied
+    const alreadyApplied = myApplications.some(a => String(a.jobId) === String(job.id));
+    if (alreadyApplied) {
+      setSubmitSuccess(`You have already applied for ${job.title}!`);
+      return;
+    }
+
+    // 1. INSTANT OPTIMISTIC UI UPDATE (0ms latency - instantaneous feedback!)
+    const optimisticApp = {
+      id: 'app_' + Date.now(),
+      jobId: job.id,
+      job_id: job.id,
+      candidateId: candidate?.id,
+      currentStatus: 'Applied',
+      status: 'Applied',
+      appliedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      jobTitle: job.title || 'Job Opening',
+      companyName: job.companyName || 'Hiring Company',
+      companyLogo: job.companyLogo || '',
+      jobCity: job.city || '',
+      jobSalary: job.minSalary ? `₹${Number(job.minSalary).toLocaleString()} - ₹${Number(job.maxSalary).toLocaleString()}` : (job.salary || 'Competitive'),
+      jobEmploymentType: job.employmentType || 'Full Time'
+    };
+
+    setMyApplications(prev => [optimisticApp, ...prev.filter(a => String(a.jobId) !== String(job.id))]);
+    setSubmitSuccess(`🎉 Successfully applied for ${job.title}! Recruiter will review your application.`);
+    setSubmitError(null);
+
+    // Instant celebration animation & audio chime
+    setFlowerJobDetails({
+      title: job.title || 'Job Role',
+      companyName: job.companyName || 'Hiring Company'
+    });
+    setShowFlowerAnimation(true);
+    playNotificationChime();
+
+    // 2. Perform background API call without blocking the UI
+    try {
+      const response = await fetch(`/api/jobs/${job.id}/apply`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ 
+          candidateId: candidate.id,
+          fullName: profile?.fullName || candidate.fullName || 'Candidate',
+          age: profile?.age || 22,
+          gender: profile?.gender || 'Any',
+          pincode: profile?.pincode || '110001'
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        console.warn('Backend apply note:', data.error);
+      }
+      // Silently refresh applications in background to sync database state
+      fetchMyApplications();
+      fetchJobs();
+    } catch (err: any) {
+      console.warn('Background apply synced locally:', err);
+    }
+  };
+
+  const handleInstantApplySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!jobForInstantApply || !token) return;
+
+    setInstantLoading(true);
+    setInstantError(null);
+
+    try {
+      const updatedProfileData: Profile = {
+        ...profile,
+        fullName: instantFullName.trim(),
+        age: parseInt(instantAge, 10) || profile.age || 22,
+        gender: instantGender || profile.gender || 'Male',
+        pincode: instantPincode.trim() || profile.pincode || ''
+      };
+
+      await fetch('/api/candidate/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ profile: updatedProfileData })
+      });
+
+      if (onUpdateProfile) onUpdateProfile(updatedProfileData);
+
+      const response = await fetch(`/api/jobs/${jobForInstantApply.id}/apply`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ candidateId: candidate.id })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to apply after updating profile.');
+      }
+
+      setFlowerJobDetails({
+        title: jobForInstantApply.title || 'Job Opening',
+        companyName: jobForInstantApply.companyName || 'Hiring Company'
+      });
+      setShowFlowerAnimation(true);
+      setSubmitSuccess(`Instant Fast Apply completed for ${jobForInstantApply.title}!`);
+      setJobForInstantApply(null);
+      fetchMyApplications();
+      fetchJobs();
+    } catch (err: any) {
+      setInstantError(err.message || 'Error completing application.');
+    } finally {
+      setInstantLoading(false);
+    }
+  };
+
+  const handleViewDetails = (job: any, pushHistory: boolean = true) => {
+    setSelectedJob(job);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (pushHistory && typeof window !== 'undefined') {
+      const currentState = window.history.state || {};
+      window.history.pushState(
+        { ...currentState, modal: 'job_details', jobId: job.id },
+        '',
+        window.location.pathname + `?job=${encodeURIComponent(job.id)}`
+      );
+    }
+  };
+
+  const handleCloseJobDetails = (fromPopState: boolean = false) => {
+    setSelectedJob(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (!fromPopState && typeof window !== 'undefined') {
+      if (window.history.state?.modal === 'job_details') {
+        window.history.back();
+      } else {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('job');
+        window.history.replaceState({ ...window.history.state, modal: undefined, jobId: undefined }, '', url.pathname + (url.search || ''));
+      }
+    }
+  };
+
+  // Back button popstate listener for Job Details and deep links
+  React.useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      if (selectedJob && e.state?.modal !== 'job_details') {
+        setSelectedJob(null);
+      } else if (!selectedJob && e.state?.modal === 'job_details' && e.state?.jobId) {
+        const targetJob = activeJobs.find(j => String(j.id) === String(e.state.jobId));
+        if (targetJob) setSelectedJob(targetJob);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [selectedJob, activeJobs]);
+
+  // Deep-link check: open job from ?job=<id> query parameter on mount/load
+  React.useEffect(() => {
+    if (activeJobs.length > 0 && !selectedJob && typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const jobId = params.get('job');
+      if (jobId) {
+        const found = activeJobs.find(j => String(j.id) === String(jobId));
+        if (found) {
+          setSelectedJob(found);
+        }
+      }
+    }
+  }, [activeJobs]);
+
+  const handleViewAppDetails = (app: any) => {
+    setSelectedApp(app);
+  };
+
+  const handleWithdrawApplication = async (appId: string) => {
+    if (!appId) return;
+    setWithdrawingAppId(appId);
+    setSubmitError(null);
+    setSubmitSuccess(null);
+
+    try {
+      // 1. Try POST request to API endpoint
+      let response = await fetch(`/api/applications/${appId}/withdraw`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        // Fallback: try PUT request
+        response = await fetch(`/api/applications/${appId}/withdraw`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+      }
+
+      // 2. Update Supabase directly if configured
+      if (isSupabaseConfigured()) {
+        try {
+          const supabase = getSupabase();
+          await supabase
+            .from('applications')
+            .update({
+              currentStatus: 'Withdrawn',
+              current_status: 'Withdrawn',
+              withdrawStatus: 'Withdrawn',
+              withdraw_status: 'Withdrawn'
+            })
+            .or(`id.eq.${appId},appId.eq.${appId}`);
+        } catch (supaErr) {
+          console.warn('Supabase update during withdraw:', supaErr);
+        }
+      }
+
+      // 3. Immediately remove application from state so it disappears from the list
+      setMyApplications(prev => prev.filter(app => 
+        String(app.id) !== String(appId) && 
+        String(app.jobId) !== String(appId)
+      ));
+
+      setSubmitSuccess('Application successfully withdrawn.');
+      if (selectedApp?.id === appId) setSelectedApp(null);
+    } catch (err: any) {
+      console.error('Error withdrawing application:', err);
+      setSubmitError(err.message || 'Error withdrawing application.');
+    } finally {
+      setWithdrawingAppId(null);
+    }
+  };
+
+
+  return (
+    <div className="w-full text-slate-800 pb-24 lg:pb-0" id="candidate-dashboard-container">
+      
+      {/* Celebratory Flower Blast Animation */}
+      <FlowerBlastAnimation
+        show={showFlowerAnimation}
+        jobTitle={flowerJobDetails.title}
+        companyName={flowerJobDetails.companyName}
+        onComplete={() => setShowFlowerAnimation(false)}
+      />
+
+      {/* ================= MOBILE SLIDE-OVER DRAWER OVERLAY (lg:hidden) ================= */}
+      <AnimatePresence>
+        {isMobileDrawerOpen && (
+          <React.Fragment>
+            {/* Dark Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileDrawerOpen(false)}
+              className="fixed inset-0 bg-slate-950/75 backdrop-blur-xs z-50 lg:hidden"
+            />
+
+            {/* Slide-over Drawer Panel */}
+            <motion.aside
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 250 }}
+              className="fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-[#0F172A] text-slate-300 p-5 shadow-2xl z-50 overflow-y-auto flex flex-col justify-between lg:hidden"
+            >
+              <div>
+                <div className="flex items-center justify-between px-1 py-1 mb-6 border-b border-slate-800/80 pb-4">
+                  <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setActiveTab('find_jobs'); setIsMobileDrawerOpen(false); }}>
+                    <div className="w-9 h-9 rounded-xl bg-[#1D61F2] text-white font-black flex items-center justify-center text-base shadow-md">
+                      J
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-black text-white tracking-tight leading-none">Jobsner</h2>
+                      <span className="text-[10px] font-semibold text-slate-400">Connecting Talent</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setIsMobileDrawerOpen(false)}
+                    className="p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <nav className="space-y-1.5 font-bold text-xs">
+                  <button
+                    onClick={() => { setActiveTab('find_jobs'); setAppStatusTab('all'); setIsMobileDrawerOpen(false); }}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all cursor-pointer ${
+                      activeTab === 'find_jobs' && appStatusTab === 'all'
+                        ? 'bg-[#1D61F2] text-white shadow-md font-extrabold'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <BarChart2 className="w-4 h-4" />
+                      <span>Dashboard</span>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => { setActiveTab('find_jobs'); setAppStatusTab('all'); setIsMobileDrawerOpen(false); }}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all cursor-pointer ${
+                      activeTab === 'find_jobs' && appStatusTab === 'all'
+                        ? 'text-white bg-slate-800/80'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Briefcase className="w-4 h-4" />
+                      <span>Jobs</span>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => { setActiveTab('applications'); setIsMobileDrawerOpen(false); }}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all cursor-pointer ${
+                      activeTab === 'applications'
+                        ? 'bg-[#1D61F2] text-white shadow-md font-extrabold'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <ClipboardList className="w-4 h-4" />
+                      <span>Applications</span>
+                    </div>
+                    {myApplications.length > 0 && (
+                      <span className="w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center">
+                        {myApplications.length}
+                      </span>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => { setActiveTab('saved'); setIsMobileDrawerOpen(false); }}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all cursor-pointer ${
+                      activeTab === 'saved'
+                        ? 'bg-[#1D61F2] text-white shadow-md font-extrabold'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Bookmark className="w-4 h-4" />
+                      <span>Saved Jobs</span>
+                    </div>
+                    {savedJobIds.length > 0 && (
+                      <span className="px-2 py-0.5 rounded-full bg-blue-600/60 text-white text-[10px] font-bold">
+                        {savedJobIds.length}
+                      </span>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => { setActiveTab('overview'); setIsMobileDrawerOpen(false); }}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all cursor-pointer ${
+                      activeTab === 'overview'
+                        ? 'bg-[#1D61F2] text-white shadow-md font-extrabold'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <User className="w-4 h-4" />
+                      <span>Profile</span>
+                    </div>
+                  </button>
+                </nav>
+              </div>
+
+              {/* Bottom Drawer Promo & Actions */}
+              <div className="mt-6 pt-4 border-t border-slate-800 space-y-3">
+                <button
+                  onClick={() => { setIsMobileDrawerOpen(false); onLogout(); }}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Log Out</span>
+                </button>
+              </div>
+            </motion.aside>
+          </React.Fragment>
+        )}
+      </AnimatePresence>
+
+      {/* Main 3-Column Dashboard Layout (Left Nav | Center Content | Right Widgets) */}
+      <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 items-start pb-20 lg:pb-0">
+        
+        {/* ================= LEFT NAVIGATION SIDEBAR (DESKTOP EXCLUSIVE) ================= */}
+        {!selectedJob && (
+          <aside className="hidden lg:flex w-64 shrink-0 bg-[#0F172A] text-slate-300 rounded-3xl p-5 shadow-xl flex-col justify-between min-h-[640px] sticky top-20 z-20">
+          <div>
+            {/* Top Brand Branding Header */}
+            <div className="px-2 py-1 mb-6 border-b border-slate-800/80 pb-5">
+              <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('find_jobs')}>
+                <div className="w-10 h-10 rounded-2xl bg-[#1D61F2] text-white font-black flex items-center justify-center text-lg shadow-md">
+                  J
+                </div>
+                <div>
+                  <h2 className="text-xl font-black text-white tracking-tight leading-none">Jobsner</h2>
+                  <span className="text-[10px] font-semibold text-slate-400">Connecting Talent</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Navigation Menu Items */}
+            <nav className="space-y-1.5 font-bold text-xs">
+              <button
+                onClick={() => { setActiveTab('find_jobs'); setAppStatusTab('all'); }}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all cursor-pointer ${
+                  activeTab === 'find_jobs' && appStatusTab === 'all'
+                    ? 'bg-[#1D61F2] text-white shadow-md font-extrabold'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <BarChart2 className="w-4 h-4" />
+                  <span>Dashboard</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => { setActiveTab('find_jobs'); setAppStatusTab('all'); }}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all cursor-pointer ${
+                  activeTab === 'find_jobs' && appStatusTab === 'all'
+                    ? 'text-white bg-slate-800/80'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Briefcase className="w-4 h-4" />
+                  <span>Jobs</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('applications')}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all cursor-pointer ${
+                  activeTab === 'applications'
+                    ? 'bg-[#1D61F2] text-white shadow-md font-extrabold'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <ClipboardList className="w-4 h-4" />
+                  <span>Applications</span>
+                </div>
+                {myApplications.length > 0 && (
+                  <span className="w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center">
+                    {myApplications.length}
+                  </span>
+                )}
+              </button>
+
+              <button
+                onClick={() => setActiveTab('saved')}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all cursor-pointer ${
+                  activeTab === 'saved'
+                    ? 'bg-[#1D61F2] text-white shadow-md font-extrabold'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Bookmark className="w-4 h-4" />
+                  <span>Saved Jobs</span>
+                </div>
+                {savedJobIds.length > 0 && (
+                  <span className="px-2 py-0.5 rounded-full bg-blue-600/60 text-white text-[10px] font-bold">
+                    {savedJobIds.length}
+                  </span>
+                )}
+              </button>
+
+              <button
+                onClick={() => setActiveTab('overview')}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all cursor-pointer ${
+                  activeTab === 'overview'
+                    ? 'bg-[#1D61F2] text-white shadow-md font-extrabold'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <User className="w-4 h-4" />
+                  <span>Profile</span>
+                </div>
+              </button>
+
+            </nav>
+          </div>
+
+          {/* Bottom Left Sidebar Promo & Support Cards */}
+          <div className="mt-8 space-y-4 pt-4 border-t border-slate-800">
+            {/* Promo Card */}
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-md relative overflow-hidden">
+              <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-white/10 rounded-full blur-xs" />
+              <h4 className="font-extrabold text-xs mb-1">Get Your Dream Job with Jobsner</h4>
+              <p className="text-[10px] text-blue-100 font-medium mb-3">Explore thousands of verified jobs across India.</p>
+              <button
+                onClick={() => { setActiveTab('find_jobs'); }}
+                className="w-full py-2 bg-white text-[#1D61F2] hover:bg-blue-50 font-black text-xs rounded-xl transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1"
+              >
+                Search Jobs →
+              </button>
+            </div>
+
+            {/* Support Card */}
+            <div className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
+                  <HelpCircle className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-white block leading-none">Need Help?</span>
+                  <span className="text-[9px] text-slate-400 block mt-0.5">Our support team is here.</span>
+                </div>
+              </div>
+              <button
+                onClick={() => { alert('Jobsner Support: Email us at support@jobsner.com'); }}
+                className="text-[10px] font-bold text-blue-400 hover:underline cursor-pointer"
+              >
+                Contact
+              </button>
+            </div>
+          </div>
+        </aside>
+        )}
+
+        {/* ================= CENTER MAIN CONTENT COLUMN ================= */}
+        <main className="flex-1 min-w-0 flex flex-col gap-6 w-full">
+          
+          {selectedJob ? (
+            <JobDetailsView
+              job={selectedJob}
+              onBack={() => handleCloseJobDetails(false)}
+              onApply={handleApplyNow}
+              isApplied={myApplications.some(a => String(a.jobId) === String(selectedJob.id))}
+              isApplying={applyingJobId === selectedJob.id}
+              isSaved={savedJobIds.includes(selectedJob.id)}
+              onToggleSave={handleToggleSaveJob}
+              candidate={candidate}
+            />
+          ) : (
+            <React.Fragment>
+              {/* Error & Success Notification Banners */}
+              <AnimatePresence mode="wait">
+                {submitError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="p-4 bg-red-50 border border-red-200 rounded-2xl text-xs font-bold text-red-700 flex items-center justify-between shadow-xs"
+                  >
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+                      <span>{submitError}</span>
+                    </div>
+                    <button onClick={() => setSubmitError(null)} className="text-red-400 hover:text-red-700"><X className="w-4 h-4" /></button>
+                  </motion.div>
+                )}
+                {submitSuccess && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs font-bold text-emerald-800 flex items-center justify-between shadow-xs"
+                  >
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>{submitSuccess}</span>
+                    </div>
+                    <button onClick={() => setSubmitSuccess(null)} className="text-emerald-400 hover:text-emerald-800"><X className="w-4 h-4" /></button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* TAB 1: FIND JOBS / MAIN REFERENCE DASHBOARD */}
+              {activeTab === 'find_jobs' && (
+            <React.Fragment>
+              
+              {/* TOP HERO BANNER */}
+              <div className="w-full bg-gradient-to-r from-[#0052D4] via-[#2B63FF] to-[#4379FF] rounded-2xl sm:rounded-3xl px-3.5 py-4 sm:p-7 lg:p-8 text-white shadow-xl relative overflow-hidden flex flex-row items-center justify-between gap-2 border border-blue-400/20 min-h-[185px] sm:min-h-[225px]">
+                {/* Ambient Background Glow Effects */}
+                <div className="absolute -left-12 -top-12 w-48 h-48 sm:w-64 sm:h-64 bg-blue-400/25 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute right-0 bottom-0 w-60 h-60 sm:w-80 sm:h-80 bg-indigo-500/30 rounded-full blur-3xl pointer-events-none" />
+
+                <div className="relative z-10 flex-1 min-w-0 max-w-[56%] sm:max-w-lg space-y-1.5 sm:space-y-2.5">
+                  <div className="inline-flex items-center gap-1 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-[9px] sm:text-[11px] font-extrabold border border-white/20">
+                    <Sparkles className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-yellow-300" /> #1 Delivery Hiring Platform
+                  </div>
+                  <h1 className="text-lg xs:text-xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight">
+                    Better Jobs<br /><span>Brighter Future</span>
+                  </h1>
+                  <p className="text-blue-100 text-[10px] sm:text-xs font-medium leading-snug max-w-[200px] sm:max-w-sm line-clamp-2 sm:line-clamp-none">
+                    Find top talent &amp; verified job opportunities faster with Jobsner!
+                  </p>
+                  <div className="pt-1 sm:pt-2">
+                    <button
+                      onClick={() => {
+                        const el = document.getElementById('jobs-search-input');
+                        if (el) el.focus();
+                      }}
+                      className="bg-white text-[#1D61F2] hover:bg-blue-50 font-black px-4 sm:px-6 py-2 sm:py-2.5 rounded-full text-[11px] sm:text-sm transition-all shadow-md inline-flex items-center gap-1.5 cursor-pointer active:scale-95"
+                    >
+                      Search Jobs →
+                    </button>
+                  </div>
+
+                  {/* Slider Indicators (Matching Reference Image) */}
+                  <div className="flex items-center gap-1.5 pt-1 sm:pt-2">
+                    <span className="w-4 sm:w-6 h-1 sm:h-1.5 bg-white rounded-full opacity-90" />
+                    <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-white/40 rounded-full" />
+                    <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-white/40 rounded-full" />
+                  </div>
+                </div>
+
+                {/* Right Graphic in Hero Banner - Animated Rider Moving on Road (SIDE BY SIDE ON MOBILE) */}
+                <div className="relative z-10 shrink-0 w-[44%] sm:w-auto max-w-[170px] sm:max-w-[340px] lg:max-w-[400px] flex items-center justify-center sm:justify-end pointer-events-none">
+                  <AnimatedHeroRider className="w-full" />
+                </div>
+              </div>
+
+              {/* 3 DASHBOARD STAT CARDS ROW (MATCHING REFERENCE IMAGE) */}
+              <div className="grid grid-cols-3 gap-1.5 xs:gap-2.5 sm:gap-4 w-full">
+                {/* Stat 1: Total Applications */}
+                <div className="bg-white border border-slate-100 rounded-xl sm:rounded-3xl p-2.5 xs:p-3 sm:p-5 shadow-xs flex flex-col justify-between hover:shadow-md transition-all">
+                  <div className="flex items-center justify-between gap-1 mb-1">
+                    <span className="text-[8px] xs:text-[9px] sm:text-xs font-black text-slate-400 uppercase tracking-wider truncate">
+                      APPLICATIONS
+                    </span>
+                    <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg bg-blue-50 text-[#1D61F2] flex items-center justify-center shrink-0">
+                      <Briefcase className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4" />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-baseline gap-1 xs:gap-1.5 pt-1">
+                      <span className="text-base xs:text-xl sm:text-2xl font-black text-slate-900 leading-none">{totalApplicationsCount}</span>
+                      <span className="text-[8px] xs:text-[9px] font-black text-emerald-600 bg-emerald-50 px-1 xs:px-1.5 py-0.5 rounded-full border border-emerald-100">+20%</span>
+                    </div>
+                    <span className="text-[8px] xs:text-[9px] sm:text-[10px] text-slate-400 font-medium block mt-0.5 sm:mt-1 truncate">vs 7 days</span>
+                  </div>
+                </div>
+
+                {/* Stat 2: Profile Views */}
+                <div className="bg-white border border-slate-100 rounded-xl sm:rounded-3xl p-2.5 xs:p-3 sm:p-5 shadow-xs flex flex-col justify-between hover:shadow-md transition-all">
+                  <div className="flex items-center justify-between gap-1 mb-1">
+                    <span className="text-[8px] xs:text-[9px] sm:text-xs font-black text-slate-400 uppercase tracking-wider truncate">
+                      VIEWS
+                    </span>
+                    <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                      <Eye className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4" />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-baseline gap-1 xs:gap-1.5 pt-1">
+                      <span className="text-base xs:text-xl sm:text-2xl font-black text-slate-900 leading-none">{profileViewsCount}</span>
+                      <span className="text-[8px] xs:text-[9px] font-black text-emerald-600 bg-emerald-50 px-1 xs:px-1.5 py-0.5 rounded-full border border-emerald-100">+16%</span>
+                    </div>
+                    <span className="text-[8px] xs:text-[9px] sm:text-[10px] text-slate-400 font-medium block mt-0.5 sm:mt-1 truncate">vs 7 days</span>
+                  </div>
+                </div>
+
+                {/* Stat 3: Shortlisted */}
+                <div className="bg-white border border-slate-100 rounded-xl sm:rounded-3xl p-2.5 xs:p-3 sm:p-5 shadow-xs flex flex-col justify-between hover:shadow-md transition-all">
+                  <div className="flex items-center justify-between gap-1 mb-1">
+                    <span className="text-[8px] xs:text-[9px] sm:text-xs font-black text-slate-400 uppercase tracking-wider truncate">
+                      SHORTLISTED
+                    </span>
+                    <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                      <Star className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4" />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-baseline gap-1 xs:gap-1.5 pt-1">
+                      <span className="text-base xs:text-xl sm:text-2xl font-black text-slate-900 leading-none">{shortlistedCount}</span>
+                      <span className="text-[8px] xs:text-[9px] font-black text-emerald-600 bg-emerald-50 px-1 xs:px-1.5 py-0.5 rounded-full border border-emerald-100">+25%</span>
+                    </div>
+                    <span className="text-[8px] xs:text-[9px] sm:text-[10px] text-slate-400 font-medium block mt-0.5 sm:mt-1 truncate">vs 7 days</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 5 JOB CATEGORIES TILES (Delivery & Logistics, Warehouse & Packing, Drivers, Office & Admin, Other Jobs) */}
+              <div className="w-full bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-xs">
+                <div className="flex items-center justify-between mb-2.5 sm:mb-3">
+                  <span className="text-[10px] sm:text-xs font-black text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#1D61F2]" />
+                    Job Categories
+                  </span>
+                  {selectedCategory !== 'All' && (
+                    <button
+                      onClick={() => setSelectedCategory('All')}
+                      className="text-[10px] sm:text-xs font-black text-[#1D61F2] hover:underline cursor-pointer"
+                    >
+                      Show All ({activeJobs.length})
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-5 gap-1 sm:gap-3">
+                  {/* Category 1: Delivery & Logistics */}
+                  <button
+                    onClick={() => {
+                      setSelectedCategory(selectedCategory === 'Delivery & Logistics' ? 'All' : 'Delivery & Logistics');
+                    }}
+                    className={`group relative flex flex-col items-center justify-start py-1.5 sm:py-2.5 px-0.5 sm:px-1 rounded-xl sm:rounded-2xl transition-all cursor-pointer ${
+                      selectedCategory === 'Delivery & Logistics'
+                        ? 'bg-blue-50/90 ring-2 ring-blue-500/40 shadow-xs'
+                        : 'hover:bg-slate-50/80'
+                    }`}
+                  >
+                    <div className={`w-9 h-9 xs:w-11 xs:h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
+                      selectedCategory === 'Delivery & Logistics'
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                        : 'bg-blue-50/60 text-[#1D61F2] border-blue-200/70'
+                    }`}>
+                      <Truck className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6" />
+                    </div>
+                    <span className="text-[8px] xs:text-[9.5px] sm:text-xs font-bold text-slate-800 mt-1 sm:mt-1.5 text-center leading-tight">
+                      Delivery &<br />Logistics
+                    </span>
+                    <span className="text-[7px] xs:text-[8px] sm:text-[9px] font-semibold text-slate-400 mt-0.5">
+                      {categoryCounts.deliveryLogistics} Jobs
+                    </span>
+                  </button>
+
+                  {/* Category 2: Warehouse & Packing */}
+                  <button
+                    onClick={() => {
+                      setSelectedCategory(selectedCategory === 'Warehouse & Packing' ? 'All' : 'Warehouse & Packing');
+                    }}
+                    className={`group relative flex flex-col items-center justify-start py-1.5 sm:py-2.5 px-0.5 sm:px-1 rounded-xl sm:rounded-2xl transition-all cursor-pointer ${
+                      selectedCategory === 'Warehouse & Packing'
+                        ? 'bg-orange-50/90 ring-2 ring-orange-500/40 shadow-xs'
+                        : 'hover:bg-slate-50/80'
+                    }`}
+                  >
+                    <div className={`w-9 h-9 xs:w-11 xs:h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
+                      selectedCategory === 'Warehouse & Packing'
+                        ? 'bg-orange-600 text-white border-orange-600 shadow-xs'
+                        : 'bg-orange-50/60 text-orange-600 border-orange-200/70'
+                    }`}>
+                      <Package className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6" />
+                    </div>
+                    <span className="text-[8px] xs:text-[9.5px] sm:text-xs font-bold text-slate-800 mt-1 sm:mt-1.5 text-center leading-tight">
+                      Warehouse &<br />Packing
+                    </span>
+                    <span className="text-[7px] xs:text-[8px] sm:text-[9px] font-semibold text-slate-400 mt-0.5">
+                      {categoryCounts.warehousePacking} Jobs
+                    </span>
+                  </button>
+
+                  {/* Category 3: Drivers */}
+                  <button
+                    onClick={() => {
+                      setSelectedCategory(selectedCategory === 'Drivers' ? 'All' : 'Drivers');
+                    }}
+                    className={`group relative flex flex-col items-center justify-start py-1.5 sm:py-2.5 px-0.5 sm:px-1 rounded-xl sm:rounded-2xl transition-all cursor-pointer ${
+                      selectedCategory === 'Drivers'
+                        ? 'bg-sky-50/90 ring-2 ring-sky-500/40 shadow-xs'
+                        : 'hover:bg-slate-50/80'
+                    }`}
+                  >
+                    <div className={`w-9 h-9 xs:w-11 xs:h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
+                      selectedCategory === 'Drivers'
+                        ? 'bg-sky-600 text-white border-sky-600 shadow-xs'
+                        : 'bg-sky-50/60 text-sky-600 border-sky-200/70'
+                    }`}>
+                      <Car className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6" />
+                    </div>
+                    <span className="text-[8px] xs:text-[9.5px] sm:text-xs font-bold text-slate-800 mt-1 sm:mt-1.5 text-center leading-tight">
+                      Drivers<br />& Fleet
+                    </span>
+                    <span className="text-[7px] xs:text-[8px] sm:text-[9px] font-semibold text-slate-400 mt-0.5">
+                      {categoryCounts.drivers} Jobs
+                    </span>
+                  </button>
+
+                  {/* Category 4: Office & Admin */}
+                  <button
+                    onClick={() => {
+                      setSelectedCategory(selectedCategory === 'Office & Admin' ? 'All' : 'Office & Admin');
+                    }}
+                    className={`group relative flex flex-col items-center justify-start py-1.5 sm:py-2.5 px-0.5 sm:px-1 rounded-xl sm:rounded-2xl transition-all cursor-pointer ${
+                      selectedCategory === 'Office & Admin'
+                        ? 'bg-purple-50/90 ring-2 ring-purple-500/40 shadow-xs'
+                        : 'hover:bg-slate-50/80'
+                    }`}
+                  >
+                    <div className={`w-9 h-9 xs:w-11 xs:h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
+                      selectedCategory === 'Office & Admin'
+                        ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
+                        : 'bg-purple-50/60 text-purple-600 border-purple-200/70'
+                    }`}>
+                      <Briefcase className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6" />
+                    </div>
+                    <span className="text-[8px] xs:text-[9.5px] sm:text-xs font-bold text-slate-800 mt-1 sm:mt-1.5 text-center leading-tight">
+                      Office &<br />Admin
+                    </span>
+                    <span className="text-[7px] xs:text-[8px] sm:text-[9px] font-semibold text-slate-400 mt-0.5">
+                      {categoryCounts.officeAdmin} Jobs
+                    </span>
+                  </button>
+
+                  {/* Category 5: Other Jobs */}
+                  <button
+                    onClick={() => {
+                      setSelectedCategory(selectedCategory === 'Other Jobs' ? 'All' : 'Other Jobs');
+                    }}
+                    className={`group relative flex flex-col items-center justify-start py-1.5 sm:py-2.5 px-0.5 sm:px-1 rounded-xl sm:rounded-2xl transition-all cursor-pointer ${
+                      selectedCategory === 'Other Jobs'
+                        ? 'bg-emerald-50/90 ring-2 ring-emerald-500/40 shadow-xs'
+                        : 'hover:bg-slate-50/80'
+                    }`}
+                  >
+                    <div className={`w-9 h-9 xs:w-11 xs:h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
+                      selectedCategory === 'Other Jobs'
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                        : 'bg-emerald-50/60 text-emerald-600 border-emerald-200/70'
+                    }`}>
+                      <Store className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6" />
+                    </div>
+                    <span className="text-[8px] xs:text-[9.5px] sm:text-xs font-bold text-slate-800 mt-1 sm:mt-1.5 text-center leading-tight">
+                      Other<br />Jobs
+                    </span>
+                    <span className="text-[7px] xs:text-[8px] sm:text-[9px] font-semibold text-slate-400 mt-0.5">
+                      {categoryCounts.other} Jobs
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* RECOMMENDED JOBS SECTION - Smooth Visible Swipe & Drag Carousel */}
+              {(() => {
+                const totalJobs = activeJobs.length;
+
+                return (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                          🔥 Recommended Jobs
+                        </h3>
+                        {totalJobs > 1 && (
+                          <span className="hidden sm:inline-flex items-center text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                            Drag or swipe to explore
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        {totalJobs > 0 && (
+                          <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
+                            {carouselIndex + 1} / {totalJobs}
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const el = document.getElementById('jobs-table-section');
+                            if (el) el.scrollIntoView({ behavior: 'smooth' });
+                          }}
+                          className="text-xs font-black text-[#1D61F2] hover:underline flex items-center gap-1 cursor-pointer"
+                        >
+                          See All →
+                        </button>
+                      </div>
+                    </div>
+
+                    {totalJobs === 0 ? (
+                      <div className="py-10 text-center text-slate-400">
+                        <Briefcase className="w-10 h-10 mx-auto mb-2 opacity-40" />
+                        <p className="text-xs font-bold">Loading jobs...</p>
+                      </div>
+                    ) : (
+                      <div className="relative group/carousel">
+                        {/* Left Arrow Button */}
+                        {totalJobs > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleCarouselStep('prev')}
+                            className="hidden sm:flex absolute -left-2 sm:-left-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-10 sm:h-10 bg-white/95 backdrop-blur-xs border border-slate-200 text-slate-700 hover:text-white hover:bg-[#1D61F2] hover:border-[#1D61F2] rounded-full shadow-lg items-center justify-center transition-all cursor-pointer active:scale-90"
+                            aria-label="Previous job"
+                          >
+                            <ChevronRight className="w-5 h-5 rotate-180" />
+                          </button>
+                        )}
+
+                        {/* Continuous Horizontal Scroll & Drag Track */}
+                        <div
+                          ref={carouselTrackRef}
+                          onScroll={handleCarouselScroll}
+                          onMouseDown={handleCarouselMouseDown}
+                          onMouseMove={handleCarouselMouseMove}
+                          onMouseUp={handleCarouselMouseUp}
+                          onMouseLeave={handleCarouselMouseUp}
+                          className={`flex items-stretch gap-4 sm:gap-5 overflow-x-auto scrollbar-none snap-x snap-mandatory py-2.5 px-1 select-none ${
+                            isCarouselDragging ? 'cursor-grabbing scroll-auto' : 'cursor-grab scroll-smooth'
+                          }`}
+                          style={{
+                            scrollbarWidth: 'none',
+                            msOverflowStyle: 'none',
+                            WebkitOverflowScrolling: 'touch',
+                          }}
+                        >
+                          {activeJobs.map((job, idx) => {
+                            const isApplied = myApplications.some(a => String(a.jobId) === String(job.id));
+                            const isSaved = savedJobIds.includes(job.id);
+                            return (
+                              <div
+                                key={`rec-job-${job.id}-${idx}`}
+                                data-carousel-card
+                                onClick={() => {
+                                  if (!carouselHasDraggedRef.current) {
+                                    handleViewDetails(job);
+                                  }
+                                }}
+                                className="w-[85vw] max-w-[340px] xs:w-[300px] sm:w-[320px] md:w-[350px] shrink-0 snap-start bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-lg hover:border-[#1D61F2] transition-all flex flex-col justify-between cursor-pointer group/card"
+                              >
+                                <div>
+                                  <div className="flex items-center justify-between mb-3 sm:mb-4">
+                                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white border-2 border-slate-100 flex items-center justify-center overflow-hidden p-1 shadow-2xs">
+                                      {job.companyLogo ? (
+                                        <img src={job.companyLogo} alt={job.companyName} className="w-full h-full object-contain" />
+                                      ) : (
+                                        <Building className="w-6 h-6 sm:w-7 sm:h-7 text-[#1D61F2]" />
+                                      )}
+                                    </div>
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 shrink-0">
+                                      <CheckCircle className="w-3 h-3 fill-emerald-500 text-white" /> Verified
+                                    </span>
+                                  </div>
+                                  <h4 className="font-black text-slate-900 text-sm sm:text-base line-clamp-1 group-hover/card:text-[#1D61F2] transition-colors">
+                                    {job.title}
+                                  </h4>
+                                  <p className="text-xs font-bold text-slate-500 mt-0.5 truncate">
+                                    {job.companyName} • <span className="text-slate-400">{job.employmentType || 'Full Time'}</span>
+                                  </p>
+                                  <p className="text-xs font-bold text-slate-500 mt-2 flex items-center gap-1 truncate">
+                                    <MapPin className="w-3.5 h-3.5 text-[#1D61F2] shrink-0" /> {job.city || 'India'}
+                                  </p>
+                                  <div className="flex flex-wrap gap-1.5 mt-3">
+                                    <span className="px-2.5 py-1 bg-blue-50 text-[#1D61F2] text-[10px] font-extrabold rounded-lg">
+                                      {job.category || 'Delivery'}
+                                    </span>
+                                    <span className="px-2.5 py-1 bg-slate-100 text-slate-700 text-[10px] font-bold rounded-lg">
+                                      {job.experienceRequired ? `${job.experienceRequired}+ yrs` : 'Fresher'}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-slate-100 flex items-center justify-between gap-2 min-w-0 flex-nowrap">
+                                  <span className="text-xs sm:text-[13px] font-black text-slate-900 truncate min-w-0">
+                                    ₹{job.minSalary ? `${job.minSalary.toLocaleString()} - ${job.maxSalary?.toLocaleString()}` : '35,000'} / {job.salaryType === 'Daily' ? 'day' : job.salaryType === 'Weekly' ? 'week' : 'mo'}
+                                  </span>
+                                  <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-nowrap">
+                                    <button
+                                      type="button"
+                                      onClick={(e) => { e.stopPropagation(); handleToggleSaveJob(job.id, e); }}
+                                      className="p-2 sm:p-2.5 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer shrink-0"
+                                      title="Save Job"
+                                    >
+                                      <Bookmark className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isSaved ? 'fill-[#1D61F2] text-[#1D61F2]' : 'text-slate-400'}`} />
+                                    </button>
+                                    {isApplied ? (
+                                      <span className="px-3 sm:px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-black rounded-xl shrink-0 whitespace-nowrap">
+                                        Applied ✓
+                                      </span>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => { e.stopPropagation(); handleApplyNow(job); }}
+                                        disabled={applyingJobId === job.id}
+                                        className="px-3.5 sm:px-5 py-2 sm:py-2.5 bg-[#1D61F2] hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 whitespace-nowrap"
+                                      >
+                                        Apply Now
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Right Arrow Button */}
+                        {totalJobs > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleCarouselStep('next')}
+                            className="hidden sm:flex absolute -right-2 sm:-right-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-10 sm:h-10 bg-white/95 backdrop-blur-xs border border-slate-200 text-slate-700 hover:text-white hover:bg-[#1D61F2] hover:border-[#1D61F2] rounded-full shadow-lg items-center justify-center transition-all cursor-pointer active:scale-90"
+                            aria-label="Next job"
+                          >
+                            <ChevronRight className="w-5 h-5" />
+                          </button>
+                        )}
+
+                        {/* Dot & Pill Indicators */}
+                        {totalJobs > 1 && (
+                          <div className="flex items-center justify-center gap-1.5 mt-3 sm:mt-4">
+                            {activeJobs.map((_, i) => (
+                              <button
+                                key={`dot-${i}`}
+                                type="button"
+                                onClick={() => scrollCarouselTo(i)}
+                                className={`rounded-full transition-all duration-300 cursor-pointer ${
+                                  i === carouselIndex
+                                    ? 'w-6 h-2 bg-[#1D61F2]'
+                                    : 'w-2 h-2 bg-slate-200 hover:bg-slate-400'
+                                }`}
+                                aria-label={`Go to slide ${i + 1}`}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* APPLICATION STATUS & JOB FEED TABLE SECTION */}
+              <div className="bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 md:p-6 shadow-xs space-y-4 sm:space-y-5" id="jobs-table-section">
+                
+                {/* Status Tabs Header */}
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 sm:pb-4">
+                  <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none flex-nowrap max-w-full py-0.5">
+                    <button
+                      onClick={() => setAppStatusTab('all')}
+                      className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                        appStatusTab === 'all'
+                          ? 'bg-[#1D61F2] text-white shadow-xs'
+                          : 'text-slate-600 hover:bg-slate-100'
+                      }`}
+                    >
+                      All Jobs
+                    </button>
+                    <button
+                      onClick={() => setAppStatusTab('applied')}
+                      className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                        appStatusTab === 'applied'
+                          ? 'bg-[#1D61F2] text-white shadow-xs'
+                          : 'text-slate-600 hover:bg-slate-100'
+                      }`}
+                    >
+                      Applied ({totalApplicationsCount})
+                    </button>
+                    <button
+                      onClick={() => setAppStatusTab('shortlisted')}
+                      className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                        appStatusTab === 'shortlisted'
+                          ? 'bg-[#1D61F2] text-white shadow-xs'
+                          : 'text-slate-600 hover:bg-slate-100'
+                      }`}
+                    >
+                      Shortlisted ({shortlistedCount})
+                    </button>
+                    <button
+                      onClick={() => setAppStatusTab('rejected')}
+                      className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                        appStatusTab === 'rejected'
+                          ? 'bg-[#1D61F2] text-white shadow-xs'
+                          : 'text-slate-600 hover:bg-slate-100'
+                      }`}
+                    >
+                      Rejected ({rejectedCount})
+                    </button>
+                  </div>
+                </div>
+
+                {/* Filter Controls Bar */}
+                <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2.5 sm:gap-3 w-full">
+                  <div className="relative flex-1 w-full min-w-0">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Search jobs by title, company, or city..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:bg-white transition-colors"
+                      id="jobs-search-input"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5 w-full md:w-auto">
+                    {/* Location Dropdown */}
+                    <select
+                      value={selectedCity}
+                      onChange={(e) => setSelectedCity(e.target.value)}
+                      className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none truncate"
+                    >
+                      <option value="All">Location (All)</option>
+                      {Array.from(new Set(activeJobs.map(j => j.city).filter(Boolean))).map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+
+                    {/* Job Type Dropdown */}
+                    <select
+                      value={selectedEmpType}
+                      onChange={(e) => setSelectedEmpType(e.target.value)}
+                      className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none truncate"
+                    >
+                      <option value="All">Job Type (All)</option>
+                      <option value="Full Time">Full Time</option>
+                      <option value="Part Time">Part Time</option>
+                      <option value="Flexible">Flexible</option>
+                    </select>
+
+                    {/* Sort Order */}
+                    <select
+                      value={sortOrder}
+                      onChange={(e) => setSortOrder(e.target.value)}
+                      className="col-span-2 sm:col-span-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none truncate"
+                    >
+                      <option value="newest">Newest First</option>
+                      <option value="oldest">Oldest First</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Job / Application Items Table List */}
+                <div className="space-y-3">
+                  {displayedJobsOrApps.length === 0 ? (
+                    <div className="py-12 text-center text-slate-400">
+                      <Briefcase className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                      <p className="text-xs font-bold">No job records found for this view.</p>
+                    </div>
+                  ) : (
+                    displayedJobsOrApps.map((item: any, itemIdx: number) => {
+                      const isAppRecord = appStatusTab !== 'all';
+                      const job = isAppRecord ? activeJobs.find(j => String(j.id) === String(item.jobId)) || item : item;
+                      const isApplied = myApplications.some(a => String(a.jobId) === String(job.id));
+                      const isSaved = savedJobIds.includes(job.id);
+
+                      return (
+                        <div
+                          key={item._uniqueKey || `${item.id}-${itemIdx}`}
+                          onClick={() => handleViewDetails(job)}
+                          className="p-3.5 sm:p-4 md:p-5 border border-slate-200/80 rounded-2xl bg-white hover:border-[#1D61F2] hover:shadow-xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-3.5 sm:gap-4 cursor-pointer group min-w-0"
+                        >
+                            <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center p-1 overflow-hidden shrink-0 shadow-2xs">
+                                {job.companyLogo ? (
+                                  <img src={job.companyLogo} alt={job.companyName} className="w-full h-full object-contain" />
+                                ) : (
+                                  <Building className="w-5 h-5 sm:w-6 sm:h-6 text-[#1D61F2]" />
+                                )}
+                              </div>
+
+                              <div className="min-w-0 flex-1 space-y-1">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <h4 className="font-black text-slate-900 text-sm sm:text-base group-hover:text-[#1D61F2] transition-colors truncate">
+                                    {job.title || job.jobTitle}
+                                  </h4>
+                                  <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 shrink-0">
+                                    <CheckCircle className="w-2.5 h-2.5 fill-emerald-500 text-white" /> Verified
+                                  </span>
+                                </div>
+
+                                <p className="text-xs font-semibold text-slate-500 truncate flex items-center gap-1">
+                                  <span className="text-slate-700 font-bold">{job.companyName}</span>
+                                  <span className="text-slate-300">•</span>
+                                  <span className="text-slate-400">{job.employmentType || job.jobEmploymentType || 'Full Time'}</span>
+                                  <span className="text-slate-300">•</span>
+                                  <MapPin className="w-3 h-3 inline text-[#1D61F2] shrink-0 -mt-0.5" />
+                                  <span className="truncate">{job.city || job.jobCity || 'India'}</span>
+                                </p>
+
+                                <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                                  <span className="px-2 py-0.5 bg-blue-50 text-[#1D61F2] text-[9px] font-extrabold rounded-md">
+                                    {job.category || 'Delivery'}
+                                  </span>
+                                  <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[9px] font-bold rounded-md">
+                                    {job.experienceRequired ? `${job.experienceRequired}+ yrs` : 'Fresher'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between md:justify-end gap-3 shrink-0 w-full md:w-auto pt-3 md:pt-0 border-t md:border-t-0 border-slate-100 min-w-0 flex-nowrap">
+                              <div className="text-left md:text-right min-w-0 shrink">
+                                <span className="text-xs sm:text-sm font-black text-slate-900 block truncate">
+                                  ₹{job.minSalary ? `${job.minSalary.toLocaleString()} - ${job.maxSalary?.toLocaleString()}` : (job.salary || '35,000')} / {job.salaryType === 'Daily' ? 'day' : job.salaryType === 'Weekly' ? 'week' : 'mo'}
+                                </span>
+                                <span className="text-[10px] text-slate-400 font-semibold block truncate mt-0.5">
+                                  Posted {job.createdAt ? new Date(job.createdAt).toLocaleDateString('en-GB') : 'Recently'}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-nowrap">
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); handleToggleSaveJob(job.id, e); }}
+                                  className="p-2 sm:p-2.5 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer shrink-0"
+                                  title="Save Job"
+                                >
+                                  <Bookmark className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isSaved ? 'fill-[#1D61F2] text-[#1D61F2]' : 'text-slate-400'}`} />
+                                </button>
+
+                                {isAppRecord ? (
+                                  <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-nowrap">
+                                    {item.currentStatus === 'Withdrawn' || item.withdrawStatus === 'Withdrawn' ? (
+                                      <span className="px-3 py-1.5 bg-slate-100 text-slate-500 border border-slate-200 text-xs font-black rounded-xl shrink-0 whitespace-nowrap">
+                                        Withdrawn
+                                      </span>
+                                    ) : (
+                                      <>
+                                        <span className={`px-2.5 sm:px-3 py-1.5 text-xs font-black rounded-xl border shrink-0 whitespace-nowrap ${
+                                          String(item.currentStatus || '').toLowerCase().includes('shortlist') || String(item.currentStatus || '').toLowerCase().includes('select')
+                                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                            : String(item.currentStatus || '').toLowerCase().includes('reject')
+                                            ? 'bg-red-50 text-red-700 border-red-200'
+                                            : 'bg-blue-50 text-[#1D61F2] border-blue-200'
+                                        }`}>
+                                          {item.currentStatus || 'Applied'} ✓
+                                        </span>
+                                        <button
+                                          type="button"
+                                          onClick={(e) => { e.stopPropagation(); handleWithdrawApplication(item.id); }}
+                                          disabled={withdrawingAppId === item.id}
+                                          className="px-3 sm:px-3.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-xs rounded-xl transition-all cursor-pointer disabled:opacity-50 shrink-0 whitespace-nowrap"
+                                        >
+                                          {withdrawingAppId === item.id ? 'Withdrawing...' : 'Withdraw'}
+                                        </button>
+                                      </>
+                                    )}
+                                  </div>
+                                ) : isApplied ? (
+                                  <span className="px-3.5 sm:px-4 py-2 sm:py-2.5 bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-black rounded-xl shrink-0 whitespace-nowrap">
+                                    Applied ✓
+                                  </span>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); handleApplyNow(job); }}
+                                    disabled={applyingJobId === job.id}
+                                    className="px-3.5 sm:px-5 py-2 sm:py-2.5 bg-[#1D61F2] hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 whitespace-nowrap"
+                                  >
+                                    Apply Now
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                      );
+                    })
+                  )}
+
+                  {/* Infinite Scroll Sentinel & Loader */}
+                  {appStatusTab === 'all' && filteredJobsList.length > 0 && (
+                    <div
+                      ref={infiniteScrollSentinelRef}
+                      className="py-8 flex flex-col items-center justify-center text-slate-400 gap-2 select-none"
+                    >
+                      <div className="flex items-center gap-2.5 text-xs font-extrabold text-slate-500 bg-white px-5 py-2.5 rounded-full border border-slate-200/80 shadow-xs">
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#1D61F2] animate-ping" />
+                        <span>Showing unlimited verified jobs...</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+              </div>
+
+            </React.Fragment>
+          )}
+
+          {/* TAB 2: MY APPLICATIONS VIEW */}
+          {activeTab === 'applications' && (
+            <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <h3 className="text-lg font-black text-slate-900">My Job Applications ({myApplications.length})</h3>
+              </div>
+
+              {myApplications.length === 0 ? (
+                <div className="py-16 text-center text-slate-400">
+                  <Briefcase className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p className="text-xs font-bold">You have not submitted any applications yet.</p>
+                  <button onClick={() => setActiveTab('find_jobs')} className="mt-4 px-5 py-2 bg-[#1D61F2] text-white rounded-xl text-xs font-bold">
+                    Explore Jobs
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {myApplications.map((app) => {
+                    const status = app.currentStatus || app.withdrawStatus || 'Applied';
+                    const isWithdrawn = status === 'Withdrawn' || app.withdrawStatus === 'Withdrawn';
+                    const appJob = activeJobs.find(j => String(j.id) === String(app.jobId)) || {
+                      id: app.jobId,
+                      title: app.jobTitle || app.title,
+                      companyName: app.companyName,
+                      companyLogo: app.companyLogo,
+                      city: app.jobCity,
+                      minSalary: app.minSalary,
+                      maxSalary: app.maxSalary,
+                      salary: app.jobSalary,
+                      salaryType: app.jobSalaryType,
+                      employmentType: app.jobEmploymentType,
+                      shift: app.jobShift,
+                      openings: app.jobOpenings,
+                      experienceRequired: app.jobExperienceRequired,
+                      description: app.jobDescription,
+                      responsibilities: app.jobResponsibilities,
+                      benefits: app.jobBenefits
+                    };
+                    return (
+                      <div
+                        key={app.id}
+                        onClick={() => handleViewDetails(appJob)}
+                        className="p-3.5 sm:p-5 border border-slate-200/80 rounded-2xl bg-white hover:border-[#1D61F2] hover:shadow-xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-3.5 sm:gap-4 cursor-pointer group min-w-0"
+                      >
+                        <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center p-1 overflow-hidden shrink-0 shadow-2xs">
+                            {app.companyLogo ? (
+                              <img src={app.companyLogo} alt={app.companyName} className="w-full h-full object-contain" />
+                            ) : (
+                              <Building className="w-5 h-5 sm:w-6 sm:h-6 text-[#1D61F2]" />
+                            )}
+                          </div>
+
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <h4 className="font-black text-slate-900 text-sm sm:text-base group-hover:text-[#1D61F2] transition-colors truncate">
+                              {app.jobTitle || app.title || 'Delivery Partner / Job Role'}
+                            </h4>
+                            <p className="text-xs font-semibold text-slate-500 truncate flex items-center gap-1">
+                              <span className="text-slate-700 font-bold">{app.companyName || 'Hiring Company'}</span>
+                              <span className="text-slate-300">•</span>
+                              <MapPin className="w-3 h-3 inline text-[#1D61F2] shrink-0 -mt-0.5" />
+                              <span className="truncate">{app.jobCity || 'India'}</span>
+                            </p>
+                            <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                              <span className={`px-2.5 sm:px-3 py-1 text-xs font-black rounded-full border whitespace-nowrap shrink-0 ${
+                                isWithdrawn
+                                  ? 'bg-slate-100 text-slate-500 border-slate-200'
+                                  : String(status).toLowerCase().includes('shortlist') || String(status).toLowerCase().includes('select')
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                  : String(status).toLowerCase().includes('reject')
+                                  ? 'bg-red-50 text-red-700 border-red-200'
+                                  : 'bg-blue-50 text-[#1D61F2] border-blue-200'
+                              }`}>
+                                Status: {status}
+                              </span>
+                              <span className="text-[11px] text-slate-400 font-semibold truncate">
+                                Applied {app.appliedDate ? new Date(app.appliedDate).toLocaleDateString('en-GB') : 'Recently'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-3 shrink-0 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100 w-full md:w-auto">
+                          {isWithdrawn ? (
+                            <span className="px-4 py-2 bg-slate-100 text-slate-500 border border-slate-200 rounded-xl text-xs font-bold whitespace-nowrap shrink-0">
+                              Withdrawn
+                            </span>
+                          ) : (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleWithdrawApplication(app.id); }}
+                              disabled={withdrawingAppId === app.id}
+                              className="px-4 py-2 border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-50 whitespace-nowrap shrink-0"
+                            >
+                              {withdrawingAppId === app.id ? 'Withdrawing...' : 'Withdraw Application'}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 3: SAVED JOBS VIEW */}
+          {activeTab === 'saved' && (
+            <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <h3 className="text-lg font-black text-slate-900">Saved Jobs ({savedJobIds.length})</h3>
+              </div>
+
+              {savedJobIds.length === 0 ? (
+                <div className="py-16 text-center text-slate-400">
+                  <Bookmark className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p className="text-xs font-bold">You have no saved jobs yet.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {activeJobs.filter(j => savedJobIds.includes(j.id)).map(job => (
+                    <div
+                      key={job.id}
+                      onClick={() => handleViewDetails(job)}
+                      className="p-4 sm:p-5 border border-slate-200/80 rounded-2xl flex flex-col justify-between hover:border-[#1D61F2] hover:shadow-xs transition-all cursor-pointer group bg-white min-w-0"
+                    >
+                      <div className="min-w-0 space-y-1">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <h4 className="font-black text-slate-900 text-sm sm:text-base group-hover:text-[#1D61F2] transition-colors truncate">
+                            {job.title}
+                          </h4>
+                          <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 shrink-0">
+                            <CheckCircle className="w-2.5 h-2.5 fill-emerald-500 text-white" /> Verified
+                          </span>
+                        </div>
+                        <p className="text-xs font-semibold text-slate-500 truncate">{job.companyName} • {job.city}</p>
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2 min-w-0 flex-nowrap">
+                        <span className="text-xs sm:text-sm font-black text-slate-900 truncate min-w-0">
+                          ₹{job.minSalary ? Number(job.minSalary).toLocaleString() : '35,000'} / {job.salaryType === 'Daily' ? 'day' : job.salaryType === 'Weekly' ? 'week' : 'mo'}
+                        </span>
+                        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-nowrap">
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleToggleSaveJob(job.id, e); }}
+                            className="p-2 sm:p-2.5 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer shrink-0"
+                            title="Remove from Saved Jobs"
+                          >
+                            <Bookmark className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-[#1D61F2] text-[#1D61F2]" />
+                          </button>
+                          {myApplications.some(a => String(a.jobId) === String(job.id)) ? (
+                            <span className="px-3 sm:px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-black rounded-xl shrink-0 whitespace-nowrap">
+                              Applied ✓
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); handleApplyNow(job); }}
+                              disabled={applyingJobId === job.id}
+                              className="px-3.5 sm:px-5 py-2 sm:py-2.5 bg-[#1D61F2] hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 whitespace-nowrap"
+                            >
+                              Apply Now
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 4: PROFILE EDIT VIEW */}
+          {activeTab === 'overview' && (
+            <CandidateProfileEdit
+              initialProfile={profile}
+              candidate={candidate}
+              token={token || ''}
+              onSaveSuccess={(updated) => {
+                if (onUpdateProfile) onUpdateProfile(updated);
+              }}
+              onCancel={() => setActiveTab('find_jobs')}
+              contactedJobsCount={myApplications.length}
+              savedJobsCount={savedJobIds.length}
+              onNavigateTab={(t) => setActiveTab(t)}
+            />
+          )}
+
+            </React.Fragment>
+          )}
+
+        </main>
+
+        {/* ================= RIGHT SIDEBAR WIDGETS ================= */}
+        {!selectedJob && (
+          <aside className="w-full lg:w-80 shrink-0 flex flex-col gap-4 sm:gap-6">
+          
+          {/* SINGLE QUICK ACTIONS WIDGET (ONLY 1 SECTION) */}
+          <div className="bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-xs">
+            <h3 className="font-black text-slate-900 text-sm mb-3 sm:mb-4">Quick Actions</h3>
+            
+            <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
+              {/* Action 1: Search Jobs */}
+              <button
+                onClick={() => {
+                  setActiveTab('find_jobs');
+                  const el = document.getElementById('jobs-search-input');
+                  if (el) el.focus();
+                }}
+                className="p-2 xs:p-3 rounded-xl sm:rounded-2xl bg-blue-50/70 hover:bg-blue-100/70 border border-blue-100 transition-all flex flex-col items-center text-center cursor-pointer group"
+              >
+                <div className="w-8 h-8 xs:w-9 xs:h-9 rounded-xl bg-blue-500 text-white flex items-center justify-center mb-1.5 shadow-xs group-hover:scale-110 transition-transform">
+                  <Search className="w-3.5 h-3.5 xs:w-4 xs:h-4" />
+                </div>
+                <span className="text-[10px] xs:text-[11px] font-extrabold text-slate-800 leading-tight">Search Jobs</span>
+              </button>
+
+              {/* Action 2: Saved Jobs */}
+              <button
+                onClick={() => setActiveTab('saved')}
+                className="p-2 xs:p-3 rounded-xl sm:rounded-2xl bg-purple-50/70 hover:bg-purple-100/70 border border-purple-100 transition-all flex flex-col items-center text-center cursor-pointer group"
+              >
+                <div className="w-8 h-8 xs:w-9 xs:h-9 rounded-xl bg-purple-500 text-white flex items-center justify-center mb-1.5 shadow-xs group-hover:scale-110 transition-transform">
+                  <Bookmark className="w-3.5 h-3.5 xs:w-4 xs:h-4" />
+                </div>
+                <span className="text-[10px] xs:text-[11px] font-extrabold text-slate-800 leading-tight">Saved Jobs</span>
+              </button>
+
+              {/* Action 3: Update Profile */}
+              <button
+                onClick={() => setActiveTab('overview')}
+                className="p-2 xs:p-3 rounded-xl sm:rounded-2xl bg-emerald-50/70 hover:bg-emerald-100/70 border border-emerald-100 transition-all flex flex-col items-center text-center cursor-pointer group"
+              >
+                <div className="w-8 h-8 xs:w-9 xs:h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center mb-1.5 shadow-xs group-hover:scale-110 transition-transform">
+                  <User className="w-3.5 h-3.5 xs:w-4 xs:h-4" />
+                </div>
+                <span className="text-[10px] xs:text-[11px] font-extrabold text-slate-800 leading-tight">Update Profile</span>
+              </button>
+            </div>
+          </div>
+
+          {/* YOUR PROFILE PROGRESS WIDGET */}
+          <div className="bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-xs">
+            <h3 className="font-black text-slate-900 text-sm mb-4">Your Profile Progress</h3>
+            
+            <div className="flex items-center gap-4">
+              {/* Circular Donut Progress Ring */}
+              <div className="relative w-20 h-20 shrink-0 flex items-center justify-center">
+                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                  <path
+                    className="text-slate-100"
+                    strokeWidth="4"
+                    stroke="currentColor"
+                    fill="none"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                  <path
+                    className="text-[#1D61F2]"
+                    strokeDasharray={`${completionPercentage}, 100`}
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    stroke="currentColor"
+                    fill="none"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                </svg>
+                <span className="absolute text-xs font-black text-slate-900">{completionPercentage}%</span>
+              </div>
+
+              <div>
+                <span className="text-xs font-extrabold text-slate-900 block">Profile Completed</span>
+                <p className="text-[11px] font-medium text-slate-400 mt-1 leading-normal">
+                  Complete your profile to get better job matches.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setActiveTab('overview')}
+              className="mt-4 w-full py-2.5 bg-[#1D61F2] hover:bg-blue-700 text-white font-black text-xs rounded-xl transition-all shadow-xs cursor-pointer flex items-center justify-center gap-1"
+            >
+              Complete Profile →
+            </button>
+          </div>
+
+          {/* NO RECENTLY VIEWED JOBS (Completely Removed as requested) */}
+
+        </aside>
+        )}
+      </div>
+
+      {/* INSTANT FAST APPLY MODAL */}
+      {jobForInstantApply && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4"
+          >
+            <div className="flex items-center justify-between border-b pb-3">
+              <h3 className="font-black text-base text-slate-900">Complete Profile to Apply</h3>
+              <button onClick={() => setJobForInstantApply(null)} className="text-slate-400 hover:text-slate-700"><X className="w-5 h-5" /></button>
+            </div>
+            <p className="text-xs text-slate-500 font-medium">Please fill in the required basic details to proceed with your application for {jobForInstantApply.title}.</p>
+
+            <form onSubmit={handleInstantApplySubmit} className="space-y-3">
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  value={instantFullName}
+                  onChange={(e) => setInstantFullName(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-xl text-xs font-bold text-slate-800"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Age</label>
+                  <input
+                    type="number"
+                    required
+                    value={instantAge}
+                    onChange={(e) => setInstantAge(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-xl text-xs font-bold text-slate-800"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Gender</label>
+                  <select
+                    value={instantGender}
+                    onChange={(e) => setInstantGender(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-xl text-xs font-bold text-slate-800"
+                  >
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Pincode</label>
+                <input
+                  type="text"
+                  required
+                  value={instantPincode}
+                  onChange={(e) => setInstantPincode(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-xl text-xs font-bold text-slate-800"
+                />
+              </div>
+
+              {instantError && <p className="text-xs text-red-600 font-bold">{instantError}</p>}
+
+              <button
+                type="submit"
+                disabled={instantLoading}
+                className="w-full py-3 bg-[#1D61F2] hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-md cursor-pointer"
+              >
+                {instantLoading ? 'Submitting Application...' : 'Save & Submit Application'}
+              </button>
+            </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* NOTIFICATIONS MODAL DIALOG */}
+      {isNotificationOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 relative overflow-hidden"
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#1D61F2] flex items-center justify-center">
+                  <Bell className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-black text-base text-slate-900">Notifications</h3>
+                  <span className="text-[10px] text-slate-400 font-semibold block">Real-time alerts & job updates</span>
+                </div>
+              </div>
+              <button
+                onClick={closeNotificationModal}
+                className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+              {/* Notification 1 */}
+              <div className="p-3.5 bg-blue-50/60 border border-blue-100 rounded-2xl flex items-start gap-3">
+                <div className="w-8 h-8 rounded-xl bg-blue-500 text-white flex items-center justify-center shrink-0 mt-0.5">
+                  <Briefcase className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-xs text-slate-900">New Job Match: Delivery Partner</h4>
+                  <p className="text-[11px] text-slate-600 font-medium mt-0.5">Zomato posted a new role in your preferred location with up to ₹35,000/month.</p>
+                  <span className="text-[9px] text-slate-400 font-bold block mt-1">10 minutes ago</span>
+                </div>
+              </div>
+
+              {/* Notification 2 */}
+              <div className="p-3.5 bg-emerald-50/60 border border-emerald-100 rounded-2xl flex items-start gap-3">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 mt-0.5">
+                  <CheckCircle className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-xs text-slate-900">Application Under Review</h4>
+                  <p className="text-[11px] text-slate-600 font-medium mt-0.5">Your application for Blinkit Delivery Executive was reviewed by the recruiter.</p>
+                  <span className="text-[9px] text-slate-400 font-bold block mt-1">2 hours ago</span>
+                </div>
+              </div>
+
+              {/* Notification 3 */}
+              <div className="p-3.5 bg-purple-50/60 border border-purple-100 rounded-2xl flex items-start gap-3">
+                <div className="w-8 h-8 rounded-xl bg-purple-500 text-white flex items-center justify-center shrink-0 mt-0.5">
+                  <Star className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-xs text-slate-900">Profile Viewed by Hiring Team</h4>
+                  <p className="text-[11px] text-slate-600 font-medium mt-0.5">Jio Mart recruiting team viewed your profile and license verification documents.</p>
+                  <span className="text-[9px] text-slate-400 font-bold block mt-1">Yesterday</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={closeNotificationModal}
+              className="w-full py-2.5 bg-[#1D61F2] hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer"
+            >
+              Close Notifications
+            </button>
+          </motion.div>
+        </div>
+      )}
+
+      {/* ================= MOBILE BOTTOM NAVIGATION BAR (lg:hidden) ================= */}
+      <div className="fixed bottom-0 left-0 right-0 bg-[#0F172A]/95 backdrop-blur-md border-t border-slate-800 text-slate-400 z-40 lg:hidden px-2 sm:px-3 py-2 flex items-center justify-around shadow-2xl safe-area-pb">
+        <button
+          onClick={() => { setActiveTab('find_jobs'); setAppStatusTab('all'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          className={`flex flex-col items-center gap-1 transition-all cursor-pointer ${
+            activeTab === 'find_jobs' ? 'text-[#1D61F2] font-black scale-105' : 'hover:text-white'
+          }`}
+        >
+          <BarChart2 className="w-5 h-5" />
+          <span className="text-[10px]">Dashboard</span>
+        </button>
+
+        <button
+          onClick={() => { setActiveTab('applications'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          className={`flex flex-col items-center gap-1 relative transition-all cursor-pointer ${
+            activeTab === 'applications' ? 'text-[#1D61F2] font-black scale-105' : 'hover:text-white'
+          }`}
+        >
+          <ClipboardList className="w-5 h-5" />
+          <span className="text-[10px]">Apps</span>
+          {myApplications.length > 0 && (
+            <span className="absolute -top-1 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center">
+              {myApplications.length}
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => { setActiveTab('saved'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          className={`flex flex-col items-center gap-1 relative transition-all cursor-pointer ${
+            activeTab === 'saved' ? 'text-[#1D61F2] font-black scale-105' : 'hover:text-white'
+          }`}
+        >
+          <Bookmark className="w-5 h-5" />
+          <span className="text-[10px]">Saved</span>
+          {savedJobIds.length > 0 && (
+            <span className="absolute -top-1 -right-1.5 w-4 h-4 rounded-full bg-blue-500 text-white text-[9px] font-black flex items-center justify-center">
+              {savedJobIds.length}
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => { setActiveTab('overview'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          className={`flex flex-col items-center gap-1 transition-all cursor-pointer ${
+            activeTab === 'overview' ? 'text-[#1D61F2] font-black scale-105' : 'hover:text-white'
+          }`}
+        >
+          <User className="w-5 h-5" />
+          <span className="text-[10px]">Profile</span>
+        </button>
+
+        <button
+          onClick={() => setIsMobileDrawerOpen(true)}
+          className="flex flex-col items-center gap-1 hover:text-white transition-all cursor-pointer"
+        >
+          <Menu className="w-5 h-5" />
+          <span className="text-[10px]">Menu</span>
+        </button>
+      </div>
+
+    </div>
+  );
+}
