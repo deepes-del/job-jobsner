@@ -556,13 +556,14 @@ export default function CandidateDashboard({
       }
     });
 
-    // Every category displays > 1500 jobs with '+' symbol as requested
+    // Delivery, Warehouse & Packing, Drivers show 1500+ (popular categories with many listings)
+    // Office & Admin and Other Jobs show ACTUAL count only (no artificial base - show 0 if none posted)
     const formattedCounts = {
       deliveryLogistics: `${(1850 + deliveryLogistics).toLocaleString()}+`,
       warehousePacking: `${(1620 + warehousePacking).toLocaleString()}+`,
       drivers: `${(1740 + drivers).toLocaleString()}+`,
-      officeAdmin: `${(1530 + officeAdmin).toLocaleString()}+`,
-      other: `${(1580 + other).toLocaleString()}+`,
+      officeAdmin: officeAdmin > 0 ? `${officeAdmin.toLocaleString()}+` : '0',
+      other: other > 0 ? `${other.toLocaleString()}+` : '0',
     };
 
     return formattedCounts;
@@ -1489,7 +1490,21 @@ export default function CandidateDashboard({
                         ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
                         : 'bg-blue-50/60 text-[#1D61F2] border-blue-200/70'
                     }`}>
-                      <Truck className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6" />
+                      {/* Motorcycle + Truck dual icon for Delivery & Logistics */}
+                      <svg viewBox="0 0 36 20" className="w-7 h-4 xs:w-9 xs:h-5 sm:w-11 sm:h-6" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        {/* Motorcycle (left side) */}
+                        <circle cx="4" cy="16.5" r="2.5" fill="none" stroke="currentColor" strokeWidth="1.4"/>
+                        <circle cx="13" cy="16.5" r="2.5" fill="none" stroke="currentColor" strokeWidth="1.4"/>
+                        <path d="M6.5 16.5 L8.5 11 L11 11 L13.5 14 L10 14 L8.5 11" fill="none" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round"/>
+                        <path d="M9 11 L10.5 8 L13 8 L14 10" fill="none" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round"/>
+                        <circle cx="13.5" cy="8.5" r="1" fill="currentColor"/>
+                        {/* Truck (right side) */}
+                        <rect x="19" y="10" width="12" height="7" rx="1" fill="currentColor" opacity="0.85"/>
+                        <rect x="27" y="8" width="4" height="4" rx="0.8" fill="currentColor" opacity="0.7"/>
+                        <circle cx="21.5" cy="17.5" r="1.8" fill="none" stroke="currentColor" strokeWidth="1.3"/>
+                        <circle cx="28.5" cy="17.5" r="1.8" fill="none" stroke="currentColor" strokeWidth="1.3"/>
+                        <rect x="19" y="12" width="12" height="1" rx="0.5" fill="white" opacity="0.25"/>
+                      </svg>
                     </div>
                     <span className="text-[8px] xs:text-[9.5px] sm:text-xs font-bold text-slate-800 mt-1 sm:mt-1.5 text-center leading-tight">
                       Delivery &<br />Logistics
@@ -1800,7 +1815,7 @@ export default function CandidateDashboard({
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 sm:pb-4">
                   <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none flex-nowrap max-w-full py-0.5">
                     <button
-                      onClick={() => setAppStatusTab('all')}
+                      onClick={() => { setAppStatusTab('all'); setActiveTab('find_jobs'); }}
                       className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                         appStatusTab === 'all'
                           ? 'bg-[#1D61F2] text-white shadow-xs'
