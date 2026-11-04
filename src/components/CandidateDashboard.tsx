@@ -1490,20 +1490,29 @@ export default function CandidateDashboard({
                         ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
                         : 'bg-blue-50/60 text-[#1D61F2] border-blue-200/70'
                     }`}>
-                      {/* Motorcycle + Truck dual icon for Delivery & Logistics */}
-                      <svg viewBox="0 0 36 20" className="w-7 h-4 xs:w-9 xs:h-5 sm:w-11 sm:h-6" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                        {/* Motorcycle (left side) */}
-                        <circle cx="4" cy="16.5" r="2.5" fill="none" stroke="currentColor" strokeWidth="1.4"/>
-                        <circle cx="13" cy="16.5" r="2.5" fill="none" stroke="currentColor" strokeWidth="1.4"/>
-                        <path d="M6.5 16.5 L8.5 11 L11 11 L13.5 14 L10 14 L8.5 11" fill="none" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round"/>
-                        <path d="M9 11 L10.5 8 L13 8 L14 10" fill="none" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round"/>
-                        <circle cx="13.5" cy="8.5" r="1" fill="currentColor"/>
-                        {/* Truck (right side) */}
-                        <rect x="19" y="10" width="12" height="7" rx="1" fill="currentColor" opacity="0.85"/>
-                        <rect x="27" y="8" width="4" height="4" rx="0.8" fill="currentColor" opacity="0.7"/>
-                        <circle cx="21.5" cy="17.5" r="1.8" fill="none" stroke="currentColor" strokeWidth="1.3"/>
-                        <circle cx="28.5" cy="17.5" r="1.8" fill="none" stroke="currentColor" strokeWidth="1.3"/>
-                        <rect x="19" y="12" width="12" height="1" rx="0.5" fill="white" opacity="0.25"/>
+                      {/* Diagonal split icon: Upper Motorbike + Diagonal Line + Down Car */}
+                      <svg viewBox="0 0 38 38" className="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        {/* Diagonal Dividing Line */}
+                        <line x1="33" y1="5" x2="5" y2="33" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.45" />
+
+                        {/* Upper Part: Motorbike */}
+                        <g transform="translate(1, 2) scale(0.68)" stroke="currentColor" fill="none">
+                          <circle cx="5" cy="15" r="3.5" strokeWidth="2" />
+                          <circle cx="5" cy="15" r="1.2" fill="currentColor" />
+                          <circle cx="18" cy="15" r="3.5" strokeWidth="2" />
+                          <circle cx="18" cy="15" r="1.2" fill="currentColor" />
+                          <path d="M5 15 L9 9.5 L12.5 9.5 L15.5 5.5 L18 5.5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M18 15 L15 5 M13.5 4.5 L17 5.5" strokeWidth="2" strokeLinecap="round" />
+                          <path d="M8 9 C9.5 7.5, 12 7.5, 13.5 9 L14.5 11 L9.5 11 Z" fill="currentColor" />
+                        </g>
+
+                        {/* Down Part: Car (same Lucide Car shape as Drivers & Fleet) */}
+                        <g transform="translate(17, 17) scale(0.72)" stroke="currentColor" fill="none">
+                          <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <circle cx="7" cy="17" r="2" strokeWidth="2" />
+                          <path d="M9 17h6" strokeWidth="2" strokeLinecap="round" />
+                          <circle cx="17" cy="17" r="2" strokeWidth="2" />
+                        </g>
                       </svg>
                     </div>
                     <span className="text-[8px] xs:text-[9.5px] sm:text-xs font-bold text-slate-800 mt-1 sm:mt-1.5 text-center leading-tight">
@@ -1822,7 +1831,7 @@ export default function CandidateDashboard({
                           : 'text-slate-600 hover:bg-slate-100'
                       }`}
                     >
-                      All Jobs
+                      Click on all jobs
                     </button>
                     <button
                       onClick={() => setAppStatusTab('applied')}
@@ -1863,7 +1872,7 @@ export default function CandidateDashboard({
                     <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
                       type="text"
-                      placeholder="Search jobs by title, company, or city..."
+                      placeholder="Search by location and title"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:bg-white transition-colors"
@@ -1896,15 +1905,7 @@ export default function CandidateDashboard({
                       <option value="Flexible">Flexible</option>
                     </select>
 
-                    {/* Sort Order */}
-                    <select
-                      value={sortOrder}
-                      onChange={(e) => setSortOrder(e.target.value)}
-                      className="col-span-2 sm:col-span-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none truncate"
-                    >
-                      <option value="newest">Newest First</option>
-                      <option value="oldest">Oldest First</option>
-                    </select>
+                    
                   </div>
                 </div>
 
