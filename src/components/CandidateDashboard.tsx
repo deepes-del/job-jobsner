@@ -916,9 +916,17 @@ export default function CandidateDashboard({
     }
   };
 
-  // Back button popstate listener for Job Details and deep links
+  // Back button popstate listener for Job Details, Applications, and deep links
   React.useEffect(() => {
     const handlePopState = (e: PopStateEvent) => {
+      if (jobForInstantApply) {
+        setJobForInstantApply(null);
+        return;
+      }
+      if (selectedApp) {
+        setSelectedApp(null);
+        return;
+      }
       if (selectedJob && e.state?.modal !== 'job_details') {
         setSelectedJob(null);
       } else if (!selectedJob && e.state?.modal === 'job_details' && e.state?.jobId) {
@@ -929,7 +937,7 @@ export default function CandidateDashboard({
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [selectedJob, activeJobs]);
+  }, [selectedJob, selectedApp, jobForInstantApply, activeJobs]);
 
   // Deep-link check: open job from ?job=<id> query parameter on mount/load
   React.useEffect(() => {
@@ -947,6 +955,10 @@ export default function CandidateDashboard({
 
   const handleViewAppDetails = (app: any) => {
     setSelectedApp(app);
+    if (typeof window !== 'undefined') {
+      const currentState = window.history.state || {};
+      window.history.pushState({ ...currentState, modal: 'app_details' }, '');
+    }
   };
 
   const handleWithdrawApplication = async (appId: string) => {
