@@ -692,14 +692,33 @@ export default function CandidateDashboard({
       return [];
     }
 
-    // 1. Initial list: randomized with company de-clustering so the same company is not bunched together
+    // Check if user is using any filter or search
+    const isFilterActive =
+      searchQuery.trim() !== '' ||
+      selectedCategory !== 'All' ||
+      selectedCity !== 'All' ||
+      selectedState !== 'All' ||
+      selectedEmpType !== 'All' ||
+      selectedSalary > 0 ||
+      selectedExperience !== 'All' ||
+      selectedShift !== 'All';
+
+    // When user uses filters/search: show ONLY actual, real job postings (do not repeat)
+    if (isFilterActive) {
+      return filteredJobsList.map((job: any, idx: number) => ({
+        ...job,
+        _uniqueKey: `real-filter-${job.id}-${idx}`,
+      }));
+    }
+
+    // Default unfiltered browsing: initial randomized list with de-clustering
     const randomizedInitial = shuffleJobsArray(filteredJobsList, 101);
     const originalList = randomizedInitial.map((job: any, idx: number) => ({
       ...job,
       _uniqueKey: `orig-${job.id}-${idx}`,
     }));
 
-    // 2. Unlimited Scrolling: Repeat the same jobs randomly across infinite batches
+    // Unlimited browsing batches on default feed
     const repeatedList: any[] = [];
     for (let round = 1; round <= infiniteBatchCount; round++) {
       const seed = (round * 7919 + (round % 2 === 0 ? 31 : 173)) % 100000;
@@ -711,11 +730,21 @@ export default function CandidateDashboard({
     }
 
     return [...originalList, ...repeatedList];
-  }, [appStatusTab, myApplications, filteredJobsList, infiniteBatchCount]);
+  }, [appStatusTab, myApplications, filteredJobsList, infiniteBatchCount, searchQuery, selectedCategory, selectedCity, selectedState, selectedEmpType, selectedSalary, selectedExperience, selectedShift]);
 
   // Seamless Infinite Scrolling - automatically loads more randomized batches
   React.useEffect(() => {
-    if (appStatusTab !== 'all' || !filteredJobsList || filteredJobsList.length === 0) return;
+    const isFilterActive =
+      searchQuery.trim() !== '' ||
+      selectedCategory !== 'All' ||
+      selectedCity !== 'All' ||
+      selectedState !== 'All' ||
+      selectedEmpType !== 'All' ||
+      selectedSalary > 0 ||
+      selectedExperience !== 'All' ||
+      selectedShift !== 'All';
+
+    if (isFilterActive || appStatusTab !== 'all' || !filteredJobsList || filteredJobsList.length === 0) return;
 
     // IntersectionObserver for sentinel element at bottom
     const observer = new IntersectionObserver(
@@ -1367,7 +1396,7 @@ export default function CandidateDashboard({
             <React.Fragment>
               
               {/* TOP HERO BANNER */}
-              <div className="w-full bg-gradient-to-r from-[#0052D4] via-[#2B63FF] to-[#4379FF] rounded-2xl sm:rounded-3xl px-3.5 py-4 sm:p-7 lg:p-8 text-white shadow-xl relative overflow-hidden flex flex-row items-center justify-between gap-2 border border-blue-400/20 min-h-[185px] sm:min-h-[225px]">
+              <div className="w-full bg-gradient-to-r from-[#0052D4]/75 via-[#2B63FF]/70 to-[#4379FF]/75 backdrop-blur-md rounded-2xl sm:rounded-3xl px-3.5 py-4 sm:p-7 lg:p-8 text-white shadow-lg relative overflow-hidden flex flex-row items-center justify-between gap-2 border border-blue-300/30 min-h-[185px] sm:min-h-[225px]">
                 {/* Ambient Background Glow Effects */}
                 <div className="absolute -left-12 -top-12 w-48 h-48 sm:w-64 sm:h-64 bg-blue-400/25 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute right-0 bottom-0 w-60 h-60 sm:w-80 sm:h-80 bg-indigo-500/30 rounded-full blur-3xl pointer-events-none" />
@@ -1469,7 +1498,7 @@ export default function CandidateDashboard({
               </div>
 
               {/* 5 JOB CATEGORIES TILES (Delivery & Logistics, Warehouse & Packing, Drivers, Office & Admin, Other Jobs) */}
-              <div className="w-full bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-xs">
+              <div className="w-full bg-blue-50/40 border border-blue-100/80 rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-xs">
                 <div className="flex items-center justify-between mb-2.5 sm:mb-3">
                   <span className="text-[10px] sm:text-xs font-black text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#1D61F2]" />
@@ -1493,8 +1522,8 @@ export default function CandidateDashboard({
                     }}
                     className={`group relative flex flex-col items-center justify-start py-1.5 sm:py-2.5 px-0.5 sm:px-1 rounded-xl sm:rounded-2xl transition-all cursor-pointer ${
                       selectedCategory === 'Delivery & Logistics'
-                        ? 'bg-blue-50/90 ring-2 ring-blue-500/40 shadow-xs'
-                        : 'hover:bg-slate-50/80'
+                        ? 'bg-blue-100/85 ring-2 ring-[#1D61F2] border-blue-300 shadow-xs'
+                        : 'bg-white/90 border border-blue-100/70 shadow-2xs hover:bg-white hover:border-blue-300'
                     }`}
                   >
                     <div className={`w-9 h-9 xs:w-11 xs:h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
@@ -1542,8 +1571,8 @@ export default function CandidateDashboard({
                     }}
                     className={`group relative flex flex-col items-center justify-start py-1.5 sm:py-2.5 px-0.5 sm:px-1 rounded-xl sm:rounded-2xl transition-all cursor-pointer ${
                       selectedCategory === 'Warehouse & Packing'
-                        ? 'bg-orange-50/90 ring-2 ring-orange-500/40 shadow-xs'
-                        : 'hover:bg-slate-50/80'
+                        ? 'bg-orange-100/85 ring-2 ring-orange-500 border-orange-300 shadow-xs'
+                        : 'bg-white/90 border border-blue-100/70 shadow-2xs hover:bg-white hover:border-orange-300'
                     }`}
                   >
                     <div className={`w-9 h-9 xs:w-11 xs:h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
@@ -1568,8 +1597,8 @@ export default function CandidateDashboard({
                     }}
                     className={`group relative flex flex-col items-center justify-start py-1.5 sm:py-2.5 px-0.5 sm:px-1 rounded-xl sm:rounded-2xl transition-all cursor-pointer ${
                       selectedCategory === 'Drivers'
-                        ? 'bg-sky-50/90 ring-2 ring-sky-500/40 shadow-xs'
-                        : 'hover:bg-slate-50/80'
+                        ? 'bg-sky-100/85 ring-2 ring-sky-500 border-sky-300 shadow-xs'
+                        : 'bg-white/90 border border-blue-100/70 shadow-2xs hover:bg-white hover:border-sky-300'
                     }`}
                   >
                     <div className={`w-9 h-9 xs:w-11 xs:h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
@@ -1594,8 +1623,8 @@ export default function CandidateDashboard({
                     }}
                     className={`group relative flex flex-col items-center justify-start py-1.5 sm:py-2.5 px-0.5 sm:px-1 rounded-xl sm:rounded-2xl transition-all cursor-pointer ${
                       selectedCategory === 'Office & Admin'
-                        ? 'bg-purple-50/90 ring-2 ring-purple-500/40 shadow-xs'
-                        : 'hover:bg-slate-50/80'
+                        ? 'bg-purple-100/85 ring-2 ring-purple-500 border-purple-300 shadow-xs'
+                        : 'bg-white/90 border border-blue-100/70 shadow-2xs hover:bg-white hover:border-purple-300'
                     }`}
                   >
                     <div className={`w-9 h-9 xs:w-11 xs:h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
@@ -1620,8 +1649,8 @@ export default function CandidateDashboard({
                     }}
                     className={`group relative flex flex-col items-center justify-start py-1.5 sm:py-2.5 px-0.5 sm:px-1 rounded-xl sm:rounded-2xl transition-all cursor-pointer ${
                       selectedCategory === 'Other Jobs'
-                        ? 'bg-emerald-50/90 ring-2 ring-emerald-500/40 shadow-xs'
-                        : 'hover:bg-slate-50/80'
+                        ? 'bg-emerald-100/85 ring-2 ring-emerald-500 border-emerald-300 shadow-xs'
+                        : 'bg-white/90 border border-blue-100/70 shadow-2xs hover:bg-white hover:border-emerald-300'
                     }`}
                   >
                     <div className={`w-9 h-9 xs:w-11 xs:h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 border ${
@@ -1939,7 +1968,7 @@ export default function CandidateDashboard({
                         <div
                           key={item._uniqueKey || `${item.id}-${itemIdx}`}
                           onClick={() => handleViewDetails(job)}
-                          className="p-3.5 sm:p-4 md:p-5 border border-slate-200/80 rounded-2xl bg-white hover:border-[#1D61F2] hover:shadow-xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-3.5 sm:gap-4 cursor-pointer group min-w-0"
+                          className="p-3.5 sm:p-4 md:p-5 border border-slate-200 rounded-2xl bg-slate-50/80 hover:bg-white hover:border-[#1D61F2] hover:shadow-xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-3.5 sm:gap-4 cursor-pointer group min-w-0"
                         >
                             <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0 flex-1">
                               <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center p-1 overflow-hidden shrink-0 shadow-2xs">
@@ -2050,7 +2079,16 @@ export default function CandidateDashboard({
                   )}
 
                   {/* Infinite Scroll Sentinel & Loader */}
-                  {appStatusTab === 'all' && filteredJobsList.length > 0 && (
+                  {appStatusTab === 'all' && !(
+                    searchQuery.trim() !== '' ||
+                    selectedCategory !== 'All' ||
+                    selectedCity !== 'All' ||
+                    selectedState !== 'All' ||
+                    selectedEmpType !== 'All' ||
+                    selectedSalary > 0 ||
+                    selectedExperience !== 'All' ||
+                    selectedShift !== 'All'
+                  ) && filteredJobsList.length > 0 && (
                     <div
                       ref={infiniteScrollSentinelRef}
                       className="py-8 flex flex-col items-center justify-center text-slate-400 gap-2 select-none"
@@ -2513,25 +2551,25 @@ export default function CandidateDashboard({
       )}
 
       {/* ================= MOBILE BOTTOM NAVIGATION BAR (lg:hidden) ================= */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#0F172A]/95 backdrop-blur-md border-t border-slate-800 text-slate-400 z-40 lg:hidden px-2 sm:px-3 py-2 flex items-center justify-around shadow-2xl safe-area-pb">
+      <div className="fixed bottom-0 left-0 right-0 bg-[#0F172A]/95 backdrop-blur-md border-t border-slate-800 text-white z-40 lg:hidden px-2 sm:px-3 py-2 flex items-center justify-around shadow-2xl safe-area-pb">
         <button
           onClick={() => { setActiveTab('find_jobs'); setAppStatusTab('all'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           className={`flex flex-col items-center gap-1 transition-all cursor-pointer ${
-            activeTab === 'find_jobs' ? 'text-[#1D61F2] font-black scale-105' : 'hover:text-white'
+            activeTab === 'find_jobs' ? 'scale-105' : 'opacity-85 hover:opacity-100'
           }`}
         >
-          <BarChart2 className="w-5 h-5" />
-          <span className="text-[10px]">Dashboard</span>
+          <BarChart2 className={`w-5 h-5 ${activeTab === 'find_jobs' ? 'text-[#38BDF8]' : 'text-slate-300'}`} />
+          <span className="text-[10px] text-white font-bold tracking-tight">Dashboard</span>
         </button>
 
         <button
           onClick={() => { setActiveTab('applications'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           className={`flex flex-col items-center gap-1 relative transition-all cursor-pointer ${
-            activeTab === 'applications' ? 'text-[#1D61F2] font-black scale-105' : 'hover:text-white'
+            activeTab === 'applications' ? 'scale-105' : 'opacity-85 hover:opacity-100'
           }`}
         >
-          <ClipboardList className="w-5 h-5" />
-          <span className="text-[10px]">Apps</span>
+          <ClipboardList className={`w-5 h-5 ${activeTab === 'applications' ? 'text-[#38BDF8]' : 'text-slate-300'}`} />
+          <span className="text-[10px] text-white font-bold tracking-tight">Apps</span>
           {myApplications.length > 0 && (
             <span className="absolute -top-1 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center">
               {myApplications.length}
@@ -2542,11 +2580,11 @@ export default function CandidateDashboard({
         <button
           onClick={() => { setActiveTab('saved'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           className={`flex flex-col items-center gap-1 relative transition-all cursor-pointer ${
-            activeTab === 'saved' ? 'text-[#1D61F2] font-black scale-105' : 'hover:text-white'
+            activeTab === 'saved' ? 'scale-105' : 'opacity-85 hover:opacity-100'
           }`}
         >
-          <Bookmark className="w-5 h-5" />
-          <span className="text-[10px]">Saved</span>
+          <Bookmark className={`w-5 h-5 ${activeTab === 'saved' ? 'text-[#38BDF8]' : 'text-slate-300'}`} />
+          <span className="text-[10px] text-white font-bold tracking-tight">Saved</span>
           {savedJobIds.length > 0 && (
             <span className="absolute -top-1 -right-1.5 w-4 h-4 rounded-full bg-blue-500 text-white text-[9px] font-black flex items-center justify-center">
               {savedJobIds.length}
@@ -2557,19 +2595,19 @@ export default function CandidateDashboard({
         <button
           onClick={() => { setActiveTab('overview'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           className={`flex flex-col items-center gap-1 transition-all cursor-pointer ${
-            activeTab === 'overview' ? 'text-[#1D61F2] font-black scale-105' : 'hover:text-white'
+            activeTab === 'overview' ? 'scale-105' : 'opacity-85 hover:opacity-100'
           }`}
         >
-          <User className="w-5 h-5" />
-          <span className="text-[10px]">Profile</span>
+          <User className={`w-5 h-5 ${activeTab === 'overview' ? 'text-[#38BDF8]' : 'text-slate-300'}`} />
+          <span className="text-[10px] text-white font-bold tracking-tight">Profile</span>
         </button>
 
         <button
           onClick={() => setIsMobileDrawerOpen(true)}
-          className="flex flex-col items-center gap-1 hover:text-white transition-all cursor-pointer"
+          className="flex flex-col items-center gap-1 opacity-85 hover:opacity-100 transition-all cursor-pointer"
         >
-          <Menu className="w-5 h-5" />
-          <span className="text-[10px]">Menu</span>
+          <Menu className="w-5 h-5 text-slate-300" />
+          <span className="text-[10px] text-white font-bold tracking-tight">Menu</span>
         </button>
       </div>
 
