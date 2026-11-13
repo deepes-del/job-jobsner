@@ -171,6 +171,17 @@ export default function App() {
 
   const [showExitConfirmModal, setShowExitConfirmModal] = useState(false);
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
+  // Handle /privacy-policy URL route
+  useEffect(() => {
+    const checkPrivacyRoute = () => {
+      const path = window.location.pathname + window.location.hash + window.location.search;
+      if (path.includes('privacy')) {
+        setShowPrivacyPolicy(true);
+      }
+    };
+    checkPrivacyRoute();
+  }, []);
+
 
 
 
@@ -1584,8 +1595,20 @@ export default function App() {
 
               </div>
 
-            </motion.div>
 
+              {/* Privacy Policy link on gateway */}
+              <div className="mt-5 text-center">
+                <button
+                  onClick={() => setShowPrivacyPolicy(true)}
+                  className="text-xs text-[#1D61F2] font-bold underline cursor-pointer border-none bg-transparent hover:opacity-80 transition-opacity"
+                  id="gateway-privacy-policy-link"
+                >
+                  🔒 Privacy Policy
+                </button>
+                <span className="mx-2 text-gray-300 text-xs">·</span>
+                <span className="text-xs text-gray-400">By signing in, you agree to our Privacy Policy</span>
+              </div>
+            </motion.div>
           ) : (
 
             <React.Fragment>
@@ -2002,29 +2025,21 @@ export default function App() {
 
       <footer className={`bg-white border-t border-gray-150 shrink-0 ${userRole === null ? 'py-3' : 'py-6'} ${userRole !== null ? 'mb-16 lg:mb-0' : ''}`} id="global-footer">
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-400">
-
-          <p>© 2026 Jobsner. Connecting Careers. All rights reserved.</p>
-
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-400">
+          <p className="text-center sm:text-left">© 2026 Jobsner. Connecting Careers. All rights reserved.</p>
           <div className="flex items-center gap-4 flex-wrap justify-center">
-
             <span className="flex items-center gap-1 text-gray-500 font-medium">
-
               <CheckCircle className="w-3.5 h-3.5 text-orange-500" /> Verified Logistics Hiring Network
-
             </span>
-
-                      <button
+            <button
               onClick={() => setShowPrivacyPolicy(true)}
-              className="text-[#1D61F2] font-semibold hover:underline cursor-pointer border-none bg-transparent text-xs transition-colors"
+              className="text-[#1D61F2] font-bold hover:underline cursor-pointer border-none bg-transparent text-xs transition-colors underline"
               id="footer-privacy-policy-link"
             >
               Privacy Policy
             </button>
           </div>
-
         </div>
-
       </footer>
 
 

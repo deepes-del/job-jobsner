@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Shield, ChevronRight } from 'lucide-react';
+import { X, Shield, ChevronRight, ExternalLink } from 'lucide-react';
 
 interface PrivacyPolicyProps {
   onClose: () => void;
@@ -198,7 +198,7 @@ const SECTIONS = [
   },
   {
     id: '9',
-    title: '9. Children\'s Privacy',
+    title: "9. Children's Privacy",
     content: (
       <>
         <p>JOBSner is not intended for use by individuals under the age of 18. We do not knowingly collect personal information from minors. If you believe a minor has provided us with their information, please contact us immediately.</p>
@@ -243,37 +243,101 @@ const SECTIONS = [
 ];
 
 const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onClose }) => {
-  const [activeSection, setActiveSection] = React.useState<string | null>(null);
+  const [activeSection, setActiveSection] = React.useState<string | null>('1');
+
+  // Push /privacy-policy to URL bar so it becomes shareable
+  React.useEffect(() => {
+    const prevTitle = document.title;
+    const prevUrl = window.location.href;
+    window.history.pushState({ privacyPolicy: true }, 'JOBSner Privacy Policy', '/privacy-policy');
+    document.title = 'Privacy Policy | JOBSner';
+    return () => {
+      window.history.replaceState({}, prevTitle, '/');
+      document.title = prevTitle;
+    };
+  }, []);
+
+  // Allow Escape key to close
+  React.useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [onClose]);
+
+  const directLink = typeof window !== 'undefined'
+    ? window.location.origin + '/privacy-policy'
+    : '/privacy-policy';
+
+  const copyLink = () => {
+    navigator.clipboard?.writeText(directLink).then(() => {
+      alert('Link copied: ' + directLink);
+    }).catch(() => {
+      prompt('Copy this link:', directLink);
+    });
+  };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-slate-900/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4" id="privacy-policy-modal">
+    <div
+      className="fixed inset-0 z-[100] bg-slate-900/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
+      id="privacy-policy-modal"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
       <div
         className="bg-white w-full sm:max-w-3xl max-h-[96dvh] sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden"
         style={{ animation: 'slideUp 0.3s cubic-bezier(0.16,1,0.3,1)' }}
       >
         {/* Header */}
         <div className="flex items-center justify-between gap-3 px-5 sm:px-7 py-4 border-b border-gray-100 shrink-0 bg-gradient-to-r from-[#1D61F2]/5 to-blue-50/30">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <div className="w-9 h-9 rounded-xl bg-[#1D61F2]/10 border border-[#1D61F2]/20 flex items-center justify-center shrink-0">
-              <Shield className="w-4.5 h-4.5 text-[#1D61F2]" />
+              <Shield className="w-4 h-4 text-[#1D61F2]" />
             </div>
-            <div>
+            <div className="min-w-0">
               <h2 className="text-base sm:text-lg font-black text-slate-900 leading-tight">JOBSner Privacy Policy</h2>
               <p className="text-[10px] text-slate-400 font-semibold">Last Updated: September 21, 2026</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors cursor-pointer shrink-0 border-none"
-            aria-label="Close Privacy Policy"
-            id="privacy-policy-close-btn"
-          >
-            <X className="w-4 h-4 text-slate-600" />
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Copy shareable link button */}
+            <button
+              onClick={copyLink}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-[#1D61F2] border border-blue-200 rounded-lg text-[11px] font-bold cursor-pointer transition-colors border-none"
+              title="Copy direct link to Privacy Policy"
+              id="privacy-copy-link-btn"
+            >
+              <ExternalLink className="w-3 h-3" />
+              <span className="hidden sm:inline">Copy Link</span>
+            </button>
+            <button
+              onClick={onClose}
+              className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors cursor-pointer shrink-0 border-none"
+              aria-label="Close Privacy Policy"
+              id="privacy-policy-close-btn"
+            >
+              <X className="w-4 h-4 text-slate-600" />
+            </button>
+          </div>
+        </div>
+
+        {/* Direct URL bar */}
+        <div className="px-5 sm:px-7 py-2.5 bg-slate-50 border-b border-gray-100 shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0">Direct Link:</span>
+            <div className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-1.5 flex items-center justify-between gap-2 min-w-0">
+              <code className="text-[11px] text-[#1D61F2] font-mono truncate">{directLink}</code>
+              <button
+                onClick={copyLink}
+                className="text-[10px] font-black text-[#1D61F2] hover:text-blue-700 cursor-pointer border-none bg-transparent shrink-0"
+                id="privacy-inline-copy-btn"
+              >
+                COPY
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Content */}
-        <div className="overflow-y-auto flex-1 px-5 sm:px-7 py-5 space-y-3">
+        <div className="overflow-y-auto flex-1 px-5 sm:px-7 py-5 space-y-2.5">
           {/* Intro banner */}
           <div className="bg-gradient-to-r from-[#1D61F2]/8 to-blue-50/50 border border-[#1D61F2]/15 rounded-2xl p-4 text-xs text-slate-600 leading-relaxed font-medium">
             This policy governs the collection, use, and protection of your information when you use the <strong>JOBSner</strong> platform. Please read it carefully.
@@ -320,10 +384,18 @@ const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onClose }) => {
         </div>
 
         {/* Footer */}
-        <div className="border-t border-gray-100 px-5 sm:px-7 py-3.5 shrink-0 bg-white">
+        <div className="border-t border-gray-100 px-5 sm:px-7 py-3.5 shrink-0 bg-white flex items-center gap-3">
+          <button
+            onClick={copyLink}
+            className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 active:scale-[0.98] text-slate-700 font-black text-xs rounded-xl cursor-pointer transition-all shadow-xs border-none flex items-center justify-center gap-1.5"
+            id="privacy-copy-footer-btn"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            Share Link
+          </button>
           <button
             onClick={onClose}
-            className="w-full py-2.5 bg-[#1D61F2] hover:bg-blue-700 active:scale-[0.98] text-white font-black text-xs rounded-xl cursor-pointer transition-all shadow-xs border-none"
+            className="flex-1 py-2.5 bg-[#1D61F2] hover:bg-blue-700 active:scale-[0.98] text-white font-black text-xs rounded-xl cursor-pointer transition-all shadow-xs border-none"
             id="privacy-policy-close-footer-btn"
           >
             I Understand — Close
