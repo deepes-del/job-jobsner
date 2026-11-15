@@ -1393,10 +1393,10 @@ async function authenticateToken(req: express.Request, res: express.Response, ne
   if (token === 'guest_token' || token.startsWith('guest_')) {
     (req as any).candidate = {
       id: token,
-      fullName: 'Guest Candidate',
+      fullName: '',
       mobile: '',
       isGuest: true,
-      profile: { fullName: 'Guest Candidate', bikeAvailable: 'Yes', drivingLicenseAvailable: 'Yes' }
+      profile: { fullName: '', mobile: '' }
     };
     (req as any).token = token;
     return next();
@@ -2048,6 +2048,21 @@ app.post('/api/firebase-auth', async (req, res) => {
 // 3. Get Candidate Profile (Live from Database)
 app.get('/api/profile', authenticateToken, async (req, res) => {
   const candidate = (req as any).candidate;
+  const currentToken = (req as any).token;
+
+  // Guest candidate: always return empty details to guarantee privacy
+  if (candidate.isGuest || String(candidate.id).startsWith('guest_') || currentToken === 'guest_token') {
+    return res.status(200).json({
+      id: candidate.id,
+      profile: {},
+      fullName: '',
+      email: '',
+      mobile: '',
+      documents: [],
+      renewedToken: currentToken,
+      isGuest: true
+    });
+  }
   try {
     const liveCandidates = await getLiveCandidates();
     const liveDocs = await getLiveDocuments();

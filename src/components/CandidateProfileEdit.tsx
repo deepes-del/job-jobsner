@@ -83,14 +83,14 @@ export default function CandidateProfileEdit({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   
   // Profile Form States (matching all inputs from user's screenshots)
-  const [fullName, setFullName] = useState(initialProfile.fullName || candidate?.fullName || 'Sathya');
-  const [mobile, setMobile] = useState(initialProfile.mobile || candidate?.mobile || '7892939485');
-  const [locality, setLocality] = useState(initialProfile.locality || initialProfile.city || initialProfile.address || '100 Feet Road');
-  const [education, setEducation] = useState(initialProfile.education || 'Below 10th');
+  const [fullName, setFullName] = useState(initialProfile.fullName || candidate?.fullName || '');
+  const [mobile, setMobile] = useState(initialProfile.mobile || candidate?.mobile || '');
+  const [locality, setLocality] = useState(initialProfile.locality || initialProfile.city || initialProfile.address || '');
+  const [education, setEducation] = useState(initialProfile.education || '');
   const [experience, setExperience] = useState<string>(
     typeof initialProfile.experience === 'number' 
       ? (initialProfile.experience === 0 ? '0 Years (Fresher)' : `${initialProfile.experience} Year${initialProfile.experience > 1 ? 's' : ''}`)
-      : (initialProfile.experience || 'Less than 1 year')
+      : (initialProfile.experience || '')
   );
   const [bikeAvailable, setBikeAvailable] = useState<boolean>(
     initialProfile.bikeAvailable === 'Yes' || initialProfile.bikeAvailable === undefined
@@ -98,17 +98,17 @@ export default function CandidateProfileEdit({
   const [drivingLicenseAvailable, setDrivingLicenseAvailable] = useState<boolean>(
     initialProfile.drivingLicenseAvailable === 'Yes' || initialProfile.drivingLicenseAvailable === undefined
   );
-  const [age, setAge] = useState<string>(initialProfile.age ? String(initialProfile.age) : '30');
-  const [gender, setGender] = useState(initialProfile.gender || 'Male');
-  const [recentCategory, setRecentCategory] = useState(initialProfile.recentAppliedCategory || 'Last-Mile Delivery');
-  const [currentJobRole, setCurrentJobRole] = useState(initialProfile.currentJobRole || 'Delivery Executive');
+  const [age, setAge] = useState<string>(initialProfile.age ? String(initialProfile.age) : '');
+  const [gender, setGender] = useState(initialProfile.gender || '');
+  const [recentCategory, setRecentCategory] = useState(initialProfile.recentAppliedCategory || '');
+  const [currentJobRole, setCurrentJobRole] = useState(initialProfile.currentJobRole || '');
   const [profilePhoto, setProfilePhoto] = useState(initialProfile.profilePhoto || '');
 
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
-  const [resumeFileName, setResumeFileName] = useState<string | null>('My_Resume.pdf');
+  const [resumeFileName, setResumeFileName] = useState<string | null>(null);
 
   const resumeInputRef = useRef<HTMLInputElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -343,7 +343,7 @@ export default function CandidateProfileEdit({
                 {profilePhoto ? (
                   <img src={profilePhoto} alt={fullName} className="w-full h-full object-cover" />
                 ) : (
-                  <span>{fullName ? fullName.charAt(0).toUpperCase() : 'S'}</span>
+                  <span>{fullName ? fullName.charAt(0).toUpperCase() : '?'}</span>
                 )}
               </div>
               <button 
@@ -367,7 +367,7 @@ export default function CandidateProfileEdit({
             {/* Name & Contact Details */}
             <div className="space-y-1.5">
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-2.5">
-                <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">{fullName || 'Sathya'}</h2>
+                <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">{fullName || '—'}</h2>
                 <span className="text-xs font-bold text-slate-600 bg-white/90 border border-gray-200 px-2.5 py-0.5 rounded-lg shadow-2xs">
                   {recentCategory}
                 </span>
@@ -377,19 +377,19 @@ export default function CandidateProfileEdit({
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 text-xs font-medium text-slate-600 pt-1">
                 <span className="flex items-center gap-1.5 bg-white border border-gray-200 px-2.5 sm:px-3 py-1 rounded-lg shadow-2xs">
                   <Phone className="w-3.5 h-3.5 text-slate-400" />
-                  <strong className="text-slate-800">{mobile || '7892939485'}</strong>
+                  <strong className="text-slate-800">{mobile || '—'}</strong>
                 </span>
                 <span className="flex items-center gap-1.5 bg-white border border-gray-200 px-2.5 sm:px-3 py-1 rounded-lg shadow-2xs">
                   <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                  <span>{locality || '100 Feet Road'}</span>
+                  <span>{locality || '—'}</span>
                 </span>
                 <span className="flex items-center gap-1.5 bg-white border border-gray-200 px-2.5 sm:px-3 py-1 rounded-lg shadow-2xs">
                   <Briefcase className="w-3.5 h-3.5 text-slate-400" />
-                  <span>{experience || 'Less than 1 year'}</span>
+                  <span>{experience || '—'}</span>
                 </span>
                 <span className="flex items-center gap-1.5 bg-white border border-gray-200 px-2.5 sm:px-3 py-1 rounded-lg shadow-2xs">
                   <GraduationCap className="w-3.5 h-3.5 text-slate-400" />
-                  <span>{education || 'Below 10th'}</span>
+                  <span>{education || '—'}</span>
                 </span>
               </div>
             </div>
@@ -461,55 +461,55 @@ export default function CandidateProfileEdit({
               {/* Full Name */}
               <div className="p-3 bg-slate-50/70 rounded-xl border border-gray-100">
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Full Name</span>
-                <span className="text-sm font-black text-slate-900">{fullName || 'Sathya'}</span>
+                <span className="text-sm font-black text-slate-900">{fullName || '—'}</span>
               </div>
 
               {/* Mobile Number */}
               <div className="p-3 bg-slate-50/70 rounded-xl border border-gray-100">
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Mobile Number</span>
-                <span className="text-sm font-black text-slate-900">{mobile || '7892939485'}</span>
+                <span className="text-sm font-black text-slate-900">{mobile || '—'}</span>
               </div>
 
               {/* Age */}
               <div className="p-3 bg-slate-50/70 rounded-xl border border-gray-100">
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Age</span>
-                <span className="text-sm font-black text-slate-900">{age ? `${age} Years` : '30 Years'}</span>
+                <span className="text-sm font-black text-slate-900">{age ? `${age} Years` : '—'}</span>
               </div>
 
               {/* Gender */}
               <div className="p-3 bg-slate-50/70 rounded-xl border border-gray-100">
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Gender</span>
-                <span className="text-sm font-black text-slate-900">{gender || 'Male'}</span>
+                <span className="text-sm font-black text-slate-900">{gender || '—'}</span>
               </div>
 
               {/* Education Level */}
               <div className="p-3 bg-slate-50/70 rounded-xl border border-gray-100">
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Education Level</span>
-                <span className="text-sm font-black text-slate-900">{education || 'Below 10th'}</span>
+                <span className="text-sm font-black text-slate-900">{education || '—'}</span>
               </div>
 
               {/* Work Experience */}
               <div className="p-3 bg-slate-50/70 rounded-xl border border-gray-100">
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Work Experience</span>
-                <span className="text-sm font-black text-slate-900">{experience || 'Less than 1 year'}</span>
+                <span className="text-sm font-black text-slate-900">{experience || '—'}</span>
               </div>
 
               {/* Recent Applied Category */}
               <div className="p-3 bg-slate-50/70 rounded-xl border border-gray-100">
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Recent Applied Category</span>
-                <span className="text-sm font-black text-slate-900">{recentCategory || 'Last-Mile Delivery'}</span>
+                <span className="text-sm font-black text-slate-900">{recentCategory || '—'}</span>
               </div>
 
               {/* Current/Last Job Role */}
               <div className="p-3 bg-slate-50/70 rounded-xl border border-gray-100">
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Current / Last Job Role</span>
-                <span className="text-sm font-black text-slate-900">{currentJobRole || 'Delivery Partner'}</span>
+                <span className="text-sm font-black text-slate-900">{currentJobRole || '—'}</span>
               </div>
 
               {/* Chosen Locality / City */}
               <div className="sm:col-span-2 p-3 bg-slate-50/70 rounded-xl border border-gray-100">
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Preferred Locality / City</span>
-                <span className="text-sm font-black text-slate-900">{locality || '100 Feet Road, Bengaluru'}</span>
+                <span className="text-sm font-black text-slate-900">{locality || '—'}</span>
               </div>
 
               {/* Vehicle & Driving License Badges */}

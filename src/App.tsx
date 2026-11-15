@@ -193,14 +193,13 @@ export default function App() {
 
     const guestCand: Candidate = {
       id: 'guest_' + Math.random().toString(36).substring(2, 9),
-      fullName: 'Guest Candidate',
+      fullName: '',
       mobile: '',
       isGuest: true,
       profile: {
-        fullName: 'Guest Candidate',
-        bikeAvailable: 'Yes',
-        drivingLicenseAvailable: 'Yes',
-        languagesKnown: ['Hindi', 'English']
+        fullName: '',
+        mobile: '',
+        languagesKnown: []
       },
       documents: []
     };
