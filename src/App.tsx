@@ -171,15 +171,62 @@ export default function App() {
 
   const [showExitConfirmModal, setShowExitConfirmModal] = useState(false);
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
-  // Handle /privacy-policy URL route
+  // Guest Login Helpers & Separate Link Route Detection
+  const isGuestUrl = () => {
+    if (typeof window === 'undefined') return false;
+    const path = window.location.pathname.toLowerCase();
+    const search = window.location.search.toLowerCase();
+    const hash = window.location.hash.toLowerCase();
+    return (
+      search.includes('guest=true') ||
+      search.includes('guest=1') ||
+      search.includes('mode=guest') ||
+      path.includes('/guest') ||
+      hash.includes('guest')
+    );
+  };
+
+  const handleStartGuestSession = () => {
+    localStorage.removeItem('jobsner_explicit_logout');
+    localStorage.setItem('jobsner_is_guest', 'true');
+    localStorage.setItem('jobsner_portal', 'candidate');
+
+    const guestCand: Candidate = {
+      id: 'guest_' + Math.random().toString(36).substring(2, 9),
+      fullName: 'Guest Candidate',
+      mobile: '',
+      isGuest: true,
+      profile: {
+        fullName: 'Guest Candidate',
+        bikeAvailable: 'Yes',
+        drivingLicenseAvailable: 'Yes',
+        languagesKnown: ['Hindi', 'English']
+      },
+      documents: []
+    };
+
+    setCandidate(guestCand);
+    setToken('guest_token');
+    setUserRole('candidate');
+    setPortal('candidate');
+    setView('dashboard');
+    setCandidateActiveTab('find_jobs');
+  };
+
+  // Handle /privacy-policy & Guest Login URL routes
   useEffect(() => {
-    const checkPrivacyRoute = () => {
+    const checkRoutes = () => {
       const path = window.location.pathname + window.location.hash + window.location.search;
       if (path.includes('privacy')) {
         setShowPrivacyPolicy(true);
       }
+      if (isGuestUrl() && !localStorage.getItem('delivery_hiring_token')) {
+        handleStartGuestSession();
+      }
     };
-    checkPrivacyRoute();
+    checkRoutes();
+    window.addEventListener('popstate', checkRoutes);
+    return () => window.removeEventListener('popstate', checkRoutes);
   }, []);
 
 
@@ -420,15 +467,14 @@ export default function App() {
 
 
         // Only clear role and force login view if user has no valid session and not a transient network error
-
         if (!isRestored && !isTransient) {
-
-          setUserRole(null);
-
-          setView('login');
-
-          setRecruiterView('login');
-
+          if (isGuestUrl() || localStorage.getItem('jobsner_is_guest') === 'true') {
+            handleStartGuestSession();
+          } else {
+            setUserRole(null);
+            setView('login');
+            setRecruiterView('login');
+          }
         }
 
       } catch (err) {
@@ -652,6 +698,7 @@ export default function App() {
     logoutFirebase().catch(e => console.warn('[Firebase SignOut]', e));
 
     localStorage.removeItem('delivery_hiring_token');
+    localStorage.removeItem('jobsner_is_guest');
 
     setCandidate(null);
 
@@ -1636,17 +1683,12 @@ export default function App() {
                     >
 
                       <CandidateLogin 
-
                         onSuccess={handleCandidateAuthSuccess}
-
                         onNavigateToRegister={(prefill) => {
-
                           if (prefill) setCandidatePrefill(prefill);
-
                           setView('register');
-
                         }}
-
+                        onGuestLogin={handleStartGuestSession}
                       />
 
                       <div className="max-w-md mx-auto text-center mt-4 flex flex-col gap-2.5">
@@ -1748,6 +1790,8 @@ export default function App() {
                         onManageDocuments={() => setView('documents')}
 
                         onUpdateProfile={handleCandidateProfileSaveSuccess}
+
+                        onUpgradeGuestCandidate={handleCandidateAuthSuccess}
 
                         isNotificationOpen={isNotificationModalOpen}
 

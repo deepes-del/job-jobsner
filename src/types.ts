@@ -40,6 +40,7 @@ export interface Candidate {
   email?: string;
   profile: Profile;
   documents?: CandidateDocument[];
+  isGuest?: boolean;
 }
 
 export interface AuthState {

@@ -1389,6 +1389,19 @@ async function authenticateToken(req: express.Request, res: express.Response, ne
     return res.status(401).json({ error: 'Access denied. No token provided.' });
   }
 
+  // Gracefully handle guest candidate sessions for read endpoints
+  if (token === 'guest_token' || token.startsWith('guest_')) {
+    (req as any).candidate = {
+      id: token,
+      fullName: 'Guest Candidate',
+      mobile: '',
+      isGuest: true,
+      profile: { fullName: 'Guest Candidate', bikeAvailable: 'Yes', drivingLicenseAvailable: 'Yes' }
+    };
+    (req as any).token = token;
+    return next();
+  }
+
   let db = readDB();
   db.tokens = db.tokens || {};
   db.revokedTokens = db.revokedTokens || {};
@@ -3860,6 +3873,256 @@ app.post('/api/applications', authenticateToken, async (req, res) => {
   const candidate = (req as any).candidate;
   const { jobId } = req.body;
   await applyCandidateToJob(candidate, jobId, res);
+});
+
+// 7.4.1 Guest Candidate Job Apply (Asks for name & number, stores candidate and application in Supabase)
+app.post('/api/guest/apply', async (req, res) => {
+  try {
+    const { jobId, fullName, mobile } = req.body;
+
+    if (!jobId) {
+      return res.status(400).json({ error: 'jobId is required.' });
+    }
+
+    if (!fullName || typeof fullName !== 'string' || !fullName.trim()) {
+      return res.status(400).json({ error: 'Candidate Full Name is required.' });
+    }
+
+    const cleanDigits = String(mobile || '').replace(/\D/g, '').slice(-10);
+    if (!cleanDigits || cleanDigits.length !== 10) {
+      return res.status(400).json({ error: 'Please enter a valid 10-digit mobile number.' });
+    }
+
+    const trimmedName = fullName.trim();
+    const nowIso = new Date().toISOString();
+
+    // 1. Check if candidate already exists in database with this mobile number
+    const liveCandidates = await getLiveCandidates();
+    let candidateRecord = liveCandidates.find((c: any) => {
+      const cMob = String(c.mobile || c.profile?.mobile || '').replace(/\D/g, '').slice(-10);
+      return cMob === cleanDigits;
+    });
+
+    const db = readDB();
+    db.candidates = db.candidates || [];
+    db.tokens = db.tokens || {};
+
+    if (!candidateRecord) {
+      const newCandId = 'cand_' + crypto.randomUUID();
+      candidateRecord = {
+        id: newCandId,
+        fullName: trimmedName,
+        mobile: cleanDigits,
+        email: null,
+        salt: '',
+        hash: '',
+        profile: {
+          fullName: trimmedName,
+          mobile: cleanDigits,
+          registeredVia: 'guest_apply',
+          bikeAvailable: 'Yes',
+          drivingLicenseAvailable: 'Yes',
+          languagesKnown: ['Hindi', 'English']
+        },
+        createdAt: nowIso,
+        updatedAt: nowIso
+      };
+      db.candidates.push(candidateRecord);
+    } else {
+      candidateRecord.fullName = trimmedName;
+      candidateRecord.profile = candidateRecord.profile || {};
+      candidateRecord.profile.fullName = trimmedName;
+      candidateRecord.profile.mobile = cleanDigits;
+      candidateRecord.updatedAt = nowIso;
+
+      const candIndex = db.candidates.findIndex((c: any) => String(c.id) === String(candidateRecord.id));
+      if (candIndex !== -1) {
+        db.candidates[candIndex] = { ...db.candidates[candIndex], ...candidateRecord };
+      } else {
+        db.candidates.push(candidateRecord);
+      }
+    }
+
+    // 2. CRITICAL: Upsert candidate to Supabase
+    if (isSupabaseConfigured()) {
+      try {
+        const candRow = toSupabaseCandidateRow(candidateRecord);
+        if (candRow) {
+          await safeSupabaseUpsert('candidates', [candRow]);
+        }
+      } catch (supaCandErr) {
+        console.warn('[Guest Apply - Supabase Candidate Upsert Warning]', supaCandErr);
+      }
+    }
+
+    // 3. Generate candidate session token
+    const token = generateCandidateSessionToken(candidateRecord.id);
+    db.tokens[token] = candidateRecord.id;
+    await writeDB(db);
+
+    // 4. Validate Job
+    const allJobs = await getLiveJobs();
+    const job = allJobs.find((j: any) => String(j.id) === String(jobId));
+    if (!job) {
+      return res.status(404).json({ error: 'Job opening not found.' });
+    }
+
+    if (job.status === 'Draft') {
+      return res.status(403).json({ error: 'Cannot apply to a draft job.' });
+    }
+
+    if (job.status === 'Closed') {
+      return res.status(400).json({ error: 'This job listing has been closed and cannot accept new applications.' });
+    }
+
+    const recruiterId = job.recruiterId || job.recruiter_id;
+    if (!recruiterId || !String(recruiterId).trim()) {
+      return res.status(500).json({ error: 'Job is missing recruiterId.' });
+    }
+
+    // 5. Check duplicate application
+    const allApps = await getLiveApplications();
+    const existingApplication = allApps.find(
+      (app: any) =>
+        String(app.candidateId || app.candidate_id) === String(candidateRecord.id) &&
+        String(app.jobId || app.job_id) === String(jobId) &&
+        app.withdrawStatus !== 'Withdrawn' &&
+        app.currentStatus !== 'Withdrawn'
+    );
+
+    if (existingApplication) {
+      return res.status(200).json({
+        message: 'You have already applied for this job listing.',
+        alreadyApplied: true,
+        candidate: {
+          id: candidateRecord.id,
+          fullName: candidateRecord.fullName,
+          mobile: candidateRecord.mobile,
+          email: candidateRecord.email,
+          profile: candidateRecord.profile
+        },
+        token,
+        application: existingApplication
+      });
+    }
+
+    // 6. Create application row
+    const applicationId = crypto.randomUUID();
+    const newApplication = {
+      id: applicationId,
+      candidateId: candidateRecord.id,
+      jobId: String(jobId),
+      recruiterId: String(recruiterId),
+      appliedDate: nowIso,
+      currentStatus: 'Applied',
+      withdrawStatus: 'Active',
+      lastUpdated: nowIso
+    };
+
+    // 7. CRITICAL: Insert application into Supabase
+    if (isSupabaseConfigured()) {
+      try {
+        const appRow = toSupabaseApplicationRow(newApplication);
+        await safeSupabaseUpsert('applications', [appRow]);
+
+        const newCount = (job.applicationsCount || 0) + 1;
+        const jobRow = toSupabaseJobRow({ ...job, applicationsCount: newCount, updatedAt: nowIso });
+        await safeSupabaseUpsert('jobs', [jobRow]);
+
+        const allocRecord = {
+          applicationId: newApplication.id,
+          allocationStatus: 'Recruiter Visible',
+          jobId: String(jobId),
+          recruiterId: String(recruiterId),
+          candidateId: String(candidateRecord.id),
+          allocatedAt: nowIso
+        };
+        await safeSupabaseUpsert('candidateAllocations', [toSupabaseAllocationRow(allocRecord)]);
+      } catch (supaAppErr) {
+        console.warn('[Guest Apply - Supabase Application Upsert Warning]', supaAppErr);
+      }
+    }
+
+    // Local DB update
+    const freshDb = readDB();
+    freshDb.applications = freshDb.applications || [];
+    freshDb.applications.push(newApplication);
+
+    freshDb.candidateAllocations = freshDb.candidateAllocations || [];
+    freshDb.candidateAllocations.push({
+      applicationId: newApplication.id,
+      allocationStatus: 'Recruiter Visible',
+      jobId: String(jobId),
+      recruiterId: String(recruiterId),
+      candidateId: String(candidateRecord.id),
+      allocatedAt: nowIso
+    });
+
+    freshDb.jobs = freshDb.jobs || [];
+    const dbJob = freshDb.jobs.find((j: any) => String(j.id) === String(jobId));
+    if (dbJob) {
+      dbJob.applicationsCount = (dbJob.applicationsCount || 0) + 1;
+    }
+
+    await writeDB(freshDb);
+
+    // 8. Notifications
+    try {
+      await createAndBroadcastNotification({
+        title: '📄 New Candidate Application Received!',
+        message: `${trimmedName} (+91 ${cleanDigits}) has applied for "${job.title}" at ${job.companyName || 'Hiring Company'}.`,
+        type: 'NEW_APPLICATION',
+        targetRole: 'RECRUITER',
+        recipientId: String(recruiterId),
+        jobId: job.id,
+        applicationId: newApplication.id,
+        candidateId: candidateRecord.id,
+        metadata: {
+          applicationId: newApplication.id,
+          jobId: job.id,
+          jobTitle: job.title,
+          companyName: job.companyName,
+          candidateName: trimmedName,
+          candidateMobile: cleanDigits
+        }
+      });
+
+      await createAndBroadcastNotification({
+        title: '✅ Application Submitted Successfully',
+        message: `Your application for "${job.title}" at ${job.companyName || 'Hiring Company'} was submitted. Recruiter will review your profile shortly.`,
+        type: 'APPLICATION_SUBMITTED',
+        targetRole: 'CANDIDATE',
+        recipientId: candidateRecord.id,
+        jobId: job.id,
+        applicationId: newApplication.id,
+        metadata: {
+          applicationId: newApplication.id,
+          jobId: job.id,
+          jobTitle: job.title,
+          companyName: job.companyName
+        }
+      });
+    } catch (notifErr) {
+      console.warn('[Guest Apply Notification Warning]', notifErr);
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: 'Application submitted successfully.',
+      candidate: {
+        id: candidateRecord.id,
+        fullName: candidateRecord.fullName,
+        mobile: candidateRecord.mobile,
+        email: candidateRecord.email,
+        profile: candidateRecord.profile
+      },
+      token,
+      application: newApplication
+    });
+  } catch (err: any) {
+    console.error('[Guest Apply Error]', err);
+    return res.status(500).json({ error: err.message || 'Server error submitting guest application.' });
+  }
 });
 
 // 7.5 Get My Applications (Candidates)

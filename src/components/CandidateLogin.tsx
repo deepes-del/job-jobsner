@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Phone, Lock, LogIn, ArrowRight, Mail, Key, ShieldCheck, RefreshCw } from 'lucide-react';
+import { Phone, Lock, LogIn, ArrowRight, Mail, Key, ShieldCheck, RefreshCw, Sparkles, Share2, Check } from 'lucide-react';
 import { Candidate } from '../types';
 import {
   setupRecaptcha,
@@ -17,13 +17,15 @@ import JobsnerLogo from './JobsnerLogo';
 interface CandidateLoginProps {
   onSuccess: (candidate: Candidate, token: string) => void;
   onNavigateToRegister: (prefill?: { mobile?: string; email?: string; fullName?: string }) => void;
+  onGuestLogin?: () => void;
 }
 
-export default function CandidateLogin({ onSuccess, onNavigateToRegister }: CandidateLoginProps) {
+export default function CandidateLogin({ onSuccess, onNavigateToRegister, onGuestLogin }: CandidateLoginProps) {
   const [authMode, setAuthMode] = useState<'otp' | 'password'>('otp');
   const [mobile, setMobile] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [copiedGuestLink, setCopiedGuestLink] = useState(false);
   
   // Phone OTP States
   const [otpStep, setOtpStep] = useState<'phone' | 'code'>('phone');
@@ -547,8 +549,66 @@ export default function CandidateLogin({ onSuccess, onNavigateToRegister }: Cand
         </form>
       )}
 
+      {/* GUEST LOGIN OPTION (Explore website & apply) */}
+      <div className="mt-5 pt-4 border-t border-dashed border-gray-200">
+        <button
+          type="button"
+          onClick={() => {
+            if (onGuestLogin) {
+              onGuestLogin();
+            }
+          }}
+          className="w-full py-2.5 px-3.5 bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 hover:from-emerald-100 hover:to-teal-100 border border-emerald-200/90 hover:border-emerald-400 text-emerald-900 text-xs font-bold rounded-2xl transition-all flex items-center justify-between shadow-2xs group cursor-pointer"
+        >
+          <div className="flex items-center gap-2.5">
+            <span className="w-7 h-7 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+              <Sparkles className="w-4 h-4 text-emerald-100" />
+            </span>
+            <div className="text-left">
+              <span className="block font-black text-emerald-950 text-xs tracking-tight">Guest Login</span>
+              <span className="block text-[10px] text-emerald-700 font-medium">Explore all jobs freely & experience features</span>
+            </div>
+          </div>
+          <span className="text-[11px] font-black text-emerald-700 group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
+            Explore as Guest <ArrowRight className="w-3.5 h-3.5" />
+          </span>
+        </button>
+
+        {/* Separate Direct Guest Link */}
+        <div className="mt-2.5 flex items-center justify-between px-2 text-[10.5px] text-gray-500">
+          <span className="text-gray-400 font-medium">Direct guest entry link:</span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const guestUrl = `${window.location.origin}/?guest=true`;
+              if (navigator.clipboard) {
+                navigator.clipboard.writeText(guestUrl);
+              }
+              setCopiedGuestLink(true);
+              setTimeout(() => setCopiedGuestLink(false), 2500);
+            }}
+            className="text-emerald-700 hover:text-emerald-800 font-bold flex items-center gap-1 hover:underline cursor-pointer"
+            title="Copy guest link to share"
+          >
+            {copiedGuestLink ? (
+              <>
+                <Check className="w-3 h-3 text-emerald-600" />
+                <span className="text-emerald-600">Copied!</span>
+              </>
+            ) : (
+              <>
+                <Share2 className="w-3 h-3" />
+                <span>Copy Guest Link</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
       {/* Footer */}
-      <div className="mt-8 pt-6 border-t border-gray-100 text-center text-xs text-gray-500">
+      <div className="mt-6 pt-5 border-t border-gray-100 text-center text-xs text-gray-500">
         Don't have an account yet?{' '}
         <button
           type="button"
