@@ -76,33 +76,42 @@ export default function CandidateProfileEdit({
   token, 
   onSaveSuccess, 
   onCancel,
-  contactedJobsCount = 1,
-  savedJobsCount = 4,
+  contactedJobsCount = 0,
+  savedJobsCount = 0,
   onNavigateTab
 }: CandidateProfileEditProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   
+  const isGuest = Boolean(
+    candidate?.isGuest || 
+    token === 'guest_token' || 
+    candidate?.id?.startsWith('guest_') || 
+    !candidate?.mobile
+  );
+
   // Profile Form States (matching all inputs from user's screenshots)
-  const [fullName, setFullName] = useState(initialProfile.fullName || candidate?.fullName || '');
-  const [mobile, setMobile] = useState(initialProfile.mobile || candidate?.mobile || '');
-  const [locality, setLocality] = useState(initialProfile.locality || initialProfile.city || initialProfile.address || '');
-  const [education, setEducation] = useState(initialProfile.education || '');
+  const [fullName, setFullName] = useState(isGuest ? '' : (initialProfile.fullName || candidate?.fullName || ''));
+  const [mobile, setMobile] = useState(isGuest ? '' : (initialProfile.mobile || candidate?.mobile || ''));
+  const [locality, setLocality] = useState(isGuest ? '' : (initialProfile.locality || initialProfile.city || initialProfile.address || ''));
+  const [education, setEducation] = useState(isGuest ? '' : (initialProfile.education || ''));
   const [experience, setExperience] = useState<string>(
-    typeof initialProfile.experience === 'number' 
-      ? (initialProfile.experience === 0 ? '0 Years (Fresher)' : `${initialProfile.experience} Year${initialProfile.experience > 1 ? 's' : ''}`)
-      : (initialProfile.experience || '')
+    isGuest
+      ? ''
+      : typeof initialProfile.experience === 'number' 
+        ? (initialProfile.experience === 0 ? '0 Years (Fresher)' : `${initialProfile.experience} Year${initialProfile.experience > 1 ? 's' : ''}`)
+        : (initialProfile.experience || '')
   );
   const [bikeAvailable, setBikeAvailable] = useState<boolean>(
-    initialProfile.bikeAvailable === 'Yes' || initialProfile.bikeAvailable === undefined
+    isGuest ? false : (initialProfile.bikeAvailable === 'Yes' || initialProfile.bikeAvailable === undefined)
   );
   const [drivingLicenseAvailable, setDrivingLicenseAvailable] = useState<boolean>(
-    initialProfile.drivingLicenseAvailable === 'Yes' || initialProfile.drivingLicenseAvailable === undefined
+    isGuest ? false : (initialProfile.drivingLicenseAvailable === 'Yes' || initialProfile.drivingLicenseAvailable === undefined)
   );
-  const [age, setAge] = useState<string>(initialProfile.age ? String(initialProfile.age) : '');
-  const [gender, setGender] = useState(initialProfile.gender || '');
-  const [recentCategory, setRecentCategory] = useState(initialProfile.recentAppliedCategory || '');
-  const [currentJobRole, setCurrentJobRole] = useState(initialProfile.currentJobRole || '');
-  const [profilePhoto, setProfilePhoto] = useState(initialProfile.profilePhoto || '');
+  const [age, setAge] = useState<string>(isGuest ? '' : (initialProfile.age ? String(initialProfile.age) : ''));
+  const [gender, setGender] = useState(isGuest ? '' : (initialProfile.gender || ''));
+  const [recentCategory, setRecentCategory] = useState(isGuest ? '' : (initialProfile.recentAppliedCategory || ''));
+  const [currentJobRole, setCurrentJobRole] = useState(isGuest ? '' : (initialProfile.currentJobRole || ''));
+  const [profilePhoto, setProfilePhoto] = useState(isGuest ? '' : (initialProfile.profilePhoto || ''));
 
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -331,6 +340,19 @@ export default function CandidateProfileEdit({
         )}
       </AnimatePresence>
 
+      {/* GUEST BANNER NOTIFICATION */}
+      {isGuest && (
+        <div className="p-4 bg-amber-50/80 border border-amber-200 rounded-2xl flex items-start gap-3 shadow-2xs">
+          <div className="w-8 h-8 rounded-xl bg-amber-100 border border-amber-200 text-amber-700 flex items-center justify-center shrink-0">
+            <Sparkles className="w-4 h-4" />
+          </div>
+          <div className="text-xs text-amber-900 leading-relaxed">
+            <span className="font-black text-amber-950 block text-xs mb-0.5">Guest Mode — Profile Empty for Privacy</span>
+            You are browsing as a guest. All profile details remain blank and unpopulated. When you apply for any job, Jobsner will ask for your name and mobile number, and your candidate details will be securely saved in the database.
+          </div>
+        </div>
+      )}
+
       {/* 2. HERO PROFILE BANNER CARD */}
       <div className="bg-gradient-to-br from-orange-50/70 via-white to-orange-50/30 border border-orange-100/80 rounded-2xl p-4 sm:p-6 md:p-8 shadow-xs relative overflow-hidden">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
@@ -367,10 +389,12 @@ export default function CandidateProfileEdit({
             {/* Name & Contact Details */}
             <div className="space-y-1.5">
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-2.5">
-                <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">{fullName || '—'}</h2>
-                <span className="text-xs font-bold text-slate-600 bg-white/90 border border-gray-200 px-2.5 py-0.5 rounded-lg shadow-2xs">
-                  {recentCategory}
-                </span>
+                <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">{fullName || (isGuest ? 'Guest Candidate' : '—')}</h2>
+                {recentCategory ? (
+                  <span className="text-xs font-bold text-slate-600 bg-white/90 border border-gray-200 px-2.5 py-0.5 rounded-lg shadow-2xs">
+                    {recentCategory}
+                  </span>
+                ) : null}
               </div>
 
               {/* Tag Pills */}
@@ -419,12 +443,20 @@ export default function CandidateProfileEdit({
               <span className="text-xl font-black text-slate-900 mt-1">{savedJobsCount}</span>
             </button>
 
-            {/* Profile Completion */}
-            <div className="col-span-2 sm:col-span-1 p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl flex flex-col justify-between text-left shadow-2xs">
-              <span className="text-[11px] font-bold text-emerald-800 flex items-center gap-1">
-                <CheckCircle className="w-3 h-3 text-emerald-600" /> Status
+            {/* Profile Completion / Status */}
+            <div className={`col-span-2 sm:col-span-1 p-3.5 rounded-2xl flex flex-col justify-between text-left shadow-2xs ${
+              isGuest ? 'bg-amber-50/80 border border-amber-200' : 'bg-emerald-50 border border-emerald-200'
+            }`}>
+              <span className={`text-[11px] font-bold flex items-center gap-1 ${
+                isGuest ? 'text-amber-800' : 'text-emerald-800'
+              }`}>
+                {isGuest ? <ShieldCheck className="w-3.5 h-3.5 text-amber-600" /> : <CheckCircle className="w-3 h-3 text-emerald-600" />} Status
               </span>
-              <span className="text-xs font-black text-emerald-900 mt-1">Ready for Dispatch</span>
+              <span className={`text-xs font-black mt-1 ${
+                isGuest ? 'text-amber-900' : 'text-emerald-900'
+              }`}>
+                {isGuest ? 'Guest Mode (Blank)' : 'Ready for Dispatch'}
+              </span>
             </div>
           </div>
 
@@ -518,11 +550,17 @@ export default function CandidateProfileEdit({
                   <Bike className="w-5 h-5 text-orange-600" />
                   <div>
                     <span className="text-[11px] font-bold text-slate-500 uppercase block">Owns Two Wheeler / Bike</span>
-                    <span className="text-xs font-black text-slate-900">{bikeAvailable ? 'Yes (Available for shifts)' : 'No'}</span>
+                    <span className="text-xs font-black text-slate-900">
+                      {isGuest ? '— (Not specified)' : (bikeAvailable ? 'Yes (Available for shifts)' : 'No')}
+                    </span>
                   </div>
                 </div>
-                <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${bikeAvailable ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-700'}`}>
-                  {bikeAvailable ? 'YES' : 'NO'}
+                <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${
+                  isGuest 
+                    ? 'bg-slate-200 text-slate-600' 
+                    : (bikeAvailable ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-700')
+                }`}>
+                  {isGuest ? '—' : (bikeAvailable ? 'YES' : 'NO')}
                 </span>
               </div>
 
@@ -531,11 +569,17 @@ export default function CandidateProfileEdit({
                   <CreditCard className="w-5 h-5 text-orange-600" />
                   <div>
                     <span className="text-[11px] font-bold text-slate-500 uppercase block">Driving License (DL)</span>
-                    <span className="text-xs font-black text-slate-900">{drivingLicenseAvailable ? 'Yes (Valid Commercial/Personal DL)' : 'No'}</span>
+                    <span className="text-xs font-black text-slate-900">
+                      {isGuest ? '— (Not specified)' : (drivingLicenseAvailable ? 'Yes (Valid Commercial/Personal DL)' : 'No')}
+                    </span>
                   </div>
                 </div>
-                <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${drivingLicenseAvailable ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-700'}`}>
-                  {drivingLicenseAvailable ? 'YES' : 'NO'}
+                <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${
+                  isGuest 
+                    ? 'bg-slate-200 text-slate-600' 
+                    : (drivingLicenseAvailable ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-700')
+                }`}>
+                  {isGuest ? '—' : (drivingLicenseAvailable ? 'YES' : 'NO')}
                 </span>
               </div>
 
@@ -676,7 +720,7 @@ export default function CandidateProfileEdit({
                       required
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      placeholder="e.g. Sathya"
+                      placeholder="Enter candidate full name"
                       className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
                     />
                   </div>
@@ -690,7 +734,7 @@ export default function CandidateProfileEdit({
                       type="tel"
                       value={mobile}
                       onChange={(e) => setMobile(e.target.value)}
-                      placeholder="e.g. 7892939485"
+                      placeholder="Enter 10-digit mobile number"
                       className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
                     />
                   </div>
@@ -704,7 +748,7 @@ export default function CandidateProfileEdit({
                       type="text"
                       value={locality}
                       onChange={(e) => setLocality(e.target.value)}
-                      placeholder="e.g. 100 Feet Road, Bengaluru"
+                      placeholder="Enter area, locality or city"
                       className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
                     />
                   </div>
@@ -720,6 +764,7 @@ export default function CandidateProfileEdit({
                         onChange={(e) => setEducation(e.target.value)}
                         className="w-full appearance-none px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all cursor-pointer"
                       >
+                        <option value="">Select Education Level</option>
                         {EDUCATION_OPTIONS.map((opt) => (
                           <option key={opt} value={opt}>{opt}</option>
                         ))}
@@ -741,6 +786,7 @@ export default function CandidateProfileEdit({
                         onChange={(e) => setExperience(e.target.value)}
                         className="w-full appearance-none px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all cursor-pointer"
                       >
+                        <option value="">Select Work Experience</option>
                         {EXPERIENCE_OPTIONS.map((opt) => (
                           <option key={opt} value={opt}>{opt}</option>
                         ))}
@@ -760,7 +806,7 @@ export default function CandidateProfileEdit({
                       type="number"
                       value={age}
                       onChange={(e) => setAge(e.target.value)}
-                      placeholder="e.g. 30"
+                      placeholder="Enter age in years"
                       min="18"
                       max="100"
                       className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
@@ -777,6 +823,7 @@ export default function CandidateProfileEdit({
                       onChange={(e) => setGender(e.target.value)}
                       className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all cursor-pointer"
                     >
+                      <option value="">Select Gender</option>
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
                       <option value="Other">Other</option>
@@ -794,6 +841,7 @@ export default function CandidateProfileEdit({
                         onChange={(e) => setRecentCategory(e.target.value)}
                         className="w-full appearance-none px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all cursor-pointer"
                       >
+                        <option value="">Select Job Category</option>
                         {CATEGORY_OPTIONS.map((cat) => (
                           <option key={cat} value={cat}>{cat}</option>
                         ))}

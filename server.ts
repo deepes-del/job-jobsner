@@ -3758,9 +3758,20 @@ async function applyCandidateToJob(candidate: any, rawJobId: any, res: any) {
 
     // 2. Insert into Supabase (Fail if insertion fails, return HTTP 500)
     if (isSupabaseConfigured()) {
-      const upsertRes = await safeSupabaseUpsert('applications', [newApplication]);
+      const appRow = toSupabaseApplicationRow(newApplication);
+      const upsertRes = await safeSupabaseUpsert('applications', [appRow]);
       if (!upsertRes.success) {
         return res.status(500).json({ error: upsertRes.error || 'Failed to insert application into Supabase.' });
+      }
+
+      // Upsert candidate record to Supabase
+      try {
+        const candRow = toSupabaseCandidateRow(candidate);
+        if (candRow) {
+          await safeSupabaseUpsert('candidates', [candRow]);
+        }
+      } catch (candErr) {
+        console.warn('[Supabase Candidate Upsert Warning]', candErr);
       }
 
       // 8. Update jobs.applicationsCount in Supabase using exact existing jobs columns
@@ -3781,6 +3792,28 @@ async function applyCandidateToJob(candidate: any, rawJobId: any, res: any) {
         await safeSupabaseUpsert('candidateAllocations', [toSupabaseAllocationRow(allocRecord)]);
       } catch (allocErr) {
         console.warn('[Supabase Candidate Allocation Auto-upsert Warning]', allocErr);
+      }
+
+      // Sync into Supabase candidate_pool so admin sees candidate in Pool (Section 3)
+      try {
+        const cleanContact = String(candidate.mobile || candidate.profile?.mobile || '').replace(/\D/g, '').slice(-10);
+        if (cleanContact) {
+          const poolRow = toSupabaseCandidatePoolRow({
+            id: String(candidate.id),
+            name: candidate.fullName || candidate.profile?.fullName || 'Candidate',
+            contact: cleanContact,
+            location: candidate.profile?.locality || candidate.profile?.city || candidate.city || 'Bengaluru',
+            education: candidate.profile?.education || candidate.education || '10th Pass',
+            source: 'applied_job',
+            createdAt: nowIso,
+            updatedAt: nowIso
+          });
+          if (poolRow) {
+            await safeSupabaseUpsert('candidate_pool', [poolRow]);
+          }
+        }
+      } catch (poolErr) {
+        console.warn('[Supabase Candidate Pool Upsert Warning]', poolErr);
       }
     }
 
@@ -4053,6 +4086,21 @@ app.post('/api/guest/apply', async (req, res) => {
           allocatedAt: nowIso
         };
         await safeSupabaseUpsert('candidateAllocations', [toSupabaseAllocationRow(allocRecord)]);
+
+        // Sync into Supabase candidate_pool so admin sees candidate in Pool (Section 3)
+        const poolRow = toSupabaseCandidatePoolRow({
+          id: String(candidateRecord.id),
+          name: trimmedName,
+          contact: cleanDigits,
+          location: candidateRecord.profile?.locality || candidateRecord.profile?.city || 'Bengaluru',
+          education: candidateRecord.profile?.education || '10th Pass',
+          source: 'guest_apply',
+          createdAt: nowIso,
+          updatedAt: nowIso
+        });
+        if (poolRow) {
+          await safeSupabaseUpsert('candidate_pool', [poolRow]);
+        }
       } catch (supaAppErr) {
         console.warn('[Guest Apply - Supabase Application Upsert Warning]', supaAppErr);
       }
@@ -4072,6 +4120,24 @@ app.post('/api/guest/apply', async (req, res) => {
       candidateId: String(candidateRecord.id),
       allocatedAt: nowIso
     });
+
+    freshDb.candidatePool = freshDb.candidatePool || [];
+    const poolIdx = freshDb.candidatePool.findIndex((cp: any) => cp.contact === cleanDigits || cp.id === candidateRecord.id);
+    const localPoolItem = {
+      id: String(candidateRecord.id),
+      name: trimmedName,
+      contact: cleanDigits,
+      location: candidateRecord.profile?.locality || candidateRecord.profile?.city || 'Bengaluru',
+      education: candidateRecord.profile?.education || '10th Pass',
+      source: 'guest_apply',
+      createdAt: nowIso,
+      updatedAt: nowIso
+    };
+    if (poolIdx >= 0) {
+      freshDb.candidatePool[poolIdx] = { ...freshDb.candidatePool[poolIdx], ...localPoolItem };
+    } else {
+      freshDb.candidatePool.push(localPoolItem);
+    }
 
     freshDb.jobs = freshDb.jobs || [];
     const dbJob = freshDb.jobs.find((j: any) => String(j.id) === String(jobId));
@@ -7016,24 +7082,55 @@ app.post('/api/admin/broadcast-notification', async (req, res) => {
   }
 });
 
-// GET all applications for Admin Panel
-app.get('/api/admin/applications', (req, res) => {
+// GET all applications for Admin Panel (Live sync with Supabase and local DB)
+app.get('/api/admin/applications', async (req, res) => {
   try {
-    const db = readDB();
-    const apps = db.applications || [];
+    const apps = await getLiveApplications();
+    const candidates = await getLiveCandidates();
+    const jobs = await getLiveJobs();
+    const allocations = await getLiveAllocations();
+    const recruiters = await getLiveRecruiters();
+
     const detailedApps = apps.map((app: any) => {
-      const job = (db.jobs || []).find((j: any) => j.id === app.jobId) || {};
-      const candidate = (db.candidates || []).find((c: any) => c.id === app.candidateId) || {};
+      const job = jobs.find((j: any) => String(j.id) === String(app.jobId || app.job_id)) || {};
+      const candidateId = String(app.candidateId || app.candidate_id || '');
+      const candidate = candidates.find((c: any) => String(c.id) === candidateId) || {};
+      const recruiter = recruiters.find((r: any) => String(r.id) === String(app.recruiterId || app.recruiter_id || job.recruiterId || job.recruiter_id)) || {};
+      const alloc = allocations.find((al: any) => String(al.applicationId || al.application_id) === String(app.id));
+
+      const profile = candidate.profile || {};
+      const cleanMobile = String(candidate.mobile || profile.mobile || '').replace(/\D/g, '').slice(-10);
+      const displayName = profile.fullName || candidate.fullName || 'Candidate';
+
       return {
-        ...app,
-        jobTitle: job.title || 'Unknown Position',
-        companyName: job.companyName || 'Unknown Fleet',
-        candidateName: candidate.profile?.fullName || candidate.fullName || 'Unknown Candidate',
-        candidateMobile: candidate.mobile || ''
+        id: String(app.id),
+        applicationId: String(app.id),
+        candidateId: candidate.id || candidateId,
+        jobId: String(app.jobId || app.job_id || job.id || ''),
+        recruiterId: String(app.recruiterId || app.recruiter_id || job.recruiterId || ''),
+        candidateName: displayName,
+        candidateMobile: cleanMobile,
+        candidateEmail: candidate.email || profile.email || '',
+        candidateLocation: profile.locality || profile.city || candidate.city || '—',
+        candidateEducation: profile.education || candidate.education || '—',
+        candidateExperience: profile.experience !== undefined ? profile.experience : (candidate.experience ?? '—'),
+        bikeAvailable: profile.bikeAvailable ?? candidate.bikeAvailable ?? '—',
+        drivingLicenseAvailable: profile.drivingLicenseAvailable ?? candidate.drivingLicenseAvailable ?? '—',
+        jobTitle: job.title || 'Delivery Opening',
+        jobCategory: job.category || 'Delivery Jobs',
+        companyName: job.companyName || recruiter.companyName || 'Hiring Fleet',
+        recruiterName: recruiter.recruiterName || 'HR Lead',
+        appliedDate: app.appliedDate || app.applied_date || new Date().toISOString(),
+        currentStatus: app.currentStatus || app.current_status || 'Applied',
+        allocationStatus: alloc ? (alloc.allocationStatus || alloc.allocation_status) : 'Recruiter Visible',
+        isGuest: Boolean(candidate.isGuest || profile.registeredVia === 'guest_apply' || String(candidate.id).startsWith('guest_'))
       };
     });
+
+    detailedApps.sort((a: any, b: any) => new Date(b.appliedDate).getTime() - new Date(a.appliedDate).getTime());
     res.json(detailedApps);
   } catch (err: any) {
+    console.error('[Admin Applications Error]', err);
     res.status(500).json({ error: 'Failed to retrieve application interest records' });
   }
 });

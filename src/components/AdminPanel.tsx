@@ -33,7 +33,8 @@ import {
   ArrowRight,
   DollarSign,
   Zap,
-  CheckCircle
+  CheckCircle,
+  ClipboardList
 } from 'lucide-react';
 import { ExcelCandidateGrid, CandidateGridRow } from './ExcelCandidateGrid';
 import CandidatePoolSection from './CandidatePoolSection';
@@ -250,6 +251,28 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose, onJobPo
     }
   };
 
+  // Section 5: All Applied Candidates State & Fetcher
+  const [allApplications, setAllApplications] = useState<any[]>([]);
+  const [loadingAllApplications, setLoadingAllApplications] = useState(false);
+  const [applicationSearch, setApplicationSearch] = useState('');
+  const [applicationSourceFilter, setApplicationSourceFilter] = useState<'all' | 'guest' | 'registered'>('all');
+  const [copiedAppContact, setCopiedAppContact] = useState<string | null>(null);
+
+  const fetchAllApplications = async () => {
+    setLoadingAllApplications(true);
+    try {
+      const res = await fetch('/api/admin/applications');
+      if (res.ok) {
+        const data = await res.json();
+        setAllApplications(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error('[Admin] Error fetching all applications:', err);
+    } finally {
+      setLoadingAllApplications(false);
+    }
+  };
+
   // Admin Authentication State
   const [isAdminAuth, setIsAdminAuth] = useState<boolean>(false);
   const [authUsername, setAuthUsername] = useState<string>('');
@@ -311,6 +334,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose, onJobPo
       fetchAllocationsForJob(selectedJobId);
     }
   }, [selectedJobId]);
+
+  useEffect(() => {
+    if (activeSection === 5 && isAdminAuth) {
+      fetchAllApplications();
+    }
+  }, [activeSection, isAdminAuth]);
 
   // Section 1: Submit Register Recruiter Form
   const handleRegisterRecruiter = async (e: React.FormEvent) => {
@@ -758,7 +787,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose, onJobPo
             { id: 2, label: '2. Allocation', icon: Users },
             { id: 3, label: '3. Candidate Pool', icon: FileSpreadsheet },
             { id: 4, label: '4. Post Job', icon: Briefcase },
-            { id: 5, label: '5. Slot 5', icon: Settings },
+            { id: 5, label: '5. Applied Candidates', icon: ClipboardList },
           ].map((tab) => {
             const IconComp = tab.icon;
             const active = activeSection === tab.id;
@@ -861,20 +890,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose, onJobPo
                 <span className="text-[9px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30 font-bold">New</span>
               </button>
 
-              {/* Section 5: Reserved */}
+              {/* Section 5: All Applied Candidates */}
               <button
-                onClick={() => setActiveSection(5)}
+                onClick={() => {
+                  setActiveSection(5);
+                  fetchAllApplications();
+                }}
                 className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition ${
                   activeSection === 5
-                    ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 shadow-sm'
-                    : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
+                    ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30 shadow-sm'
+                    : 'text-slate-300 hover:bg-slate-900 hover:text-white'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <Settings className="w-4 h-4 text-slate-500" />
-                  <span>5. Reserved Section</span>
+                  <ClipboardList className={`w-4 h-4 ${activeSection === 5 ? 'text-blue-400' : 'text-slate-400'}`} />
+                  <span className="truncate">5. Applied Candidates</span>
                 </div>
-                <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">Slot 5</span>
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30 font-bold font-mono">
+                  {allApplications.length > 0 ? allApplications.length : 'Live'}
+                </span>
               </button>
             </div>
 
@@ -2044,18 +2078,276 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose, onJobPo
               </div>
             )}
 
-            {/* SECTION 5: RESERVED */}
+            {/* SECTION 5: ALL APPLIED CANDIDATES & APPLICATIONS */}
             {activeSection === 5 && (
-              <div className="flex-1 flex flex-col items-center justify-center py-20 text-center animate-fade-in max-w-lg mx-auto">
-                <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 mb-4 shadow-xl">
-                  <Settings className="w-8 h-8" />
+              <div className="flex-1 flex flex-col space-y-4 animate-fade-in pb-8">
+                {/* Control Header & Stats */}
+                <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-4 shadow-xl">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-base font-bold text-white flex items-center gap-2">
+                        <ClipboardList className="w-5 h-5 text-blue-400" />
+                        Section 5: All Applied Candidates & Job Applications
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Real-time master ledger of all candidate applications across all companies, synchronized live with Supabase.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={fetchAllApplications}
+                        disabled={loadingAllApplications}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 text-xs font-semibold rounded-lg border border-blue-500/30 transition shadow-sm cursor-pointer disabled:opacity-50"
+                        title="Reload live applications from Supabase"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${loadingAllApplications ? 'animate-spin' : ''}`} />
+                        <span>Refresh List</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Stat Cards Strip */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-3 border-t border-slate-800/80">
+                    <div className="p-2.5 bg-slate-900 border border-slate-800 rounded-lg text-center">
+                      <span className="text-[10px] text-slate-400 block font-sans uppercase tracking-wider font-bold">Total Applications</span>
+                      <span className="text-lg font-black text-white font-mono">{allApplications.length}</span>
+                    </div>
+
+                    <div className="p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-lg text-center">
+                      <span className="text-[10px] text-amber-400 block font-sans uppercase tracking-wider font-bold">Guest Applications</span>
+                      <span className="text-lg font-black text-amber-300 font-mono">
+                        {allApplications.filter(a => a.isGuest).length}
+                      </span>
+                    </div>
+
+                    <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-center">
+                      <span className="text-[10px] text-emerald-400 block font-sans uppercase tracking-wider font-bold">Direct Registered</span>
+                      <span className="text-lg font-black text-emerald-300 font-mono">
+                        {allApplications.filter(a => !a.isGuest).length}
+                      </span>
+                    </div>
+
+                    <div className="p-2.5 bg-blue-500/10 border border-blue-500/30 rounded-lg text-center">
+                      <span className="text-[10px] text-blue-400 block font-sans uppercase tracking-wider font-bold">Recruiter Visible</span>
+                      <span className="text-lg font-black text-blue-300 font-mono">
+                        {allApplications.filter(a => a.allocationStatus === 'Recruiter Visible').length}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <h3 className="text-lg font-bold text-white">Section 5: Reserved for Future Expansion</h3>
-                <p className="text-xs text-slate-400 mt-2 leading-relaxed">
-                  This section is reserved for platform system settings, multi-city delivery zone controls, SMS/OTP gateway configuration, and Super Admin audit logs.
-                </p>
-                <div className="mt-6 px-3 py-1.5 rounded-full bg-slate-800 text-slate-400 text-xs font-mono border border-slate-700">
-                  SLOT_5_AVAILABLE
+
+                {/* Filter and Search Bar */}
+                <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div className="relative w-full sm:w-80">
+                    <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={applicationSearch}
+                      onChange={(e) => setApplicationSearch(e.target.value)}
+                      placeholder="Search name, mobile, job, fleet..."
+                      className="w-full pl-9 pr-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-1.5 w-full sm:w-auto">
+                    {(['all', 'guest', 'registered'] as const).map((mode) => (
+                      <button
+                        key={mode}
+                        onClick={() => setApplicationSourceFilter(mode)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition ${
+                          applicationSourceFilter === mode
+                            ? 'bg-blue-600 text-white shadow-sm'
+                            : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                        }`}
+                      >
+                        {mode === 'all' ? 'All Candidates' : mode === 'guest' ? 'Guest Apply' : 'Registered'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Applications Table */}
+                <div className="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-2xl flex-1 flex flex-col">
+                  {loadingAllApplications ? (
+                    <div className="py-20 flex flex-col items-center justify-center text-slate-400 text-xs gap-3">
+                      <RefreshCw className="w-6 h-6 animate-spin text-blue-400" />
+                      <span>Loading candidate applications from Supabase...</span>
+                    </div>
+                  ) : (
+                    (() => {
+                      const filtered = allApplications.filter((app) => {
+                        if (applicationSourceFilter === 'guest' && !app.isGuest) return false;
+                        if (applicationSourceFilter === 'registered' && app.isGuest) return false;
+                        if (applicationSearch.trim()) {
+                          const q = applicationSearch.toLowerCase();
+                          const n = String(app.candidateName || '').toLowerCase();
+                          const m = String(app.candidateMobile || '').toLowerCase();
+                          const j = String(app.jobTitle || '').toLowerCase();
+                          const c = String(app.companyName || '').toLowerCase();
+                          const l = String(app.candidateLocation || '').toLowerCase();
+                          if (!n.includes(q) && !m.includes(q) && !j.includes(q) && !c.includes(q) && !l.includes(q)) {
+                            return false;
+                          }
+                        }
+                        return true;
+                      });
+
+                      if (filtered.length === 0) {
+                        return (
+                          <div className="py-16 text-center text-slate-400 text-xs">
+                            <ClipboardList className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+                            <p className="font-bold text-white text-sm">No applications found</p>
+                            <p className="text-slate-500 mt-1 max-w-sm mx-auto">
+                              {applicationSearch
+                                ? 'No applications match your search query.'
+                                : 'When any user applies for a job (via Guest Apply or direct login), their application and candidate details will appear here immediately.'}
+                            </p>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left text-xs border-collapse">
+                            <thead>
+                              <tr className="bg-slate-900 border-b border-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                <th className="px-3.5 py-3">#</th>
+                                <th className="px-3.5 py-3">Candidate</th>
+                                <th className="px-3.5 py-3">Contact</th>
+                                <th className="px-3.5 py-3">Job Applied</th>
+                                <th className="px-3.5 py-3">Hiring Company</th>
+                                <th className="px-3.5 py-3">Applied Date</th>
+                                <th className="px-3.5 py-3">Source</th>
+                                <th className="px-3.5 py-3">Status</th>
+                                <th className="px-3.5 py-3">Allocation</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-800/80 font-mono text-[11px]">
+                              {filtered.map((app, index) => {
+                                const initial = (app.candidateName || 'C').charAt(0).toUpperCase();
+                                const isCopied = copiedAppContact === app.candidateMobile;
+
+                                return (
+                                  <tr 
+                                    key={app.id || index}
+                                    className="hover:bg-slate-900/60 transition-colors font-sans text-slate-300"
+                                  >
+                                    <td className="px-3.5 py-3 text-slate-500 font-mono text-[10px]">
+                                      {index + 1}
+                                    </td>
+
+                                    {/* Candidate Name & Avatar */}
+                                    <td className="px-3.5 py-3">
+                                      <div className="flex items-center gap-2.5">
+                                        <div className="w-7 h-7 rounded-lg bg-orange-500/20 text-orange-400 border border-orange-500/30 flex items-center justify-center font-bold text-xs shrink-0">
+                                          {initial}
+                                        </div>
+                                        <div>
+                                          <span className="font-bold text-white block leading-tight">
+                                            {app.candidateName || 'Candidate'}
+                                          </span>
+                                          <span className="text-[10px] text-slate-500 font-mono">
+                                            {app.candidateLocation || 'India'}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </td>
+
+                                    {/* Mobile & Quick Copy */}
+                                    <td className="px-3.5 py-3">
+                                      {app.candidateMobile ? (
+                                        <div className="flex items-center gap-1.5">
+                                          <span className="font-mono text-emerald-400 font-semibold">
+                                            +91 {app.candidateMobile}
+                                          </span>
+                                          <button
+                                            onClick={() => {
+                                              navigator.clipboard.writeText(app.candidateMobile);
+                                              setCopiedAppContact(app.candidateMobile);
+                                              setTimeout(() => setCopiedAppContact(null), 2000);
+                                            }}
+                                            className="p-1 hover:bg-slate-800 rounded text-slate-500 hover:text-white transition cursor-pointer"
+                                            title="Copy mobile number"
+                                          >
+                                            {isCopied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                                          </button>
+                                        </div>
+                                      ) : (
+                                        <span className="text-slate-600">—</span>
+                                      )}
+                                    </td>
+
+                                    {/* Job Title & Category */}
+                                    <td className="px-3.5 py-3">
+                                      <div>
+                                        <span className="font-semibold text-white block">
+                                          {app.jobTitle}
+                                        </span>
+                                        <span className="text-[10px] text-slate-400">
+                                          {app.jobCategory}
+                                        </span>
+                                      </div>
+                                    </td>
+
+                                    {/* Hiring Company */}
+                                    <td className="px-3.5 py-3">
+                                      <div className="flex items-center gap-1.5">
+                                        <Building2 className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                                        <span className="text-slate-300 font-medium">
+                                          {app.companyName}
+                                        </span>
+                                      </div>
+                                    </td>
+
+                                    {/* Applied Date */}
+                                    <td className="px-3.5 py-3 text-slate-400 text-[11px] font-mono whitespace-nowrap">
+                                      {new Date(app.appliedDate).toLocaleDateString('en-IN', {
+                                        day: '2-digit',
+                                        month: 'short',
+                                        year: 'numeric'
+                                      })}
+                                    </td>
+
+                                    {/* Source */}
+                                    <td className="px-3.5 py-3 whitespace-nowrap">
+                                      {app.isGuest ? (
+                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                                          Guest Apply
+                                        </span>
+                                      ) : (
+                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                                          Registered
+                                        </span>
+                                      )}
+                                    </td>
+
+                                    {/* Status */}
+                                    <td className="px-3.5 py-3 whitespace-nowrap">
+                                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/15 text-blue-300 border border-blue-500/30">
+                                        {app.currentStatus || 'Applied'}
+                                      </span>
+                                    </td>
+
+                                    {/* Allocation */}
+                                    <td className="px-3.5 py-3 whitespace-nowrap">
+                                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                        app.allocationStatus === 'Recruiter Visible'
+                                          ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                                          : 'bg-slate-800 text-slate-400 border border-slate-700'
+                                      }`}>
+                                        {app.allocationStatus || 'Recruiter Visible'}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      );
+                    })()
+                  )}
                 </div>
               </div>
             )}

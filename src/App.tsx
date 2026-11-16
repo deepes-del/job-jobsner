@@ -188,6 +188,8 @@ export default function App() {
 
   const handleStartGuestSession = () => {
     localStorage.removeItem('jobsner_explicit_logout');
+    localStorage.removeItem('delivery_hiring_token');
+    localStorage.removeItem('recruiter_hiring_token');
     localStorage.setItem('jobsner_is_guest', 'true');
     localStorage.setItem('jobsner_portal', 'candidate');
 
@@ -219,7 +221,7 @@ export default function App() {
       if (path.includes('privacy')) {
         setShowPrivacyPolicy(true);
       }
-      if (isGuestUrl() && !localStorage.getItem('delivery_hiring_token')) {
+      if (isGuestUrl()) {
         handleStartGuestSession();
       }
     };
@@ -425,11 +427,14 @@ export default function App() {
 
 
 
+        if (isGuestUrl() || localStorage.getItem('jobsner_is_guest') === 'true') {
+          handleStartGuestSession();
+          return;
+        }
+
         let candResult: 'success' | 'unauthorized' | 'transient' = 'unauthorized';
 
         let recResult: 'success' | 'unauthorized' | 'transient' = 'unauthorized';
-
-
 
         if (preferredPortal === 'recruiter') {
 
@@ -623,15 +628,11 @@ export default function App() {
   // --- CANDIDATE EVENT HANDLERS ---
 
   const handleCandidateAuthSuccess = (newCandidate: Candidate, newToken: string) => {
-
     localStorage.removeItem('jobsner_explicit_logout');
-
+    localStorage.removeItem('jobsner_is_guest');
     setCandidate(newCandidate);
-
     setToken(newToken);
-
     localStorage.setItem('delivery_hiring_token', newToken);
-
     localStorage.setItem('jobsner_portal', 'candidate');
 
     setUserRole('candidate');
