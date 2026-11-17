@@ -1248,9 +1248,13 @@ export default function App() {
 
                         <img src={candidate.profile.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
 
+                      ) : candidate.profile?.fullName?.[0] || candidate.fullName?.[0] ? (
+
+                        (candidate.profile?.fullName?.[0] || candidate.fullName?.[0])!.toUpperCase()
+
                       ) : (
 
-                        candidate.profile?.fullName?.[0]?.toUpperCase() || 'D'
+                        <User className="w-4 h-4" />
 
                       )}
 
@@ -1260,13 +1264,13 @@ export default function App() {
 
                       <span className="text-xs font-extrabold text-slate-900 leading-tight">
 
-                        {candidate.profile?.fullName?.toLowerCase() || candidate.fullName?.toLowerCase() || 'deepesh'}
+                        {candidate.profile?.fullName?.toLowerCase() || candidate.fullName?.toLowerCase() || ''}
 
                       </span>
 
                       <span className="text-[10px] font-semibold text-slate-500">
 
-                        Job Seeker
+                        {candidate.isGuest ? 'Guest' : 'Job Seeker'}
 
                       </span>
 
