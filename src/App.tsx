@@ -1659,6 +1659,31 @@ export default function App() {
                 <span className="mx-2 text-gray-300 text-xs">·</span>
                 <span className="text-xs text-gray-400">By signing in, you agree to our Privacy Policy</span>
               </div>
+
+              {/* Download App Banner on Gateway */}
+              <div className="mt-6 flex flex-col items-center gap-2">
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Download the App</span>
+                <a
+                  href="https://play.google.com/store/apps/details?id=com.aistudio.jobhai.gylmpx&pcampaignid=web_share"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  id="gateway-playstore-link"
+                  className="inline-flex items-center gap-2.5 bg-black hover:bg-gray-900 active:scale-95 text-white px-4 py-2.5 rounded-xl shadow-md transition-all group"
+                >
+                  {/* Google Play SVG Logo */}
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 shrink-0" fill="none">
+                    <path d="M3.18 23.76c.3.17.65.21.99.1l13.07-7.54-2.9-2.9-11.16 10.34z" fill="#EA4335"/>
+                    <path d="M20.82 10.3l-2.78-1.6L14.9 12l3.14 3.14 2.78-1.6a1.65 1.65 0 0 0 0-3.24z" fill="#FBBC04"/>
+                    <path d="M3.18.24A1.64 1.64 0 0 0 2.5 1.6v20.8c0 .54.26 1.01.68 1.36L14.9 12 3.18.24z" fill="#4285F4"/>
+                    <path d="M3.18 23.76L14.9 12 4.14 1.24 3.18.24c-.43.35-.68.82-.68 1.36v20.8c0 .54.26 1.01.68 1.36z" fill="#4285F4"/>
+                    <path d="M3.18.24l11.72 11.76 2.9-2.9L4.73.14a1.64 1.64 0 0 0-1.55.1z" fill="#34A853"/>
+                  </svg>
+                  <div className="text-left">
+                    <div className="text-[9px] font-semibold text-gray-300 leading-none">GET IT ON</div>
+                    <div className="text-sm font-black leading-tight tracking-tight">Google Play</div>
+                  </div>
+                </a>
+              </div>
             </motion.div>
           ) : (
 
@@ -2079,6 +2104,22 @@ export default function App() {
             <span className="flex items-center gap-1 text-gray-500 font-medium">
               <CheckCircle className="w-3.5 h-3.5 text-orange-500" /> Verified Logistics Hiring Network
             </span>
+            {/* Play Store Footer Link */}
+            <a
+              href="https://play.google.com/store/apps/details?id=com.aistudio.jobhai.gylmpx&pcampaignid=web_share"
+              target="_blank"
+              rel="noopener noreferrer"
+              id="footer-playstore-link"
+              className="inline-flex items-center gap-1.5 bg-gray-900 hover:bg-black text-white px-2.5 py-1.5 rounded-lg transition-all shadow-xs text-[10px] font-bold"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-3.5 h-3.5 shrink-0" fill="none">
+                <path d="M3.18 23.76c.3.17.65.21.99.1l13.07-7.54-2.9-2.9-11.16 10.34z" fill="#EA4335"/>
+                <path d="M20.82 10.3l-2.78-1.6L14.9 12l3.14 3.14 2.78-1.6a1.65 1.65 0 0 0 0-3.24z" fill="#FBBC04"/>
+                <path d="M3.18.24A1.64 1.64 0 0 0 2.5 1.6v20.8c0 .54.26 1.01.68 1.36L14.9 12 3.18.24z" fill="#4285F4"/>
+                <path d="M3.18.24l11.72 11.76 2.9-2.9L4.73.14a1.64 1.64 0 0 0-1.55.1z" fill="#34A853"/>
+              </svg>
+              Download App
+            </a>
             <button
               onClick={() => setShowPrivacyPolicy(true)}
               className="text-[#1D61F2] font-bold hover:underline cursor-pointer border-none bg-transparent text-xs transition-colors underline"

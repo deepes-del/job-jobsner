@@ -1315,6 +1315,21 @@ export default function CandidateDashboard({
 
               {/* Bottom Drawer Promo & Actions */}
               <div className="mt-6 pt-4 border-t border-slate-800 space-y-3">
+                {/* Play Store Download Button */}
+                <a
+                  href="https://play.google.com/store/apps/details?id=com.aistudio.jobhai.gylmpx&pcampaignid=web_share"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full flex items-center justify-center gap-2.5 py-2.5 bg-white/10 hover:bg-white/15 border border-white/10 text-white rounded-xl text-xs font-bold transition-all"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="none">
+                    <path d="M3.18 23.76c.3.17.65.21.99.1l13.07-7.54-2.9-2.9-11.16 10.34z" fill="#EA4335"/>
+                    <path d="M20.82 10.3l-2.78-1.6L14.9 12l3.14 3.14 2.78-1.6a1.65 1.65 0 0 0 0-3.24z" fill="#FBBC04"/>
+                    <path d="M3.18.24A1.64 1.64 0 0 0 2.5 1.6v20.8c0 .54.26 1.01.68 1.36L14.9 12 3.18.24z" fill="#4285F4"/>
+                    <path d="M3.18.24l11.72 11.76 2.9-2.9L4.73.14a1.64 1.64 0 0 0-1.55.1z" fill="#34A853"/>
+                  </svg>
+                  <span>Download on Google Play</span>
+                </a>
                 <button
                   onClick={() => { setIsMobileDrawerOpen(false); onLogout(); }}
                   className="w-full flex items-center justify-center gap-2 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl text-xs font-bold transition-all cursor-pointer"
@@ -1466,6 +1481,25 @@ export default function CandidateDashboard({
                 Contact
               </button>
             </div>
+
+            {/* Play Store Download Card */}
+            <a
+              href="https://play.google.com/store/apps/details?id=com.aistudio.jobhai.gylmpx&pcampaignid=web_share"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2.5 p-3 rounded-2xl bg-black hover:bg-gray-900 border border-slate-700 text-white transition-all group w-full"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-6 h-6 shrink-0" fill="none">
+                <path d="M3.18 23.76c.3.17.65.21.99.1l13.07-7.54-2.9-2.9-11.16 10.34z" fill="#EA4335"/>
+                <path d="M20.82 10.3l-2.78-1.6L14.9 12l3.14 3.14 2.78-1.6a1.65 1.65 0 0 0 0-3.24z" fill="#FBBC04"/>
+                <path d="M3.18.24A1.64 1.64 0 0 0 2.5 1.6v20.8c0 .54.26 1.01.68 1.36L14.9 12 3.18.24z" fill="#4285F4"/>
+                <path d="M3.18.24l11.72 11.76 2.9-2.9L4.73.14a1.64 1.64 0 0 0-1.55.1z" fill="#34A853"/>
+              </svg>
+              <div>
+                <div className="text-[9px] font-semibold text-slate-400 leading-none">GET IT ON</div>
+                <div className="text-xs font-black leading-tight">Google Play</div>
+              </div>
+            </a>
           </div>
         </aside>
         )}
