@@ -31,18 +31,18 @@ export default function CandidateLogin({ onSuccess, onNavigateToRegister, onGues
   const [otpStep, setOtpStep] = useState<'phone' | 'code'>('phone');
   const [otpCode, setOtpCode] = useState('');
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
-  const [recaptchaReady, setRecaptchaReady] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [unregisteredInfo, setUnregisteredInfo] = useState<{ identifier: string; mobile?: string; email?: string } | null>(null);
 
+  // Pre-render the invisible reCAPTCHA verifier when the OTP phone step is active.
+  // Invisible reCAPTCHA is silently bound to the Send OTP button — no visible widget is rendered.
   useEffect(() => {
     if (authMode === 'otp' && otpStep === 'phone') {
       const timer = setTimeout(() => {
         try {
-          setupRecaptcha('recaptcha-candidate-container');
-          setRecaptchaReady(true);
+          setupRecaptcha('send-otp-btn');
         } catch (err) {
           console.error('[Recaptcha Init Error]', err);
         }
@@ -65,13 +65,19 @@ export default function CandidateLogin({ onSuccess, onNavigateToRegister, onGues
 
     setLoading(true);
     try {
-      const verifier = window.recaptchaVerifier || setupRecaptcha('recaptcha-candidate-container');
+      // Use the existing invisible verifier attached to the Send OTP button, or create a fresh one
+      const verifier = window.recaptchaVerifier || setupRecaptcha('send-otp-btn');
       const result = await sendPhoneOTP(cleanDigits, verifier);
       setConfirmationResult(result);
       setOtpStep('code');
     } catch (err: any) {
       console.error('[Firebase Phone Auth Error]', err);
       setError(formatFirebaseAuthError(err));
+      // Reset verifier on error so user can retry cleanly
+      if (window.recaptchaVerifier) {
+        try { window.recaptchaVerifier.clear(); } catch (_) {}
+        window.recaptchaVerifier = undefined;
+      }
     } finally {
       setLoading(false);
     }
@@ -414,10 +420,8 @@ export default function CandidateLogin({ onSuccess, onNavigateToRegister, onGues
                 </div>
               </div>
 
-              {/* ReCAPTCHA Container */}
-              <div id="recaptcha-candidate-container" className="my-2 flex justify-center scale-90"></div>
-
               <button
+                id="send-otp-btn"
                 type="submit"
                 disabled={loading || mobile.length < 10}
                 className="w-full py-3 px-4 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-2xl transition-all shadow-lg shadow-orange-600/15 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"

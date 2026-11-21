@@ -117,25 +117,26 @@ declare global {
 }
 
 /**
- * Initialize Firebase RecaptchaVerifier on a DOM element
+ * Initialize Firebase RecaptchaVerifier in invisible mode.
+ * buttonId: the DOM id of the "Send OTP" button the verifier is attached to.
+ * Invisible reCAPTCHA performs bot detection silently in the background —
+ * no visible checkbox or image-selection challenge is shown to the user.
  */
-export function setupRecaptcha(containerId: string): RecaptchaVerifier {
-  // Clear any existing instance
+export function setupRecaptcha(buttonId: string): RecaptchaVerifier {
+  // Clear any existing verifier instance before creating a new one
   if (window.recaptchaVerifier) {
     try {
       window.recaptchaVerifier.clear();
     } catch (e) {
       console.log('[Recaptcha Cleanup]', e);
     }
+    window.recaptchaVerifier = undefined;
   }
 
-  const verifier = new RecaptchaVerifier(auth, containerId, {
-    size: 'normal',
+  const verifier = new RecaptchaVerifier(auth, buttonId, {
+    size: 'invisible',
     callback: () => {
-      console.log('[Recaptcha] Verified successfully');
-    },
-    'expired-callback': () => {
-      console.warn('[Recaptcha] Expired, please solve again');
+      console.log('[Recaptcha] Invisible verification passed');
     }
   });
 
