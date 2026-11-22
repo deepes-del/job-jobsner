@@ -17,6 +17,7 @@ import CandidateProfileEdit from './CandidateProfileEdit';
 import AnimatedHeroRider from './AnimatedHeroRider';
 import JobDetailsView from './JobDetailsView';
 import { playNotificationChime, showSystemNotification } from '../lib/webPush';
+import PromoSlider, { InFeedBanner } from './PromoSlider';
 
 interface CandidateDashboardProps {
   candidate: Candidate;
@@ -1646,6 +1647,15 @@ export default function CandidateDashboard({
                 </div>
               </div>
 
+              {/* ─── PROMOTIONAL BANNER SLIDER (after existing hero) ──────── */}
+              <PromoSlider
+                interval={2000}
+                heightClass="h-[150px] sm:h-[210px] md:h-[250px]"
+                radiusClass="rounded-2xl sm:rounded-3xl"
+                showDots={true}
+                className="w-full shadow-sm"
+              />
+
               {/* 3 DASHBOARD STAT CARDS ROW (MATCHING REFERENCE IMAGE) */}
               <div className="grid grid-cols-3 gap-1.5 xs:gap-2.5 sm:gap-4 w-full">
                 {/* Stat 1: Total Applications */}
@@ -2173,10 +2183,12 @@ export default function CandidateDashboard({
                       const job = isAppRecord ? activeJobs.find(j => String(j.id) === String(item.jobId)) || item : item;
                       const isApplied = myApplications.some(a => String(a.jobId) === String(job.id));
                       const isSaved = savedJobIds.includes(job.id);
+                      // Insert promo banner after every 10 job cards (after index 9, 19, 29 …)
+                      const showBannerAfter = itemIdx > 0 && itemIdx % 10 === 9;
 
                       return (
+                        <React.Fragment key={item._uniqueKey || `${item.id}-${itemIdx}`}>
                         <div
-                          key={item._uniqueKey || `${item.id}-${itemIdx}`}
                           onClick={() => handleViewDetails(job)}
                           className="p-3.5 sm:p-4 md:p-5 border border-slate-200 rounded-2xl bg-slate-50/80 hover:bg-white hover:border-[#1D61F2] hover:shadow-xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-3.5 sm:gap-4 cursor-pointer group min-w-0"
                         >
@@ -2286,6 +2298,14 @@ export default function CandidateDashboard({
                               </div>
                             </div>
                           </div>
+                        {/* Promo in-feed banner inserted after every 10th card */}
+                        {showBannerAfter && (
+                          <InFeedBanner
+                            startIndex={Math.floor((itemIdx + 1) / 10) - 1}
+                            interval={2000}
+                          />
+                        )}
+                        </React.Fragment>
                       );
                     })
                   )}
