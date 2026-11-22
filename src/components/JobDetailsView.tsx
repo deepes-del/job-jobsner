@@ -211,7 +211,7 @@ export default function JobDetailsView({
                 <span>•</span>
                 <span className="flex items-center gap-1 text-slate-600">
                   <MapPin className="w-3.5 h-3.5 text-[#1D61F2] shrink-0" />
-                  {job.workLocation || job.area || job.city || 'India'}
+                  {[job.area || job.workLocation, job.city || job.jobCity].filter(Boolean).join(', ') || 'India'}
                   {job.state ? `, ${job.state}` : ''}
                 </span>
               </div>
@@ -474,10 +474,10 @@ export default function JobDetailsView({
               <div className="p-3 bg-slate-50 rounded-2xl space-y-1">
                 <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Assigned Work Area</span>
                 <p className="font-black text-slate-900 text-sm">
-                  {job.workLocation || job.area || job.city || 'Local Delivery Zone'}
+                  {job.area || job.workLocation || job.city || 'Local Delivery Zone'}
                 </p>
                 <p className="text-slate-500 font-semibold text-xs">
-                  {job.city || 'India'}{job.state ? `, ${job.state}` : ''}
+                  {[job.city || job.jobCity, job.state].filter(Boolean).join(', ') || 'India'}
                 </p>
               </div>
 
@@ -533,7 +533,7 @@ export default function JobDetailsView({
             Ready to apply for {job.title}?
           </h3>
           <p className="text-xs text-slate-500 font-medium">
-            {job.companyName} is actively reviewing applications in {job.city || 'your area'}.
+            {job.companyName} is actively reviewing applications in {[job.area || job.workLocation, job.city || job.jobCity].filter(Boolean).join(', ') || 'your area'}.
           </p>
         </div>
 

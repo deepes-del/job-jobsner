@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { LogIn, Key, Mail, ShieldAlert, Phone, Eye, EyeOff, ShieldCheck, RefreshCw } from 'lucide-react';
 import { Recruiter } from '../types';
@@ -268,13 +268,13 @@ export default function RecruiterLogin({
         
         {/* Portal Info Badge */}
         <div className="flex justify-between items-center mb-6">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-orange-50 text-orange-700 border border-orange-100">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-100">
             Recruiter Portal
           </span>
           <button 
             type="button"
             onClick={onSwitchToCandidate}
-            className="text-xs font-bold text-gray-500 hover:text-orange-600 transition-colors cursor-pointer"
+            className="text-xs font-bold text-gray-500 hover:text-[#1D61F2] transition-colors cursor-pointer"
           >
             Apply as Candidate?
           </button>
@@ -296,7 +296,7 @@ export default function RecruiterLogin({
               setError(null);
             }}
             className={`py-2 rounded-xl transition-all cursor-pointer ${
-              authMode === 'password' ? 'bg-white text-orange-600 shadow-sm font-bold' : 'text-gray-500 hover:text-gray-800'
+              authMode === 'password' ? 'bg-white text-[#1D61F2] shadow-sm font-bold' : 'text-gray-500 hover:text-gray-800'
             }`}
           >
             🔐 Password
@@ -308,7 +308,7 @@ export default function RecruiterLogin({
               setError(null);
             }}
             className={`py-2 rounded-xl transition-all cursor-pointer ${
-              authMode === 'otp' ? 'bg-white text-orange-600 shadow-sm font-bold' : 'text-gray-500 hover:text-gray-800'
+              authMode === 'otp' ? 'bg-white text-[#1D61F2] shadow-sm font-bold' : 'text-gray-500 hover:text-gray-800'
             }`}
           >
             📱 Phone OTP
@@ -327,7 +327,7 @@ export default function RecruiterLogin({
           type="button"
           onClick={handleGoogleSignIn}
           disabled={loading}
-          className="w-full mb-5 py-3 px-4 bg-white border border-gray-200 hover:border-orange-500/30 hover:bg-orange-50/10 text-gray-700 text-xs font-bold rounded-2xl transition-all flex items-center justify-center gap-3 shadow-xs cursor-pointer disabled:opacity-50"
+          className="w-full mb-5 py-3 px-4 bg-white border border-gray-200 hover:border-blue-500/30 hover:bg-blue-50/10 text-gray-700 text-xs font-bold rounded-2xl transition-all flex items-center justify-center gap-3 shadow-xs cursor-pointer disabled:opacity-50"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24">
             <path
@@ -370,7 +370,7 @@ export default function RecruiterLogin({
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   placeholder="e.g. recruiter@company.com or 9876543210"
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 focus:border-orange-500 focus:bg-white rounded-2xl text-xs transition-all outline-none font-medium"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-2xl text-xs transition-all outline-none font-medium"
                 />
               </div>
             </div>
@@ -386,7 +386,7 @@ export default function RecruiterLogin({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter password"
-                  className="w-full pl-10 pr-10 py-3 bg-gray-50 border border-gray-200 focus:border-orange-500 focus:bg-white rounded-2xl text-xs transition-all outline-none font-medium"
+                  className="w-full pl-10 pr-10 py-3 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-2xl text-xs transition-all outline-none font-medium"
                 />
                 <button
                   type="button"
@@ -401,7 +401,7 @@ export default function RecruiterLogin({
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-2xl shadow-lg shadow-orange-600/10 hover:shadow-orange-700/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
+              className="w-full py-3 px-4 bg-[#1D61F2] hover:bg-blue-700 text-white text-xs font-bold rounded-2xl shadow-lg shadow-blue-600/10 hover:shadow-blue-700/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
             >
               {loading ? (
                 <>
@@ -434,7 +434,7 @@ export default function RecruiterLogin({
                       type="tel"
                       required
                       maxLength={10}
-                      className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 focus:border-orange-500 focus:bg-white rounded-2xl text-xs transition-all outline-none font-medium"
+                      className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-2xl text-xs transition-all outline-none font-medium"
                       placeholder="10-digit mobile number"
                       value={mobile}
                       onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}
@@ -447,7 +447,7 @@ export default function RecruiterLogin({
                 <button
                   type="submit"
                   disabled={loading || mobile.length < 10}
-                  className="w-full py-3 px-4 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-2xl transition-all shadow-lg shadow-orange-600/10 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="w-full py-3 px-4 bg-[#1D61F2] hover:bg-blue-700 text-white text-xs font-bold rounded-2xl transition-all shadow-lg shadow-blue-600/10 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   {loading ? (
                     <>
@@ -460,7 +460,7 @@ export default function RecruiterLogin({
               </form>
             ) : (
               <form onSubmit={handleVerifyOTP} className="space-y-4">
-                <div className="text-center p-3 bg-orange-50/50 rounded-2xl border border-orange-100 text-xs text-gray-600">
+                <div className="text-center p-3 bg-blue-50/50 rounded-2xl border border-blue-100 text-xs text-gray-600">
                   OTP sent to <span className="font-bold text-gray-900">+91 {mobile}</span>
                   <button
                     type="button"
@@ -469,7 +469,7 @@ export default function RecruiterLogin({
                       setOtpCode('');
                       setError(null);
                     }}
-                    className="ml-2 text-orange-600 underline font-semibold hover:text-orange-700"
+                    className="ml-2 text-[#1D61F2] underline font-semibold hover:text-blue-700"
                   >
                     Edit Number
                   </button>
@@ -483,7 +483,7 @@ export default function RecruiterLogin({
                     type="text"
                     required
                     maxLength={6}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 focus:border-orange-500 focus:bg-white rounded-2xl text-center tracking-widest text-lg font-bold transition-all outline-none"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-2xl text-center tracking-widest text-lg font-bold transition-all outline-none"
                     placeholder="000000"
                     value={otpCode}
                     onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
@@ -493,7 +493,7 @@ export default function RecruiterLogin({
                 <button
                   type="submit"
                   disabled={loading || otpCode.length !== 6}
-                  className="w-full py-3 px-4 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-2xl transition-all shadow-lg shadow-orange-600/10 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="w-full py-3 px-4 bg-[#1D61F2] hover:bg-blue-700 text-white text-xs font-bold rounded-2xl transition-all shadow-lg shadow-blue-600/10 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   {loading ? 'Verifying OTP...' : 'Verify & Log In'}
                 </button>
@@ -508,7 +508,7 @@ export default function RecruiterLogin({
             <button
               type="button"
               onClick={onNavigateToRegister}
-              className="text-orange-600 font-bold hover:underline transition-all cursor-pointer"
+              className="text-[#1D61F2] font-bold hover:underline transition-all cursor-pointer"
             >
               Register your Company
             </button>

@@ -1985,7 +1985,8 @@ export default function CandidateDashboard({
                                     {job.companyName} • <span className="text-slate-400">{job.employmentType || 'Full Time'}</span>
                                   </p>
                                   <p className="text-xs font-bold text-slate-500 mt-2 flex items-center gap-1 truncate">
-                                    <MapPin className="w-3.5 h-3.5 text-[#1D61F2] shrink-0" /> {job.city || 'India'}
+                                    <MapPin className="w-3.5 h-3.5 text-[#1D61F2] shrink-0" />
+                                    {[job.area || job.workLocation, job.city || job.jobCity].filter(Boolean).join(', ') || 'India'}
                                   </p>
                                   <div className="flex flex-wrap gap-1.5 mt-3">
                                     <span className="px-2.5 py-1 bg-blue-50 text-[#1D61F2] text-[10px] font-extrabold rounded-lg">
@@ -2204,7 +2205,9 @@ export default function CandidateDashboard({
                                   <span className="text-slate-400">{job.employmentType || job.jobEmploymentType || 'Full Time'}</span>
                                   <span className="text-slate-300">•</span>
                                   <MapPin className="w-3 h-3 inline text-[#1D61F2] shrink-0 -mt-0.5" />
-                                  <span className="truncate">{job.city || job.jobCity || 'India'}</span>
+                                  <span className="truncate">
+                                    {[job.area || job.workLocation, job.city || job.jobCity].filter(Boolean).join(', ') || 'India'}
+                                  </span>
                                 </p>
 
                                 <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
@@ -2511,7 +2514,7 @@ export default function CandidateDashboard({
 
         {/* ================= RIGHT SIDEBAR WIDGETS ================= */}
         {!selectedJob && (
-          <aside className="w-full lg:w-80 shrink-0 flex flex-col gap-4 sm:gap-6">
+          <aside className="w-full lg:w-80 shrink-0 flex flex-col gap-4 sm:gap-6 lg:sticky lg:top-20 lg:max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto">
           
           {/* SINGLE QUICK ACTIONS WIDGET (ONLY 1 SECTION) */}
           <div className="bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-xs">

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   User, 
@@ -24,7 +24,10 @@ import {
   CreditCard,
   FileCheck,
   ExternalLink,
-  Save
+  Save,
+  Sun,
+  Moon,
+  Settings
 } from 'lucide-react';
 import { Profile, Candidate } from '../types';
 import { compressImageTo50KB, formatByteSize, getBase64ByteSize, MAX_IMAGE_SIZE_BYTES } from '../lib/imageCompressor';
@@ -118,6 +121,64 @@ export default function CandidateProfileEdit({
   const [loading, setLoading] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
   const [resumeFileName, setResumeFileName] = useState<string | null>(null);
+
+  // ── Theme Toggle State ──────────────────────────────────────────
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('jobsner_theme') === 'dark' ||
+        document.documentElement.classList.contains('dark');
+    } catch { return false; }
+  });
+
+  // Apply dark class to <html> on mount and whenever isDarkMode changes
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('jobsner_theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('jobsner_theme', 'light');
+    }
+  }, [isDarkMode]);
+
+  /**
+   * Toggle dark/light mode with a circular reveal transition that expands
+   * from the exact pixel coordinates of the button click.
+   */
+  const handleThemeToggle = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const x = e.clientX;
+    const y = e.clientY;
+    const nextDark = !isDarkMode;
+
+    // Use View Transitions API if available for the circular reveal
+    if ('startViewTransition' in document) {
+      const transition = (document as any).startViewTransition(() => {
+        setIsDarkMode(nextDark);
+      });
+      transition.ready.then(() => {
+        const maxRadius = Math.hypot(
+          Math.max(x, window.innerWidth - x),
+          Math.max(y, window.innerHeight - y)
+        );
+        const clipPath = [
+          `circle(0px at ${x}px ${y}px)`,
+          `circle(${maxRadius}px at ${x}px ${y}px)`
+        ];
+        document.documentElement.animate(
+          { clipPath: nextDark ? clipPath : [...clipPath].reverse() },
+          {
+            duration: 500,
+            easing: 'ease-in-out',
+            pseudoElement: nextDark ? '::view-transition-new(root)' : '::view-transition-old(root)'
+          }
+        );
+      });
+    } else {
+      // Fallback: instant toggle without animation
+      setIsDarkMode(nextDark);
+    }
+  };
+  // ───────────────────────────────────────────────────────────────
 
   const resumeInputRef = useRef<HTMLInputElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -683,7 +744,61 @@ export default function CandidateProfileEdit({
 
       </div>
 
-      {/* 4. EDIT PROFILE MODAL DIALOG (Clean Web Popover / Modal with all fields from Screenshot 1) */}
+      {/* ── 4. SETTINGS CARD ───────────────────────────────────────── */}
+      <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-xs">
+        <div className="flex items-center gap-2 pb-4 border-b border-gray-100 mb-5">
+          <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600">
+            <Settings className="w-4 h-4" />
+          </div>
+          <div>
+            <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Settings</h3>
+            <p className="text-xs text-slate-500">App preferences and appearance.</p>
+          </div>
+        </div>
+
+        {/* Theme Toggle Row */}
+        <div className="flex items-center justify-between p-4 bg-slate-50/80 rounded-xl border border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
+              isDarkMode ? 'bg-slate-800 text-yellow-400' : 'bg-orange-50 text-orange-500'
+            }`}>
+              {isDarkMode ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+            </div>
+            <div>
+              <span className="text-sm font-black text-slate-900 block leading-none">
+                {isDarkMode ? 'Dark Mode' : 'Light Mode'}
+              </span>
+              <span className="text-[11px] text-slate-500 mt-0.5 block">
+                {isDarkMode ? 'Switch to light theme' : 'Switch to dark theme'}
+              </span>
+            </div>
+          </div>
+
+          {/* Toggle Button — doubles as the circular reveal origin */}
+          <button
+            id="theme-toggle-btn"
+            type="button"
+            onClick={handleThemeToggle}
+            aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            className={`relative inline-flex h-7 w-13 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-300 ease-in-out focus:outline-none shadow-inner ${
+              isDarkMode ? 'bg-slate-700' : 'bg-orange-400'
+            }`}
+          >
+            <span
+              className={`pointer-events-none inline-flex h-6 w-6 items-center justify-center transform rounded-full bg-white shadow-md ring-0 transition-all duration-300 ease-in-out ${
+                isDarkMode ? 'translate-x-6' : 'translate-x-0'
+              }`}
+            >
+              {isDarkMode
+                ? <Moon className="w-3 h-3 text-slate-700" />
+                : <Sun className="w-3 h-3 text-orange-500" />
+              }
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* 5. EDIT PROFILE MODAL DIALOG */}
       <AnimatePresence>
         {isEditModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">

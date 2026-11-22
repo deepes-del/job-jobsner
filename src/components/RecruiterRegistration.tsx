@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { 
   Building2, User, MapPin, Key, ShieldCheck, Mail, Phone, 
@@ -196,13 +196,13 @@ export default function RecruiterRegistration({
         
         {/* Header portal info */}
         <div className="flex justify-between items-center mb-6">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-orange-50 text-orange-700 border border-orange-100">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-100">
             Jobsner Enterprise
           </span>
           <button 
             type="button"
             onClick={onSwitchToCandidate}
-            className="text-xs font-bold text-gray-500 hover:text-orange-600 transition-colors cursor-pointer"
+            className="text-xs font-bold text-gray-500 hover:text-[#1D61F2] transition-colors cursor-pointer"
           >
             Apply as Candidate?
           </button>
@@ -229,7 +229,7 @@ export default function RecruiterRegistration({
           {/* Section 1: Company Information */}
           <div className="space-y-4" id="reg-company-section">
             <div className="flex items-center gap-2 border-b border-gray-100 pb-2">
-              <Building2 className="w-5 h-5 text-orange-600" />
+              <Building2 className="w-5 h-5 text-[#1D61F2]" />
               <h3 className="text-sm font-extrabold text-gray-800 uppercase tracking-wider">Company Information</h3>
             </div>
 
@@ -242,7 +242,7 @@ export default function RecruiterRegistration({
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   placeholder="e.g. Apex Logistical Solutions"
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-orange-500 focus:bg-white rounded-xl text-xs transition-all outline-none"
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
                 />
               </div>
 
@@ -257,7 +257,7 @@ export default function RecruiterRegistration({
                     value={companyWebsite}
                     onChange={(e) => setCompanyWebsite(e.target.value)}
                     placeholder="e.g. https://apexlogs.com"
-                    className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-orange-500 focus:bg-white rounded-xl text-xs transition-all outline-none"
+                    className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
                   />
                 </div>
               </div>
@@ -296,7 +296,7 @@ export default function RecruiterRegistration({
                     type="button"
                     onClick={() => document.getElementById('logo-input')?.click()}
                     disabled={logoUploading}
-                    className="py-2 px-4 border border-gray-200 hover:border-orange-500/30 hover:bg-orange-50/10 text-gray-700 hover:text-orange-600 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2"
+                    className="py-2 px-4 border border-gray-200 hover:border-blue-500/30 hover:bg-blue-50/10 text-gray-700 hover:text-[#1D61F2] text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2"
                   >
                     {logoUploading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
                     {companyLogo ? 'Change Logo' : 'Upload Corporate Logo'}
@@ -310,7 +310,7 @@ export default function RecruiterRegistration({
           {/* Section 2: Recruiter Personal Details */}
           <div className="space-y-4" id="reg-recruiter-section">
             <div className="flex items-center gap-2 border-b border-gray-100 pb-2">
-              <User className="w-5 h-5 text-orange-600" />
+              <User className="w-5 h-5 text-[#1D61F2]" />
               <h3 className="text-sm font-extrabold text-gray-800 uppercase tracking-wider">Recruiter Information</h3>
             </div>
 
@@ -323,7 +323,7 @@ export default function RecruiterRegistration({
                   value={recruiterName}
                   onChange={(e) => setRecruiterName(e.target.value)}
                   placeholder="e.g. John Doe"
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-orange-500 focus:bg-white rounded-xl text-xs transition-all outline-none"
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
                 />
               </div>
 
@@ -339,7 +339,7 @@ export default function RecruiterRegistration({
                     value={designation}
                     onChange={(e) => setDesignation(e.target.value)}
                     placeholder="e.g. HR Manager, Talent Acquisition"
-                    className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-orange-500 focus:bg-white rounded-xl text-xs transition-all outline-none"
+                    className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
                   />
                 </div>
               </div>
@@ -356,7 +356,7 @@ export default function RecruiterRegistration({
                     value={mobile}
                     onChange={(e) => setMobile(e.target.value)}
                     placeholder="10-digit mobile number"
-                    className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-orange-500 focus:bg-white rounded-xl text-xs transition-all outline-none"
+                    className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
                   />
                 </div>
               </div>
@@ -373,7 +373,7 @@ export default function RecruiterRegistration({
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="recruiter@company.com"
-                    className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-orange-500 focus:bg-white rounded-xl text-xs transition-all outline-none"
+                    className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
                   />
                 </div>
               </div>
@@ -390,7 +390,7 @@ export default function RecruiterRegistration({
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Password"
-                    className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-orange-500 focus:bg-white rounded-xl text-xs transition-all outline-none"
+                    className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
                   />
                 </div>
               </div>
@@ -407,7 +407,7 @@ export default function RecruiterRegistration({
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm Password"
-                    className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-orange-500 focus:bg-white rounded-xl text-xs transition-all outline-none"
+                    className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
                   />
                 </div>
               </div>
@@ -417,7 +417,7 @@ export default function RecruiterRegistration({
           {/* Section 3: Company Address */}
           <div className="space-y-4" id="reg-address-section">
             <div className="flex items-center gap-2 border-b border-gray-100 pb-2">
-              <MapPin className="w-5 h-5 text-orange-600" />
+              <MapPin className="w-5 h-5 text-[#1D61F2]" />
               <h3 className="text-sm font-extrabold text-gray-800 uppercase tracking-wider">Company Address</h3>
             </div>
 
@@ -429,7 +429,7 @@ export default function RecruiterRegistration({
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="HQ Block / Suite No, Building Name, Industrial Area"
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-orange-500 focus:bg-white rounded-xl text-xs transition-all outline-none"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
               />
             </div>
 
@@ -442,7 +442,7 @@ export default function RecruiterRegistration({
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   placeholder="e.g. Mumbai"
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-orange-500 focus:bg-white rounded-xl text-xs transition-all outline-none"
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
                 />
               </div>
 
@@ -454,7 +454,7 @@ export default function RecruiterRegistration({
                   value={state}
                   onChange={(e) => setState(e.target.value)}
                   placeholder="e.g. Maharashtra"
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-orange-500 focus:bg-white rounded-xl text-xs transition-all outline-none"
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
                 />
               </div>
 
@@ -466,7 +466,7 @@ export default function RecruiterRegistration({
                   value={pincode}
                   onChange={(e) => setPincode(e.target.value)}
                   placeholder="6-digit ZIP code"
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-orange-500 focus:bg-white rounded-xl text-xs transition-all outline-none"
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-xl text-xs transition-all outline-none"
                 />
               </div>
             </div>
@@ -476,7 +476,7 @@ export default function RecruiterRegistration({
             <button
               type="submit"
               disabled={loading || logoUploading}
-              className="flex-1 py-3 px-6 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-2xl transition-all shadow-lg shadow-orange-600/15 text-center flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
+              className="flex-1 py-3 px-6 bg-[#1D61F2] hover:bg-blue-700 text-white text-xs font-bold rounded-2xl transition-all shadow-lg shadow-blue-600/15 text-center flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
             >
               {loading ? (
                 <>

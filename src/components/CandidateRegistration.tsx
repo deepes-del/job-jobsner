@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { User, Phone, Mail, Lock, ArrowRight, ShieldCheck, RefreshCw } from 'lucide-react';
 import { Candidate } from '../types';
@@ -296,7 +296,7 @@ export default function CandidateRegistration({ prefill, onSuccess, onNavigateTo
         type="button"
         onClick={handleGoogleRegister}
         disabled={loading}
-        className="w-full mb-5 py-3 px-4 bg-white border border-gray-200 hover:border-orange-500/30 hover:bg-orange-50/10 text-gray-700 text-xs font-bold rounded-2xl transition-all flex items-center justify-center gap-3 shadow-xs cursor-pointer disabled:opacity-50"
+        className="w-full mb-5 py-3 px-4 bg-white border border-gray-200 hover:border-blue-500/30 hover:bg-blue-50/10 text-gray-700 text-xs font-bold rounded-2xl transition-all flex items-center justify-center gap-3 shadow-xs cursor-pointer disabled:opacity-50"
       >
         <svg className="w-4 h-4" viewBox="0 0 24 24">
           <path
@@ -337,7 +337,7 @@ export default function CandidateRegistration({ prefill, onSuccess, onNavigateTo
             <input
               type="text"
               required
-              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-orange-500 focus:bg-white rounded-2xl text-xs transition-all outline-none"
+              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-2xl text-xs transition-all outline-none"
               placeholder="e.g. Amit Kumar"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
@@ -358,7 +358,7 @@ export default function CandidateRegistration({ prefill, onSuccess, onNavigateTo
               type="tel"
               required
               maxLength={10}
-              className="w-full pl-12 pr-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-orange-500 focus:bg-white rounded-2xl text-xs transition-all outline-none"
+              className="w-full pl-12 pr-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-2xl text-xs transition-all outline-none"
               placeholder="10-digit mobile number"
               value={mobile}
               onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}
@@ -377,7 +377,7 @@ export default function CandidateRegistration({ prefill, onSuccess, onNavigateTo
             </span>
             <input
               type="email"
-              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-orange-500 focus:bg-white rounded-2xl text-xs transition-all outline-none"
+              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-2xl text-xs transition-all outline-none"
               placeholder="e.g. amit@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -399,7 +399,7 @@ export default function CandidateRegistration({ prefill, onSuccess, onNavigateTo
                 <input
                   type="password"
                   required
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-orange-500 focus:bg-white rounded-2xl text-xs transition-all outline-none"
+                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-2xl text-xs transition-all outline-none"
                   placeholder="Minimum 6 characters"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -419,7 +419,7 @@ export default function CandidateRegistration({ prefill, onSuccess, onNavigateTo
                 <input
                   type="password"
                   required
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-orange-500 focus:bg-white rounded-2xl text-xs transition-all outline-none"
+                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-2xl text-xs transition-all outline-none"
                   placeholder="Re-enter password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -439,7 +439,7 @@ export default function CandidateRegistration({ prefill, onSuccess, onNavigateTo
                   type="text"
                   required
                   maxLength={6}
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-orange-500 focus:bg-white rounded-2xl text-center tracking-widest text-lg font-bold transition-all outline-none"
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#1D61F2] focus:bg-white rounded-2xl text-center tracking-widest text-lg font-bold transition-all outline-none"
                   placeholder="000000"
                   value={otpCode}
                   onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
@@ -453,7 +453,7 @@ export default function CandidateRegistration({ prefill, onSuccess, onNavigateTo
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 px-4 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-2xl transition-all shadow-lg shadow-orange-600/15 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+          className="w-full py-3 px-4 bg-[#1D61F2] hover:bg-blue-700 text-white text-xs font-bold rounded-2xl transition-all shadow-lg shadow-blue-600/15 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
           id="reg-submit-btn"
         >
           {loading ? (
@@ -473,7 +473,7 @@ export default function CandidateRegistration({ prefill, onSuccess, onNavigateTo
         <button
           type="button"
           onClick={onNavigateToLogin}
-          className="text-orange-600 font-bold hover:underline cursor-pointer"
+          className="text-[#1D61F2] font-bold hover:underline cursor-pointer"
           id="reg-to-login-btn"
         >
           Log in
