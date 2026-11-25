@@ -27,7 +27,8 @@ import {
   Save,
   Sun,
   Moon,
-  Settings
+  Settings,
+  Trash2
 } from 'lucide-react';
 import { Profile, Candidate } from '../types';
 import { compressImageTo50KB, formatByteSize, getBase64ByteSize, MAX_IMAGE_SIZE_BYTES } from '../lib/imageCompressor';
@@ -41,6 +42,7 @@ interface CandidateProfileEditProps {
   contactedJobsCount?: number;
   savedJobsCount?: number;
   onNavigateTab?: (tab: 'find_jobs' | 'applications' | 'saved' | 'overview') => void;
+  onDeleteAccount?: () => void;
 }
 
 const EDUCATION_OPTIONS = [
@@ -81,7 +83,8 @@ export default function CandidateProfileEdit({
   onCancel,
   contactedJobsCount = 0,
   savedJobsCount = 0,
-  onNavigateTab
+  onNavigateTab,
+  onDeleteAccount
 }: CandidateProfileEditProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   
@@ -796,6 +799,28 @@ export default function CandidateProfileEdit({
             </span>
           </button>
         </div>
+
+        {/* Delete Account Row */}
+        {onDeleteAccount && (
+          <div className="flex items-center justify-between p-4 bg-red-50/60 rounded-xl border border-red-100 mt-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-red-100 flex items-center justify-center">
+                <Trash2 className="w-4 h-4 text-red-600" />
+              </div>
+              <div>
+                <span className="text-sm font-black text-red-700 block leading-none">Delete Account</span>
+                <span className="text-[11px] text-red-500 mt-0.5 block">Permanently erase your data</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onDeleteAccount}
+              className="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white font-black text-xs rounded-lg transition-colors cursor-pointer shadow-sm"
+            >
+              Delete
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 5. EDIT PROFILE MODAL DIALOG */}

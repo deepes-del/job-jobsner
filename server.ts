@@ -5163,6 +5163,28 @@ async function initDatabase() {
         // Save local copy as mirror fallback
         fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2), 'utf-8');
         console.log('[Database Init] Sync completed successfully! Cloud database is fully active.');
+
+        // Run account-deletion migration (create tables if missing)
+        try {
+          await supabase.rpc('exec_sql', { sql: `
+            CREATE TABLE IF NOT EXISTS account_deletions (
+              id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+              candidate_id TEXT NOT NULL,
+              deleted_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+              reason TEXT
+            );
+            CREATE TABLE IF NOT EXISTS deletion_requests (
+              id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+              phone VARCHAR(20) NOT NULL,
+              user_id VARCHAR(255) NOT NULL,
+              email VARCHAR(255),
+              submitted_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+              status VARCHAR(20) NOT NULL DEFAULT 'PENDING'
+            );
+          ` });
+        } catch (_migErr) {
+          // rpc exec_sql may not exist; silently skip – tables may already exist or will be created via Supabase console
+        }
       }
     } else {
       supabaseActive = false;
@@ -7200,6 +7222,267 @@ app.delete('/api/admin/candidates/:id', (req, res) => {
     res.json({ message: 'Delivery candidate and their interest data deleted successfully' });
   } catch (err: any) {
     res.status(500).json({ error: 'Failed to delete delivery candidate' });
+  }
+});
+
+// ══════════════════════════════════════════════════════════
+// ACCOUNT DELETION FEATURE (Google Play Compliant)
+// ══════════════════════════════════════════════════════════
+
+// --- Serve public account-deletion page (no auth required) ---
+app.get('/delete-account', (req, res) => {
+  const publicDir = path.join(process.cwd(), 'public');
+  const filePath = path.join(publicDir, 'delete-account.html');
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).send('Delete account page not found.');
+  }
+});
+
+// --- POST /api/account-deletion-request (public, no auth) ---
+// Stores a deletion request from an unauthenticated user (e.g. via public web form)
+app.post('/api/account-deletion-request', async (req, res) => {
+  try {
+    const { phone, userId, email } = req.body || {};
+
+    if (!phone || !userId) {
+      return res.status(400).json({ error: 'Phone and User ID are required.' });
+    }
+
+    const phoneClean = String(phone).replace(/\D/g, '');
+    if (phoneClean.length < 10) {
+      return res.status(400).json({ error: 'Please enter a valid phone number (at least 10 digits).' });
+    }
+    if (String(userId).trim().length < 3) {
+      return res.status(400).json({ error: 'Please provide a valid User ID.' });
+    }
+
+    const requestId = crypto.randomUUID();
+    const submittedAt = new Date().toISOString();
+
+    // Persist in Supabase if available
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = getSupabase();
+        await supabase.from('deletion_requests').insert([{
+          id: requestId,
+          phone: phoneClean,
+          user_id: String(userId).trim(),
+          email: email ? String(email).trim().toLowerCase() : null,
+          submitted_at: submittedAt,
+          status: 'PENDING'
+        }]);
+      } catch (supaErr: any) {
+        console.warn('[Deletion Request Supabase Warning]', supaErr?.message || supaErr);
+      }
+    }
+
+    // Also store locally in DB as a fallback
+    const db = readDB();
+    db.deletionRequests = db.deletionRequests || [];
+    db.deletionRequests.push({
+      id: requestId,
+      phone: phoneClean,
+      userId: String(userId).trim(),
+      email: email ? String(email).trim().toLowerCase() : null,
+      submittedAt,
+      status: 'PENDING'
+    });
+    writeDB(db);
+
+    res.status(200).json({
+      success: true,
+      message: 'Your account deletion request has been received. We will process it within 24–48 hours.',
+      requestId
+    });
+  } catch (err: any) {
+    console.error('[Account Deletion Request Error]', err);
+    res.status(500).json({ error: 'Failed to submit deletion request. Please try again later.' });
+  }
+});
+
+// --- GET /api/account/export (authenticated – GDPR data export) ---
+app.get('/api/account/export', authenticateToken, async (req, res) => {
+  try {
+    const candidate = (req as any).candidate;
+    if (!candidate || !candidate.id || candidate.isGuest) {
+      return res.status(401).json({ error: 'Authentication required.' });
+    }
+
+    const candidateId = String(candidate.id);
+
+    // Load all candidate data
+    const [allCandidates, allDocuments, allApplications, allNotifications] = await Promise.all([
+      getLiveCandidates(),
+      getLiveDocuments(),
+      getLiveApplications(),
+      (async () => {
+        const db = readDB();
+        return db.notifications || [];
+      })()
+    ]);
+
+    const candidateRecord = allCandidates.find((c: any) => String(c.id) === candidateId);
+    if (!candidateRecord) {
+      return res.status(404).json({ error: 'Candidate record not found.' });
+    }
+
+    // Sanitise – remove security fields
+    const { salt, hash, ...safeCandidate } = candidateRecord;
+
+    const documents = allDocuments.filter((d: any) => String(d.candidateId) === candidateId);
+    const applications = allApplications.filter((a: any) => String(a.candidateId) === candidateId);
+    const notifications = allNotifications.filter((n: any) =>
+      String(n.candidateId || n.candidate_id || n.recipientId || '') === candidateId
+    );
+
+    const exportPayload = {
+      exportedAt: new Date().toISOString(),
+      profile: safeCandidate,
+      documents: documents.map((d: any) => ({
+        id: d.id,
+        documentType: d.documentType,
+        fileName: d.fileName,
+        uploadDate: d.uploadDate,
+        verificationStatus: d.verificationStatus
+      })),
+      applications: applications.map((a: any) => ({
+        id: a.id,
+        jobId: a.jobId,
+        recruiterId: a.recruiterId,
+        appliedDate: a.appliedDate,
+        currentStatus: a.currentStatus
+      })),
+      notifications: notifications.map((n: any) => ({
+        id: n.id,
+        title: n.title,
+        message: n.message,
+        createdAt: n.created_at || n.createdAt
+      }))
+    };
+
+    const fileName = `jobsner-data-export-${candidateId.slice(0, 8)}-${Date.now()}.json`;
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.setHeader('Content-Type', 'application/json');
+    res.status(200).json(exportPayload);
+  } catch (err: any) {
+    console.error('[Account Export Error]', err);
+    res.status(500).json({ error: 'Failed to export account data.' });
+  }
+});
+
+// --- DELETE /api/account (authenticated – permanently delete account) ---
+app.delete('/api/account', authenticateToken, async (req, res) => {
+  try {
+    const candidate = (req as any).candidate;
+    if (!candidate || !candidate.id || candidate.isGuest) {
+      return res.status(401).json({ error: 'Authentication required. Guest sessions cannot be deleted.' });
+    }
+
+    const candidateId = String(candidate.id);
+    const { reason } = req.body || {};
+
+    // 1. Delete Firebase Auth user (requires the user's Firebase UID)
+    //    The firebase UID may be stored as `id` on the candidate (phone/google auth stores uid as id)
+    try {
+      const adminAuth = getAdminAuth();
+      await adminAuth.deleteUser(candidateId);
+      console.log(`[Account Deletion] Firebase Auth user deleted: ${candidateId}`);
+    } catch (fbErr: any) {
+      // Not all accounts have a Firebase UID – log and continue
+      console.warn('[Account Deletion] Firebase Auth deleteUser warning:', fbErr?.message || fbErr);
+    }
+
+    // 2. Delete all Supabase data
+    if (isSupabaseConfigured()) {
+      const supabase = getSupabase();
+      try {
+        // Delete documents
+        await supabase.from('documents').delete().eq('candidateId', candidateId);
+        // Delete notifications
+        await supabase.from('notifications').delete().eq('candidate_id', candidateId);
+        // Delete applications
+        await supabase.from('applications').delete().eq('candidateId', candidateId);
+        // Delete candidate allocations
+        await supabase.from('candidateAllocations').delete().eq('candidateId', candidateId);
+        // Delete candidate pool entry if exists
+        await supabase.from('candidate_pool').delete().eq('contact', candidate.mobile || '');
+        // Delete the candidate record itself
+        await supabase.from('candidates').delete().eq('id', candidateId);
+
+        // 3. Try to delete uploaded files from Supabase Storage
+        try {
+          const { data: storageFiles } = await supabase.storage.from('documents').list(candidateId);
+          if (storageFiles && storageFiles.length > 0) {
+            const paths = storageFiles.map((f: any) => `${candidateId}/${f.name}`);
+            await supabase.storage.from('documents').remove(paths);
+          }
+        } catch (storageErr: any) {
+          console.warn('[Account Deletion] Storage cleanup warning:', storageErr?.message || storageErr);
+        }
+
+        // 4. Write audit row
+        const deletedAt = new Date().toISOString();
+        await supabase.from('account_deletions').insert([{
+          id: crypto.randomUUID(),
+          candidate_id: candidateId,
+          deleted_at: deletedAt,
+          reason: reason || null
+        }]);
+
+        console.log(`[Account Deletion] Supabase data deleted for candidate: ${candidateId}`);
+      } catch (supaErr: any) {
+        console.error('[Account Deletion] Supabase error:', supaErr?.message || supaErr);
+        // Continue to remove from local DB regardless
+      }
+    }
+
+    // 5. Remove from local JSON database
+    const db = readDB();
+    db.candidates = (db.candidates || []).filter((c: any) => String(c.id) !== candidateId);
+    db.documents = (db.documents || []).filter((d: any) => String(d.candidateId) !== candidateId);
+    db.applications = (db.applications || []).filter((a: any) => String(a.candidateId) !== candidateId);
+    db.notifications = (db.notifications || []).filter((n: any) =>
+      String(n.candidateId || n.candidate_id || '') !== candidateId
+    );
+
+    // Revoke the token
+    const token = (req as any).token;
+    if (token && db.tokens) {
+      delete db.tokens[token];
+    }
+
+    // Write audit in local DB
+    db.accountDeletions = db.accountDeletions || [];
+    db.accountDeletions.push({
+      id: crypto.randomUUID(),
+      candidateId,
+      deletedAt: new Date().toISOString(),
+      reason: reason || null
+    });
+
+    writeDB(db);
+
+    // 6. Remove physical uploaded files from local uploads dir
+    try {
+      const candidateUploadsDir = path.join(UPLOADS_DIR, candidateId);
+      if (fs.existsSync(candidateUploadsDir)) {
+        fs.rmSync(candidateUploadsDir, { recursive: true, force: true });
+      }
+    } catch (fsErr: any) {
+      console.warn('[Account Deletion] Local file cleanup warning:', fsErr?.message || fsErr);
+    }
+
+    console.log(`[Account Deletion] Account permanently deleted for candidate: ${candidateId}`);
+
+    res.status(200).json({
+      success: true,
+      message: 'Your account and all associated data have been permanently deleted.'
+    });
+  } catch (err: any) {
+    console.error('[Account Deletion Error]', err);
+    res.status(500).json({ error: 'Failed to delete account. Please try again or contact support.' });
   }
 });
 

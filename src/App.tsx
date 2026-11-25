@@ -18,6 +18,8 @@ import CandidateDocuments from './components/CandidateDocuments';
 
 import AdminPanel from './components/AdminPanel';
 
+import DeleteAccountScreen from './components/DeleteAccountScreen';
+
 import { logoutFirebase, subscribeToAuthState } from './lib/firebase';
 
 import JobsnerLogo from './components/JobsnerLogo';
@@ -147,7 +149,7 @@ export default function App() {
 
   const [candidatePrefill, setCandidatePrefill] = useState<{ mobile?: string; email?: string; fullName?: string } | null>(null);
 
-  const [view, setView] = useState<'login' | 'register' | 'dashboard' | 'profile_edit' | 'documents'>('login');
+  const [view, setView] = useState<'login' | 'register' | 'dashboard' | 'profile_edit' | 'documents' | 'delete_account'>('login');
 
   const [candidateActiveTab, setCandidateActiveTab] = useState<'find_jobs' | 'applications' | 'saved' | 'overview'>('find_jobs');
 
@@ -716,6 +718,18 @@ export default function App() {
 
   };
 
+  // Called after successful account deletion – clear all state and go to login
+  const handleAccountDeleted = () => {
+    setCandidate(null);
+    setToken(null);
+    setView('login');
+    setUserRole(null);
+    setPortal('candidate');
+    if (typeof window !== 'undefined') {
+      window.history.pushState({ app: 'jobsner', page: 'home' }, '', '/');
+    }
+  };
+
 
 
   // --- RECRUITER EVENT HANDLERS ---
@@ -934,7 +948,7 @@ export default function App() {
 
       if (portal === 'candidate') {
 
-        if (view === 'profile_edit' || view === 'documents') {
+        if (view === 'profile_edit' || view === 'documents' || view === 'delete_account') {
 
           setView('dashboard');
 
@@ -1854,11 +1868,51 @@ export default function App() {
 
                         initialProfile={candidate.profile}
 
+                        candidate={candidate}
+
                         token={token}
 
                         onSaveSuccess={handleCandidateProfileSaveSuccess}
 
                         onCancel={() => setView('dashboard')}
+
+                        onDeleteAccount={() => setView('delete_account')}
+
+                      />
+
+                    </motion.div>
+
+                  )}
+
+
+
+                  {view === 'delete_account' && candidate && token && (
+
+                    <motion.div
+
+                      key="cand-delete-account"
+
+                      initial={{ opacity: 0, y: 15 }}
+
+                      animate={{ opacity: 1, y: 0 }}
+
+                      exit={{ opacity: 0, y: -15 }}
+
+                      transition={{ duration: 0.2 }}
+
+                    >
+
+                      <DeleteAccountScreen
+
+                        token={token}
+
+                        candidateId={candidate.id}
+
+                        candidateName={candidate.fullName || candidate.profile?.fullName || 'Candidate'}
+
+                        onBack={() => setView('profile_edit')}
+
+                        onAccountDeleted={handleAccountDeleted}
 
                       />
 
