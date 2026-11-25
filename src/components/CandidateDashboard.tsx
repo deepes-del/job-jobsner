@@ -1633,7 +1633,7 @@ export default function CandidateDashboard({
 
               {/* TAB 1: FIND JOBS / MAIN REFERENCE DASHBOARD */}
               <div style={{display: activeTab === 'find_jobs' ? 'contents' : 'none'}}>
-            <React.Fragment>
+            <div>
               
               {/* ═══ HERO BANNER — Slide 0: Original Jobsner Hero │ Slides 1-N: Promo Images ═══ */}
               <HeroBannerSlider />
@@ -2509,7 +2509,7 @@ export default function CandidateDashboard({
             />
           </div>
 
-            </React.Fragment>
+            
           )}
         </main>
 
