@@ -2510,8 +2510,7 @@ export default function CandidateDashboard({
           </div>
 
             </React.Fragment>
-          }
-
+          )}
         </main>
 
         {/* ================= RIGHT SIDEBAR WIDGETS ================= */}
