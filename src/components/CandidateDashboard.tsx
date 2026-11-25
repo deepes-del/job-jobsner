@@ -322,8 +322,15 @@ export default function CandidateDashboard({
   const [instantError, setInstantError] = React.useState<string | null>(null);
   const [instantLoading, setInstantLoading] = React.useState(false);
 
+  // Fetch de-duplication guards — prevents duplicate API calls on rapid re-renders
+  const isFetchingJobsRef = React.useRef(false);
+  const isFetchingAppsRef = React.useRef(false);
+  const isFetchingDocsRef = React.useRef(false);
+
   // Fetch functions
   const fetchJobs = React.useCallback(() => {
+    if (isFetchingJobsRef.current) return;
+    isFetchingJobsRef.current = true;
     setLoadingJobs(true);
     fetch('/api/jobs')
       .then(res => res.json())
@@ -412,11 +419,13 @@ export default function CandidateDashboard({
         setActiveJobs(jobsList);
       })
       .catch(err => console.error('Error fetching jobs:', err))
-      .finally(() => setLoadingJobs(false));
+      .finally(() => { setLoadingJobs(false); isFetchingJobsRef.current = false; });
   }, []);
 
   const fetchMyApplications = React.useCallback(() => {
     if (!token) return;
+    if (isFetchingAppsRef.current) return;
+    isFetchingAppsRef.current = true;
     setLoadingApps(true);
     fetch('/api/applications/my', {
       headers: { 'Authorization': `Bearer ${token}` }
@@ -490,6 +499,8 @@ export default function CandidateDashboard({
 
   const fetchDocuments = React.useCallback(() => {
     if (!token) return;
+    if (isFetchingDocsRef.current) return;
+    isFetchingDocsRef.current = true;
     setLoadingDocs(true);
     fetch('/api/documents', {
       headers: { 'Authorization': `Bearer ${token}` }
@@ -499,7 +510,7 @@ export default function CandidateDashboard({
         setDocuments(data.documents || []);
       })
       .catch(err => console.error('Error fetching documents:', err))
-      .finally(() => setLoadingDocs(false));
+      .finally(() => { setLoadingDocs(false); isFetchingDocsRef.current = false; });
   }, [token]);
 
   // Load stats & details on mount
@@ -1047,7 +1058,9 @@ export default function CandidateDashboard({
 
   const handleViewDetails = (job: any, pushHistory: boolean = true) => {
     setSelectedJob(job);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Scroll the center column to top — no window.scrollTo (sidebars own their own scroll)
+    const centerCol = document.getElementById('dashboard-center-col');
+    if (centerCol) centerCol.scrollTop = 0;
     if (pushHistory && typeof window !== 'undefined') {
       const currentState = window.history.state || {};
       window.history.pushState(
@@ -1060,40 +1073,54 @@ export default function CandidateDashboard({
 
   const handleCloseJobDetails = (fromPopState: boolean = false) => {
     setSelectedJob(null);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Scroll center column to top instantly — no freeze from window.scrollTo
+    const centerCol = document.getElementById('dashboard-center-col');
+    if (centerCol) centerCol.scrollTop = 0;
     if (!fromPopState && typeof window !== 'undefined') {
-      if (window.history.state?.modal === 'job_details') {
-        window.history.back();
-      } else {
-        const url = new URL(window.location.href);
-        url.searchParams.delete('job');
-        window.history.replaceState({ ...window.history.state, modal: undefined, jobId: undefined }, '', url.pathname + (url.search || ''));
-      }
+      // Always use replaceState — never history.back() which causes a full navigation freeze
+      const url = new URL(window.location.href);
+      url.searchParams.delete('job');
+      window.history.replaceState(
+        { ...window.history.state, modal: undefined, jobId: undefined },
+        '',
+        url.pathname + (url.search || '')
+      );
     }
   };
 
-  // Back button popstate listener for Job Details, Applications, and deep links
+  // Stable refs so popstate handler never needs to be re-registered (zero re-renders on dep change)
+  const selectedJobRef = React.useRef(selectedJob);
+  const selectedAppRef = React.useRef(selectedApp);
+  const jobForInstantApplyRef = React.useRef(jobForInstantApply);
+  const activeJobsRef = React.useRef(activeJobs);
+  React.useEffect(() => { selectedJobRef.current = selectedJob; }, [selectedJob]);
+  React.useEffect(() => { selectedAppRef.current = selectedApp; }, [selectedApp]);
+  React.useEffect(() => { jobForInstantApplyRef.current = jobForInstantApply; }, [jobForInstantApply]);
+  React.useEffect(() => { activeJobsRef.current = activeJobs; }, [activeJobs]);
+
+  // Back button popstate listener — registered ONCE, reads latest values via refs
   React.useEffect(() => {
     const handlePopState = (e: PopStateEvent) => {
-      if (jobForInstantApply) {
+      if (jobForInstantApplyRef.current) {
         setJobForInstantApply(null);
         return;
       }
-      if (selectedApp) {
+      if (selectedAppRef.current) {
         setSelectedApp(null);
         return;
       }
-      if (selectedJob && e.state?.modal !== 'job_details') {
+      if (selectedJobRef.current && e.state?.modal !== 'job_details') {
         setSelectedJob(null);
-      } else if (!selectedJob && e.state?.modal === 'job_details' && e.state?.jobId) {
-        const targetJob = activeJobs.find(j => String(j.id) === String(e.state.jobId));
+        const centerCol = document.getElementById('dashboard-center-col');
+        if (centerCol) centerCol.scrollTop = 0;
+      } else if (!selectedJobRef.current && e.state?.modal === 'job_details' && e.state?.jobId) {
+        const targetJob = activeJobsRef.current.find((j: any) => String(j.id) === String(e.state.jobId));
         if (targetJob) setSelectedJob(targetJob);
       }
     };
-
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [selectedJob, selectedApp, jobForInstantApply, activeJobs]);
+  }, []); // empty deps — stable handler via refs
 
   // Deep-link check: open job from ?job=<id> query parameter on mount/load
   React.useEffect(() => {
@@ -1343,12 +1370,12 @@ export default function CandidateDashboard({
         )}
       </AnimatePresence>
 
-      {/* Main 3-Column Dashboard Layout (Left Nav | Center Content | Right Widgets) */}
-      <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 items-start pb-20 lg:pb-0">
+      {/* Main 3-Column Dashboard Layout — sidebars sticky, only center scrolls */}
+      <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 items-start lg:items-stretch lg:h-[calc(100vh-4.5rem)] lg:overflow-hidden pb-20 lg:pb-0">
         
         {/* ================= LEFT NAVIGATION SIDEBAR (DESKTOP EXCLUSIVE) ================= */}
         {!selectedJob && (
-          <aside className="hidden lg:flex w-64 shrink-0 bg-[#0F172A] text-slate-300 rounded-3xl p-5 shadow-xl flex-col justify-between min-h-[640px] sticky top-20 z-20">
+          <aside className="hidden lg:flex w-64 shrink-0 bg-[#0F172A] text-slate-300 rounded-3xl p-5 shadow-xl flex-col justify-between lg:h-full lg:overflow-y-auto z-20" style={{scrollbarWidth:'none'}}>
           <div>
             {/* Top Brand Branding Header */}
             <div className="px-2 py-1 mb-6 border-b border-slate-800/80 pb-5">
@@ -1505,7 +1532,11 @@ export default function CandidateDashboard({
         )}
 
         {/* ================= CENTER MAIN CONTENT COLUMN ================= */}
-        <main className="flex-1 min-w-0 flex flex-col gap-6 w-full">
+        <main
+          id="dashboard-center-col"
+          className="flex-1 min-w-0 flex flex-col gap-6 w-full lg:overflow-y-auto lg:h-full lg:pr-1"
+          style={{scrollbarWidth:'thin', scrollbarColor:'#e2e8f0 transparent'}}
+        >
           
           {/* GUEST CANDIDATE MODE BANNER */}
           {isGuest && (
@@ -1601,7 +1632,7 @@ export default function CandidateDashboard({
               </AnimatePresence>
 
               {/* TAB 1: FIND JOBS / MAIN REFERENCE DASHBOARD */}
-              {activeTab === 'find_jobs' && (
+              <div style={{display: activeTab === 'find_jobs' ? 'contents' : 'none'}}>
             <React.Fragment>
               
               {/* ═══ HERO BANNER — Slide 0: Original Jobsner Hero │ Slides 1-N: Promo Images ═══ */}
@@ -2287,10 +2318,10 @@ export default function CandidateDashboard({
               </div>
 
             </React.Fragment>
-          )}
+              </div>
 
-          {/* TAB 2: MY APPLICATIONS VIEW */}
-          {activeTab === 'applications' && (
+              {/* TAB 2: MY APPLICATIONS VIEW */}
+              <div style={{display: activeTab === 'applications' ? 'block' : 'none'}}>
             <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-6">
               <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                 <h3 className="text-lg font-black text-slate-900">My Job Applications ({myApplications.length})</h3>
@@ -2394,8 +2425,8 @@ export default function CandidateDashboard({
             </div>
           )}
 
-          {/* TAB 3: SAVED JOBS VIEW */}
-          {activeTab === 'saved' && (
+          {/* TAB 3: SAVED JOBS VIEW — always mounted, display toggled */}
+          <div style={{display: activeTab === 'saved' ? 'block' : 'none'}}>
             <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-6">
               <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                 <h3 className="text-lg font-black text-slate-900">Saved Jobs ({savedJobIds.length})</h3>
@@ -2460,10 +2491,10 @@ export default function CandidateDashboard({
                 </div>
               )}
             </div>
-          )}
+          </div>
 
-          {/* TAB 4: PROFILE EDIT VIEW */}
-          {activeTab === 'overview' && (
+          {/* TAB 4: PROFILE EDIT VIEW — always mounted, display toggled (prevents heavy remount on switch) */}
+          <div style={{display: activeTab === 'overview' ? 'block' : 'none'}}>
             <CandidateProfileEdit
               initialProfile={profile}
               candidate={candidate}
@@ -2476,16 +2507,16 @@ export default function CandidateDashboard({
               savedJobsCount={savedJobIds.length}
               onNavigateTab={(t) => setActiveTab(t)}
             />
-          )}
+          </div>
 
             </React.Fragment>
-          )}
+          }
 
         </main>
 
         {/* ================= RIGHT SIDEBAR WIDGETS ================= */}
         {!selectedJob && (
-          <aside className="w-full lg:w-80 shrink-0 flex flex-col gap-4 sm:gap-6 lg:sticky lg:top-20 lg:max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto">
+          <aside className="w-full lg:w-80 shrink-0 flex flex-col gap-4 sm:gap-6 lg:h-full lg:overflow-y-auto" style={{scrollbarWidth:'none'}}>
           
           {/* SINGLE QUICK ACTIONS WIDGET (ONLY 1 SECTION) */}
           <div className="bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-xs">
