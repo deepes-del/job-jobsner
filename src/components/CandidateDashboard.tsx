@@ -2315,13 +2315,13 @@ export default function CandidateDashboard({
                   )}
                 </div>
 
-              </div>
+              </div>{/* closes jobs-table-section div */}
 
-            </React.Fragment>
-              </div>
+            </div>{/* closes inner div from 1636 */}
+          </div>{/* closes find_jobs tab wrapper */}
 
-              {/* TAB 2: MY APPLICATIONS VIEW */}
-              <div style={{display: activeTab === 'applications' ? 'block' : 'none'}}>
+          {/* TAB 2: MY APPLICATIONS VIEW */}
+          <div style={{display: activeTab === 'applications' ? 'block' : 'none'}}>
             <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-6">
               <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                 <h3 className="text-lg font-black text-slate-900">My Job Applications ({myApplications.length})</h3>
@@ -2423,7 +2423,7 @@ export default function CandidateDashboard({
                 </div>
               )}
             </div>
-          )}
+          </div>{/* closes applications tab wrapper */}
 
           {/* TAB 3: SAVED JOBS VIEW — always mounted, display toggled */}
           <div style={{display: activeTab === 'saved' ? 'block' : 'none'}}>
@@ -2509,7 +2509,7 @@ export default function CandidateDashboard({
             />
           </div>
 
-            
+          </React.Fragment>
           )}
         </main>
 
