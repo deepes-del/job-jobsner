@@ -170,6 +170,13 @@ export default function CandidateDashboard({
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = React.useState('');
+  // Debounced search: only triggers expensive filter after 200ms idle
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = React.useState('');
+  React.useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearchQuery(searchQuery), 200);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
+
   const [selectedCategory, setSelectedCategory] = React.useState('All');
   const [selectedState, setSelectedState] = React.useState('All');
   const [selectedCity, setSelectedCity] = React.useState('All');
@@ -190,7 +197,7 @@ export default function CandidateDashboard({
   // Reset infinite batch count when search query or filters change
   React.useEffect(() => {
     setInfiniteBatchCount(3);
-  }, [searchQuery, selectedCategory, selectedState, selectedCity, selectedSalary, selectedEmpType, selectedExperience, selectedShift, sortOrder]);
+  }, [debouncedSearchQuery, selectedCategory, selectedState, selectedCity, selectedSalary, selectedEmpType, selectedExperience, selectedShift, sortOrder]);
 
 
 
@@ -327,103 +334,53 @@ export default function CandidateDashboard({
   const isFetchingAppsRef = React.useRef(false);
   const isFetchingDocsRef = React.useRef(false);
 
+  // ─── Module-level client-side cache (persists across tab switches) ───────────
+  // Jobs rarely change — reuse cached data for 30s so navigation is instant
+  const JOBS_CLIENT_CACHE_TTL = 30_000; // 30 seconds
+  const APPS_CLIENT_CACHE_TTL = 15_000; // 15 seconds
+
   // Fetch functions
-  const fetchJobs = React.useCallback(() => {
+  const fetchJobs = React.useCallback((force = false) => {
+    // ── Client-side cache: return cached data instantly if fresh ──────────────
+    const cached = (window as any).__jobsnerJobsCache;
+    if (!force && cached && (Date.now() - cached.ts) < JOBS_CLIENT_CACHE_TTL && cached.data.length > 0) {
+      setActiveJobs(cached.data);
+      setLoadingJobs(false);
+      isFetchingJobsRef.current = false;
+      return;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     if (isFetchingJobsRef.current) return;
     isFetchingJobsRef.current = true;
     setLoadingJobs(true);
     fetch('/api/jobs')
       .then(res => res.json())
-      .then(async data => {
-        let jobsList: any[] = data.jobs || [];
-
-        try {
-          if (isSupabaseConfigured()) {
-            const supabase = getSupabase();
-            const [jobsRes, recsRes] = await Promise.all([
-              supabase.from('jobs').select('*'),
-              supabase.from('recruiters').select('id, companyLogo, company_logo, companyName, company_name')
-            ]);
-
-            const supaJobs = jobsRes.data;
-            const supaRecs = recsRes.data || [];
-
-            const recLogoMap = new Map<string, { logo: string; name: string }>();
-            supaRecs.forEach((r: any) => {
-              const rId = String(r.id || '');
-              if (rId) {
-                recLogoMap.set(rId, {
-                  logo: r.companyLogo || r.company_logo || '',
-                  name: r.companyName || r.company_name || ''
-                });
-              }
-            });
-
-            if (!jobsRes.error && supaJobs) {
-              const jobMap = new Map<string, any>();
-              supaJobs.forEach((j: any) => {
-                const id = String(j.id || j.jobId || j.job_id || '');
-                if (!id) return;
-
-                const recId = String(j.recruiterId || j.recruiter_id || '');
-                const recInfo = recLogoMap.get(recId);
-
-                const companyLogo = j.companyLogo || j.company_logo || recInfo?.logo || '';
-                const companyName = j.companyName || j.company_name || recInfo?.name || 'Hiring Company';
-
-                const normalized = {
-                  ...j,
-                  id,
-                  recruiterId: recId,
-                  companyName,
-                  companyLogo,
-                  title: j.title || j.jobTitle || j.job_title || 'Job Opening',
-                  category: j.category || j.jobCategory || j.job_category || 'Delivery Jobs',
-                  openings: Number(j.openings ?? j.no_of_openings ?? 1),
-                  employmentType: j.employmentType || j.employment_type || 'Full Time',
-                  state: j.state || '',
-                  city: j.city || '',
-                  area: j.area || '',
-                  workLocation: j.workLocation || j.work_location || '',
-                  minSalary: Number(j.minSalary ?? j.min_salary ?? 0),
-                  maxSalary: Number(j.maxSalary ?? j.max_salary ?? 0),
-                  salaryType: normalizeSalaryType(j.salaryType || j.salary_type),
-                  shift: j.shift || 'Day Shift',
-                  experienceRequired: Number(j.experienceRequired ?? j.experience_required ?? 0),
-                  educationRequired: j.educationRequired || j.education_required || '10th Pass or below',
-                  genderPreference: j.genderPreference || j.gender_preference || 'Any',
-                  ageLimitMin: Number(j.ageLimitMin ?? j.age_limit_min ?? 18),
-                  ageLimitMax: Number(j.ageLimitMax ?? j.age_limit_max ?? 45),
-                  bikeRequired: j.bikeRequired || j.bike_required || 'No',
-                  drivingLicenseRequired: j.drivingLicenseRequired || j.driving_license_required || 'No',
-                  immediateJoining: j.immediateJoining || j.immediate_joining || 'Yes',
-                  description: j.description || j.job_description || '',
-                  responsibilities: j.responsibilities || '',
-                  benefits: j.benefits || '',
-                  status: j.status || 'published',
-                  applicationsCount: Number(j.applicationsCount ?? j.applications_count ?? 0),
-                  createdAt: j.createdAt || j.created_at || new Date().toISOString()
-                };
-                const statusLower = String(normalized.status || '').toLowerCase();
-                if (!normalized.status || (statusLower !== 'closed' && statusLower !== 'deleted' && statusLower !== 'inactive' && statusLower !== 'expired' && statusLower !== 'rejected')) {
-                  jobMap.set(id, normalized);
-                }
-              });
-              jobsList = Array.from(jobMap.values());
-            }
-          }
-        } catch (supaErr) {
-          console.warn('[Supabase Direct Fetch Warning]', supaErr);
-        }
-
+      .then(data => {
+        const jobsList: any[] = data.jobs || [];
+        // ── Populate client cache ─────────────────────────────────────────────
+        (window as any).__jobsnerJobsCache = { data: jobsList, ts: Date.now() };
+        // ─────────────────────────────────────────────────────────────────────
         setActiveJobs(jobsList);
       })
       .catch(err => console.error('Error fetching jobs:', err))
       .finally(() => { setLoadingJobs(false); isFetchingJobsRef.current = false; });
-  }, []);
+  }, [JOBS_CLIENT_CACHE_TTL]);
 
-  const fetchMyApplications = React.useCallback(() => {
+  const fetchMyApplications = React.useCallback((force = false) => {
     if (!token) return;
+
+    // ── Client-side cache: return cached applications instantly if fresh ──────
+    const cacheKey = `apps_${candidate?.id}`;
+    const appCache = (window as any).__jobsnerAppsCache;
+    if (!force && appCache && appCache[cacheKey] && (Date.now() - appCache[cacheKey].ts) < APPS_CLIENT_CACHE_TTL && appCache[cacheKey].data.length > 0) {
+      setMyApplications(appCache[cacheKey].data);
+      setLoadingApps(false);
+      isFetchingAppsRef.current = false;
+      return;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     if (isFetchingAppsRef.current) return;
     isFetchingAppsRef.current = true;
     setLoadingApps(true);
@@ -431,56 +388,8 @@ export default function CandidateDashboard({
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
-      .then(async data => {
-        let appsList: any[] = data.applications || [];
-
-        try {
-          if (isSupabaseConfigured() && candidate?.id) {
-            const supabase = getSupabase();
-            const { data: supaApps, error } = await supabase
-              .from('applications')
-              .select('*')
-              .or(`candidateId.eq.${candidate.id},candidate_id.eq.${candidate.id}`);
-
-            if (!error && supaApps && supaApps.length > 0) {
-              const appMap = new Map<string, any>();
-              appsList.forEach((a: any) => {
-                const key = a.jobId || a.job_id || a.id;
-                if (key) appMap.set(String(key), a);
-              });
-              supaApps.forEach((a: any) => {
-                const jobId = String(a.jobId || a.job_id || '');
-                const id = String(a.id || a.appId || a.app_id || '');
-                const withdrawStatus = a.withdrawStatus || a.withdraw_status || 'Active';
-
-                if (jobId && !appMap.has(jobId)) {
-                  const job = activeJobs.find(j => String(j.id) === jobId) || {};
-                  appMap.set(jobId, {
-                    id: id || crypto.randomUUID(),
-                    candidateId: candidate.id,
-                    jobId,
-                    recruiterId: a.recruiterId || a.recruiter_id || job.recruiterId || '',
-                    appliedDate: a.appliedDate || a.applied_date || a.created_at || new Date().toISOString(),
-                    currentStatus: a.currentStatus || a.current_status || a.status || 'Applied',
-                    withdrawStatus,
-                    lastUpdated: a.lastUpdated || a.last_updated || a.updated_at || new Date().toISOString(),
-                    jobTitle: job.title || 'Job Opening',
-                    companyName: job.companyName || 'Hiring Company',
-                    companyLogo: job.companyLogo || '',
-                    jobCity: job.city || '',
-                    jobState: job.state || '',
-                    jobSalary: job.minSalary ? `₹${job.minSalary} - ₹${job.maxSalary}` : (job.salary || 'N/A'),
-                    jobEmploymentType: job.employmentType || '',
-                    jobShift: job.shift || ''
-                  });
-                }
-              });
-              appsList = Array.from(appMap.values());
-            }
-          }
-        } catch (supaErr) {
-          console.warn('[Supabase Direct Apps Fetch Warning]', supaErr);
-        }
+      .then(data => {
+        const appsList: any[] = data.applications || [];
 
         const seenJobIds = new Set<string>();
         const uniqueActiveAppsList = appsList.filter((a) => {
@@ -491,11 +400,17 @@ export default function CandidateDashboard({
           return true;
         });
 
+        // ── Populate client cache ───────────────────────────────────────────
+        const updatedAppCache = (window as any).__jobsnerAppsCache || {};
+        updatedAppCache[cacheKey] = { data: uniqueActiveAppsList, ts: Date.now() };
+        (window as any).__jobsnerAppsCache = updatedAppCache;
+        // ───────────────────────────────────────────────────────────────────
+
         setMyApplications(uniqueActiveAppsList);
       })
       .catch(err => console.error('Error fetching applications:', err))
-      .finally(() => setLoadingApps(false));
-  }, [token, candidate?.id]);
+      .finally(() => { setLoadingApps(false); isFetchingAppsRef.current = false; });
+  }, [token, candidate?.id, APPS_CLIENT_CACHE_TTL]);
 
   const fetchDocuments = React.useCallback(() => {
     if (!token) return;
@@ -520,7 +435,9 @@ export default function CandidateDashboard({
     fetchDocuments();
 
     const handleRefresh = () => {
-      fetchJobs();
+      // Force-bypass cache when explicitly triggered after applying to a job
+      fetchJobs(true);
+      fetchMyApplications(true);
     };
     window.addEventListener('refresh-jobs', handleRefresh);
     return () => {
@@ -645,9 +562,9 @@ export default function CandidateDashboard({
       });
     }
 
-    // Instant Search
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
+    // Instant Search (uses debounced value to avoid re-filtering on every keystroke)
+    if (debouncedSearchQuery.trim()) {
+      const q = debouncedSearchQuery.toLowerCase();
       result = result.filter(j =>
         j.title.toLowerCase().includes(q) ||
         j.companyName.toLowerCase().includes(q) ||
@@ -704,7 +621,7 @@ export default function CandidateDashboard({
     }
 
     return result;
-  }, [activeJobs, searchQuery, selectedCategory, selectedState, selectedCity, selectedSalary, selectedEmpType, selectedExperience, selectedShift, sortOrder]);
+  }, [activeJobs, debouncedSearchQuery, selectedCategory, selectedState, selectedCity, selectedSalary, selectedEmpType, selectedExperience, selectedShift, sortOrder]);
 
   // Tab Status Filtered List
   const displayedJobsOrApps = React.useMemo(() => {
@@ -730,7 +647,7 @@ export default function CandidateDashboard({
 
     // Check if user is using any filter or search
     const isFilterActive =
-      searchQuery.trim() !== '' ||
+      debouncedSearchQuery.trim() !== '' ||
       selectedCategory !== 'All' ||
       selectedCity !== 'All' ||
       selectedState !== 'All' ||
@@ -766,12 +683,12 @@ export default function CandidateDashboard({
     }
 
     return [...originalList, ...repeatedList];
-  }, [appStatusTab, myApplications, filteredJobsList, infiniteBatchCount, searchQuery, selectedCategory, selectedCity, selectedState, selectedEmpType, selectedSalary, selectedExperience, selectedShift]);
+  }, [appStatusTab, myApplications, filteredJobsList, infiniteBatchCount, debouncedSearchQuery, selectedCategory, selectedCity, selectedState, selectedEmpType, selectedSalary, selectedExperience, selectedShift]);
 
   // Seamless Infinite Scrolling - automatically loads more randomized batches
   React.useEffect(() => {
     const isFilterActive =
-      searchQuery.trim() !== '' ||
+      debouncedSearchQuery.trim() !== '' ||
       selectedCategory !== 'All' ||
       selectedCity !== 'All' ||
       selectedState !== 'All' ||

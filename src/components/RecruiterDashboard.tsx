@@ -851,26 +851,36 @@ export default function RecruiterDashboard({
     fetchUrgentCandidates();
     fetchNotifications();
 
-    // Regular polling fallback every 20 seconds for notifications
+    // Notification polling: every 90s (Supabase Realtime handles instant push above)
     const intervalId = setInterval(() => {
       fetchNotifications();
-    }, 20000);
+    }, 90000);
 
-    // Periodic data refresh every 60 seconds for cross-device sync
+    // Data refresh every 5 minutes (Realtime + on-action fetches handle real-time sync)
     const dataRefreshId = setInterval(() => {
       fetchJobs();
       fetchApplications();
-    }, 60000);
+    }, 300000);
 
-    // Re-fetch all data when user returns to this browser tab (cross-device sync)
+    // Re-fetch when tab regains focus — but debounced to avoid stampede
+    let visibilityDebounceTimer: ReturnType<typeof setTimeout> | null = null;
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        fetchJobs();
-        fetchApplications();
-        fetchUrgentCandidates();
-        fetchNotifications();
+        // Clear any pending timer and schedule a new one after 2s
+        if (visibilityDebounceTimer) clearTimeout(visibilityDebounceTimer);
+        visibilityDebounceTimer = setTimeout(() => {
+          fetchNotifications();
+          // Only refresh jobs/applications if more than 2 minutes since last load
+          const lastJobFetch = (window as any).__lastRecruiterJobFetch || 0;
+          if (Date.now() - lastJobFetch > 120000) {
+            fetchJobs();
+            fetchApplications();
+            (window as any).__lastRecruiterJobFetch = Date.now();
+          }
+        }, 2000);
       }
     };
+    (window as any).__lastRecruiterJobFetch = Date.now();
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     // Supabase Realtime broadcast listener for instant push alerts
@@ -922,6 +932,7 @@ export default function RecruiterDashboard({
     return () => {
       clearInterval(intervalId);
       clearInterval(dataRefreshId);
+      if (visibilityDebounceTimer) clearTimeout(visibilityDebounceTimer);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (supaChannel) {
         try {

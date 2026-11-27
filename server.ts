@@ -67,6 +67,25 @@ let memoryDB: any = null;
 let supabaseActive = false;
 let supabaseErrorDetails: string | null = null;
 
+// ─── Performance Cache ────────────────────────────────────────────────────────
+// TTL-based in-memory caches to avoid a full Supabase table scan on every request.
+// Cache is invalidated automatically when data changes (job created/updated/deleted).
+interface CacheEntry<T> { data: T; ts: number; }
+let _jobsCache: CacheEntry<any[]> | null = null;
+let _recruitersCache: CacheEntry<any[]> | null = null;
+const JOBS_CACHE_TTL = 20_000;       // 20 seconds – jobs update infrequently
+const RECRUITERS_CACHE_TTL = 300_000; // 5 minutes  – recruiters almost never change
+
+/** Invalidate job + recruiter cache (call after any job/recruiter mutation) */
+function invalidateJobsCache() {
+  _jobsCache = null;
+}
+function invalidateRecruitersCache() {
+  _recruitersCache = null;
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
+
 export function normalizeSalaryType(val: any): 'Daily' | 'Weekly' | 'Monthly' {
   if (!val) return 'Monthly';
   const s = String(val).trim().toLowerCase();
@@ -582,6 +601,12 @@ function isJobActive(j: any): boolean {
 }
 
 async function getLiveJobs(): Promise<any[]> {
+  // ── Cache hit: return instantly if data is fresh ──────────────────────────
+  if (_jobsCache && (Date.now() - _jobsCache.ts) < JOBS_CACHE_TTL) {
+    return _jobsCache.data;
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
   const db = readDB();
   db.jobs = db.jobs || [];
 
@@ -614,7 +639,7 @@ async function getLiveJobs(): Promise<any[]> {
     if (r.id) recMap.set(String(r.id), r);
   });
 
-  return (db.jobs || []).map((j: any) => {
+  const result = (db.jobs || []).map((j: any) => {
     const norm = normalizeJob(j);
     if (norm.recruiterId && recMap.has(norm.recruiterId)) {
       const recruiter = recMap.get(norm.recruiterId);
@@ -627,6 +652,12 @@ async function getLiveJobs(): Promise<any[]> {
     }
     return norm;
   });
+
+  // ── Store in cache ─────────────────────────────────────────────────────────
+  _jobsCache = { data: result, ts: Date.now() };
+  // ─────────────────────────────────────────────────────────────────────────
+
+  return result;
 }
 
 function normalizeApplication(a: any) {
@@ -829,6 +860,12 @@ async function getLiveAllocations(): Promise<any[]> {
 
 
 async function getLiveRecruiters(): Promise<any[]> {
+  // ── Cache hit: recruiter data changes rarely ─────────────────────────────────
+  if (_recruitersCache && (Date.now() - _recruitersCache.ts) < RECRUITERS_CACHE_TTL) {
+    return _recruitersCache.data;
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
   const db = readDB();
   db.recruiters = db.recruiters || [];
   try {
@@ -871,6 +908,11 @@ async function getLiveRecruiters(): Promise<any[]> {
   } catch (err) {
     console.warn('[Supabase Recruiters Fetch Warning]', err);
   }
+
+  // ── Store in cache ─────────────────────────────────────────────────────────
+  _recruitersCache = { data: db.recruiters || [], ts: Date.now() };
+  // ─────────────────────────────────────────────────────────────────────────
+
   return db.recruiters || [];
 }
 
@@ -1288,6 +1330,13 @@ function readDB() {
 
 async function writeDB(data: any) {
   memoryDB = data;
+
+  // ── Invalidate caches on every write so stale data is never served ─────────────
+  invalidateJobsCache();
+  // Only invalidate recruiter cache when recruiter data could have changed
+  if (data.recruiters) invalidateRecruitersCache();
+  // ────────────────────────────────────────────────────────────────────────
+
   try {
     fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), 'utf-8');
   } catch (err) {
@@ -3462,6 +3511,9 @@ app.delete('/api/recruiter/jobs/:id', authenticateRecruiter, async (req, res) =>
 // 7. Get all published/active Jobs (For candidates)
 app.get('/api/jobs', async (req, res) => {
   try {
+    // Allow browser + CDN to cache job listings for 15s, serve stale for 30s more
+    res.setHeader('Cache-Control', 'public, max-age=15, stale-while-revalidate=30');
+
     const allJobs = await getLiveJobs();
     let jobs = allJobs.filter(isJobActive);
 
