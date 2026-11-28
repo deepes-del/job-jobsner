@@ -1138,6 +1138,84 @@ export default function App() {
 
 
 
+          {/* ── Google Play Store Download Badge ─────────────────────────── */}
+          <a
+            href="https://play.google.com/store/apps/details?id=com.aistudio.jobhai.gylmpx"
+            target="_blank"
+            rel="noopener noreferrer"
+            id="play-store-badge"
+            aria-label="Download Jobsner App on Google Play"
+            style={{
+              animation: 'playBadgePop 0.6s cubic-bezier(0.34,1.56,0.64,1) 1.2s both',
+              textDecoration: 'none',
+            }}
+            className="
+              flex items-center gap-1.5 shrink-0
+              bg-white border border-gray-200 hover:border-[#1D61F2]/40
+              shadow-sm hover:shadow-md
+              rounded-2xl
+              px-2.5 py-1.5 sm:px-3 sm:py-2
+              transition-all duration-200 hover:scale-105 active:scale-95
+              group/play cursor-pointer
+              relative
+            "
+          >
+            {/* Animated green live dot */}
+            <span
+              className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-white"
+              style={{ animation: 'playDotPulse 2s ease-in-out infinite' }}
+            />
+
+            {/* Google Play icon SVG */}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              className="w-5 h-5 sm:w-6 sm:h-6 shrink-0"
+              aria-hidden="true"
+            >
+              <defs>
+                <linearGradient id="pg1" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#00C6FF" />
+                  <stop offset="100%" stopColor="#0072FF" />
+                </linearGradient>
+                <linearGradient id="pg2" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#F7971E" />
+                  <stop offset="100%" stopColor="#FFD200" />
+                </linearGradient>
+                <linearGradient id="pg3" x1="0%" y1="100%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#56AB2F" />
+                  <stop offset="100%" stopColor="#A8E063" />
+                </linearGradient>
+                <linearGradient id="pg4" x1="100%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#F7375E" />
+                  <stop offset="100%" stopColor="#F7375E" />
+                </linearGradient>
+              </defs>
+              {/* Blue triangle (top-left) */}
+              <path d="M3.18 1.16a1 1 0 0 0-1.44.9v19.88a1 1 0 0 0 1.44.9l11-9.94-11-11.74z" fill="url(#pg1)" />
+              {/* Green triangle (bottom) */}
+              <path d="M14.18 11.1l-11 9.94 13.3-7.68-2.3-2.26z" fill="url(#pg3)" />
+              {/* Yellow triangle (top) */}
+              <path d="M14.18 11.1l2.3 2.26 3.9-2.26-3.9-2.26-2.3 2.26z" fill="url(#pg2)" />
+              {/* Red triangle (top) */}
+              <path d="M3.18 1.16l11 11.74 2.3-2.26-10-5.79-3.3-3.69z" fill="url(#pg4)" />
+            </svg>
+
+            {/* Text */}
+            <div className="flex flex-col leading-none min-w-0">
+              <span className="text-[8px] font-semibold text-slate-400 uppercase tracking-wider hidden sm:block">
+                Get it on
+              </span>
+              <span className="text-[10px] sm:text-xs font-extrabold text-slate-800 group-hover/play:text-[#1D61F2] transition-colors whitespace-nowrap">
+                <span className="sm:hidden">Get App</span>
+                <span className="hidden sm:inline">Download App</span>
+              </span>
+            </div>
+          </a>
+          {/* ─────────────────────────────────────────────────────────────── */}
+
+
+
           {/* Center Navigation Links (Matching Reference Image) */}
 
           {isCandidateLoggedIn && portal === 'candidate' && view === 'dashboard' ? (
